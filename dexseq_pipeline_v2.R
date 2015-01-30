@@ -28,7 +28,7 @@ if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame'
 if ('code' %in% names(myArgs)) code <- myArgs[['code']]
 if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
 if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
-if ('gff.file' %in% names(myArgs)) gff <- myArgs[['gff.file']]
+if ('gff' %in% names(myArgs)) gff <- myArgs[['gff']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
 
 
@@ -36,6 +36,7 @@ if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']
 
 
 ###check input files and data frame
+message('gff file is ', gff)
 message('Now reading ', support.frame)
 support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 my.ids <- support$sample
@@ -126,9 +127,9 @@ for (condition in list.conditions) {
     row.names(my.design.loc) <- factor(support.loc$sample)
     
     DexSeqExons.loc <- DEXSeqDataSetFromHTSeq(loc.countFiles,
-                                              sampleData= my.design.loc,
-                                              design=  formula1,
-                                              flattenedfile= gff)
+                                              sampleData = my.design.loc,
+                                              design = formula1,
+                                              flattenedfile = gff)
     
     write.table(x = my.design.loc, file = paste(loc.dexseq.folder, '/design.tab', sep = ''), row.names = TRUE, quote = FALSE, sep = '\t')
 
@@ -191,7 +192,7 @@ for (condition in list.conditions) {
   file.remove(list.files(dexseq.figs, pattern = 'DEXSeq*', full.names = TRUE)) ##remove the old plots
 
   n.sig <- sum(res.clean$FDR < 0.01, na.rm = TRUE)
-  if (n.sig > 50) {
+  if (n.sig <= 50) {
     res.cleanSigs <- subset(res.clean, FDR<0.01)
   } else res.cleanSigs <- res.clean[1:50,]
 
@@ -206,16 +207,15 @@ for (condition in list.conditions) {
     message(i, ' ', gene, ' ', gene.pretty)
     output.pdf <- paste(dexseq.figs, '/DEXSeq-', gene.pretty, '.pdf', sep = '')
     pdf(output.pdf, width = 8, height = 4.9)
-    try(plotDEXSeq(res,
-                   geneID = gene,  ##I suspect it has to be gene, otherwise it crashes
-                   cex.axis = 1.2,
-                   cex=1.3,
-                   lwd=2,
-                   legend=TRUE,
-                   displayTranscripts = TRUE,
-                   names = TRUE,
-                   main = gene.pretty)
-        )
+    plotDEXSeq(res,
+               geneID = gene,  ##I suspect it has to be gene, otherwise it crashes
+               cex.axis = 1.2,
+               cex=1.3,
+               lwd=2,
+               legend=TRUE,
+               displayTranscripts = TRUE,
+               names = TRUE,
+               main = gene.pretty)
     dev.off()
     print(output.pdf)
   }
