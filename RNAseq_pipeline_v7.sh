@@ -52,7 +52,7 @@ done
 
 
 
-tophatbin=${software}/tophat-2.0.10.Linux_x86_64/tophat
+tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
 bowtie2Folder=${software}/bowtie2-2.1.0
 samtoolsFolder=${software}/samtools-0.1.19
 samtools1=${software}/samtools-1.0/samtools
@@ -271,6 +271,15 @@ if [[ "$species" == "human" ]]; then
     geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_chr1.bed
 
     db=hsapiens_gene_ensembl
+fi
+
+
+if [[ "$species" == "human_hg38" ]]; then
+    
+    fasta=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/UCSC_hg38_human.gtf
+
 fi
 
 if [[ "$species" == "humanmuscle" ]]; then
