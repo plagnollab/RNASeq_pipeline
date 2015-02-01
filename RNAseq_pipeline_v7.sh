@@ -55,9 +55,7 @@ done
 tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
 bowtie2Folder=${software}/bowtie2-2.1.0
 samtoolsFolder=${software}/samtools-0.1.19
-samtools1=${software}/samtools-1.0/samtools
-bcftools=${samtoolsFolder}/bcftools/bcftools
-vcftools=${software}/vcftools_0.1.10/bin/vcftools
+samtools1=${software}/samtools-1.1/samtools
 
 cufflinks=${software}/cufflinks-2.1.1.Linux_x86_64/cufflinks
 
@@ -450,8 +448,8 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 	if [[ "$sampleQC" == "yes" ]]; then ((nhours=nhours+10)); memory=7; fi
 	#if [[ "${dexseqcountslocal}" == "yes" ]]; then ((nhours=nhours+15)); memory=2; ncores=8; fi ## was 7
 	if [[ "${dexseqcountslocal}" == "yes" ]]; then ((nhours=nhours+15)); memory=7; ncores=1; fi ## was 7
-	if [[ "$tophatlocal" == "yes" ]]; then ((nhours=nhours+72)); ncores=8; memory=2; queue=novoalign; fi  ##4 days allowed ##was 1.5
-	if [[ "$runCufflinks" == "yes" ]]; then ((nhours=nhours+10)); ncores=8; memory=1.5; queue=novoalign; fi
+	if [[ "$tophatlocal" == "yes" ]]; then ((nhours=nhours+72)); ncores=4; memory=3.4; queue=novoalign; fi  ##4 days allowed ##was 1.5
+	if [[ "$runCufflinks" == "yes" ]]; then ((nhours=nhours+10)); ncores=4; memory=3; queue=novoalign; fi
 		
         ##### check that the fastq files exist
 	
@@ -541,17 +539,18 @@ export PYTHONPATH
 	    memory2=10  ##if we run tophat we know that 12G are available, so 11G to sort is OK
 	    
 	    echo "
-export PATH=${bowtie2Folder}:${samtoolsFolder}:\$PATH
+#export PATH=${bowtie2Folder}:${samtoolsFolder}:\$PATH
+export PATH=${bowtie2Folder}:\$PATH
 
 ${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --no-coverage-search -o ${finalOFolder} -p $ncores ${ltype}  ${IndexBowtie2} ${fullfile1} ${fullfile2}
 
-${samtoolsFolder}/samtools index ${finalOFolder}/accepted_hits.bam
+${samtools1} index ${finalOFolder}/accepted_hits.bam
 
 java -Xmx9g -jar ${picardDup} ${javaTemp} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
 
-${samtoolsFolder}/samtools index ${finalOFolder}/${sample}_unique.bam
+${samtools1} index ${finalOFolder}/${sample}_unique.bam
 
 ${samtools1} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_stats.txt
 
@@ -753,7 +752,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     
     if [[ "$prepareCounts" == "yes" ]]; then mem=1.9; ((nminutes=nminutes+9)); fi
     if [[ "$Rdeseq" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
-    if [[ "$Rdexseq" == "yes" ]]; then ((nhours=nhours+18)); ncores=8;mem=1.9; fi
+    if [[ "$Rdexseq" == "yes" ]]; then ((nhours=nhours+18)); ncores=4;mem=3.4; fi
     if [[ "$RpathwayGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
     if [[ "$RtopGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
     echo "
