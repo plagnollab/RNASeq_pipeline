@@ -1,0 +1,185 @@
+library(DESeq2)
+
+if(FALSE) { 
+getArgs <- function() {
+  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
+  myargs <- lapply(myargs.list,function(x) x[2] )
+  names(myargs) <- lapply(myargs.list,function(x) x[1])
+  return (myargs)
+}
+
+########################## read arguments
+
+myArgs <- getArgs()
+if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
+if ('code' %in% names(myArgs)) code <- myArgs[['code']]
+if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
+if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
+if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
+} 
+
+extra.plots <- TRUE 
+remove.hb   <- TRUE 
+### Just for debugging 
+support.frame <- "/cluster/project8/vyp/Tabrizi_Huntington_RNASeq/support/htt_support2.txt"
+code <- "htt"
+keep.dups <- FALSE 
+annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
+iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
+
+###check input files and data frame
+message('Now reading ', support.frame)
+support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill = TRUE )
+list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
+list.covars <- grep(names(support), pattern = '^covar.*', value  = TRUE)
+annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('', 'NA'))
+
+### deseq output folders and files
+deseq2.folder <- paste(iFolder, '/deseq2', sep = '')
+for (folder in c(deseq2.folder)) {
+  if (! file.exists(folder)) dir.create(folder)
+}
+
+## TO FIX: the last step of the pipeline should have already created 
+## the dataset for deseq as well as the folder. Something is wrong if 
+## the folders are not there 
+ 
+deseq.folder <- paste(iFolder, '/deseq', sep = '')
+for (folder in c(deseq.folder)) {
+  if (! file.exists(folder)) { 
+     stop("Check that the dataset has been created properly?") 
+  }  
+}
+
+########## load the count data
+
+if (keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '_keep_dups.RData', sep = '')  
+if (!keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '.RData', sep = '')  
+load(deseq.counts)
+
+
+### Sanity check that the sex-specific gene expressions are correct 
+
+
+### Remove the sex chromosome genes 
+
+genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
+message('Prior to removing chr XY probes: ', nrow(genes.counts))
+genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
+message('After removing chr XY probes: ', nrow(genes.counts))
+
+### Remove the hemoglobin genes (for whole blood only) 
+if(remove.hb) { 
+   message("Removing HBB, HBA1 and HBA2") 
+   hb.genes <- annotation[which(annotation$external_gene_id %in% c("HBB", "HBA1", "HBA2")), 'EnsemblID'] 
+   genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% hb.genes, ]                 
+   message('After removing hb genes: ', nrow(genes.counts))
+} 
+
+
+### Loop over all proposed conditions
+for (condition in list.conditions) {
+
+  message("Processing for ", condition) 
+  samples.to.use   <- !is.na(support[,condition]) 
+  
+  genes.counts.loc <- genes.counts[, samples.to.use ]
+
+  support.loc <-  support[  samples.to.use, ]
+
+## determines if the condition be treated as a factor or a numeric variable 
+  if (substr(condition, 1, 3) == "Num") { 
+     support.loc$condition <- as.numeric(support.loc[, condition])
+     loc.code <-  support.loc$condition
+  } else { 
+     support.loc$condition <- factor(support.loc[, condition])
+     loc.code <-  paste(unique(support.loc$condition), collapse = '_')
+  } 
+
+################### create the appropriate folders and specify output file
+  loc.deseq2.folder <- paste(iFolder, '/deseq2/', loc.code, sep = '')
+  deseq2.figs <- paste(loc.deseq2.folder, '/figs', sep = '')
+
+  for (folder in c(loc.deseq2.folder, deseq2.figs)) {
+    if (! file.exists(folder)) dir.create(folder)
+  }
+  
+  if (keep.dups) output.file <- paste(loc.deseq2.folder, '/deseq_', code, '_differential_expression_keep_dups.tab', sep = '')
+  if (!keep.dups) output.file <- paste(loc.deseq2.folder, '/deseq_', code, '_differential_expression.tab', sep = '')
+
+###################
+  use.covars <- FALSE
+  if (length(list.covars) > 0) {
+     use.covars <- TRUE
+  }
+  
+  if (use.covars) {
+    message("Using ", length(list.covars), " covariates") 
+    formula1 <- paste(" ~ ", paste(list.covars, collapse = "+"), " + ", condition, sep = "") 
+    formula1 <- as.formula(formula1) 
+    formula0 <- paste(" ~ ", paste(list.covars, collapse = "+"), sep = "") 
+    formula0 <- as.formula(formula0) 
+   
+    design.deseq <- support.loc[, which(names(support.loc) %in% c(condition, list.covars))]
+
+  } else {
+    formula1 <- ~ condition
+    formula0 <- ~ 1
+    design.deseq <- support.loc[, c(condition), drop = FALSE]
+  }
+
+  CDS <- DESeqDataSetFromMatrix(countData = genes.counts.loc,
+                                colData = design.deseq,
+                                design = formula1)
+
+#################### Do the actual model fitting 
+  CDS <- DESeq(CDS, test = "LRT", reduced = formula0, 
+               minReplicatesForReplace = 5 ) 
+  deseq.res <- results(CDS)  
+
+  ### output the design information
+  row.names(design.deseq) <- support.loc$sample
+  write.table(x = design.deseq, file = paste(loc.deseq2.folder, '/design.tab', sep = ''), row.names = TRUE, quote = FALSE, sep = '\t')
+  
+############# Make the results table into a sensible format 
+  deseq.res.df <- data.frame(deseq.res) 
+  deseq.res.df <- deseq.res.df[order(deseq.res.df$padj),]
+  deseq.res.df$EnsemblID <- row.names( deseq.res.df)
+  deseq.res.df <- merge(deseq.res.df, annotation, by = 'EnsemblID', all.x = TRUE)
+
+#################### now write the output to a file 
+  write.table(deseq.res.df, file = output.file, quote = FALSE, row.names = FALSE) 
+
+######### Now add a PCA for the subset of individuals being considered
+  if(extra.plots) { 
+     if (keep.dups) { 
+        output.pca <- paste(deseq2.figs, '/', loc.code, '_pca_keepdups.pdf', sep = '')
+     } else { 
+        output.pca <- paste(deseq2.figs, '/', loc.code, '_pca.pdf', sep = '')
+     } 
+     pdf(output.pca) 
+     plotPCA(CDS, intgroup = condition) 
+     dev.off() 
+
+## Visualise the counts versus condition for the genes with best p-values 
+     if (keep.dups) { 
+        output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes_keepdups.pdf", sep = '') 
+     } else { 
+        output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes.pdf", sep = '') 
+     } 
+     pdf(output.sig.genes) 
+     sig.genes <- which(deseq.res.df$padj < 0.1) 
+     for (i in sig.genes) { 
+        plotCounts(CDS, gene = deseq.res.df$Ensembl[i], intgroup = condition, 
+                   transform = TRUE, main = deseq.res.df$external_gene_id[i])
+        mtext(paste("pval: ", deseq.res.df$padj[i], sep = ""), 3)  
+     } 
+     dev.off() 
+  } # End of extra plots  
+
+} # End looping over conditions 
+
+warnings()
+
+
+sessionInfo()
