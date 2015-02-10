@@ -20,12 +20,15 @@ keep.dups <- FALSE
 #support.frame <- 'support/Bochukova.tab'
 #code <- 'Bochukova'
 
-annotation.file <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/mouse/biomart/biomart_annotations_mouse.tab'
-iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Natalia/processed'
-support.frame <- 'support/Natalia.tab'
-code <- 'Natalia'
+#annotation.file <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/mouse/biomart/biomart_annotations_mouse.tab'
+#iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Natalia/processed'
+#support.frame <- 'support/Natalia.tab'
+#code <- 'Natalia'
 
-
+annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
+iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
+support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
+code <- 'Zanda_AD_Tc1J20'
 
 
 

@@ -1,4 +1,5 @@
 library(DEXSeq)
+library(DESeq2)
 
 getArgs <- function() {
   myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
@@ -16,30 +17,12 @@ extra.plots <- FALSE
 keep.dups <- FALSE
 
 
-#iFolder <- '/SAN/biomed/biomed14/vyp-scratch/vincent/RNA_seq/Pietro_TDP43/f210i'
-#support.frame <- 'data/TDP43_f210i.tab'
-#code- <- 'f210i'
 
-#gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff'
-#annotation.file <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/mouse/biomart/biomart_annotations_mouse.tab'
-
-#gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/human/GTF/human_iGenomes_NCBI37_with_ensembl.gff'
-#annotation.file <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/human/biomart/biomart_annotations_human.tab'
-
-
-#iFolder <- '/scratch2/vyp-scratch2/IoO_RNASeq/processed/Davidson_cornea'
-#support.frame <- 'support/Davidson_cornea.tab'
-#code <- 'Davidson_cornea'
-
-gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/Tc1_mouse/GTF/Tc1.gff'
-annotation.file <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/Tc1_mouse/tc1_annotations.tab'
+gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/GTF/Tc1.gff"
+annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
+iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
 support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
 code <- 'Zanda_AD_Tc1J20'
-iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
-
-#iFolder <- '/scratch2/vyp-scratch2/Bochukova_RNASeq/processed/set2'
-#code <- 'Bochukova2'
-#support.frame <- 'support/Bochukova2.tab'
 
 
 
@@ -64,12 +47,12 @@ support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 my.ids <- support$sample
 
 
-if (!keep.dups) files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
-if (keep.dups) files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = '')
+if (!keep.dups) count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
+if (keep.dups) count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = '')
 
 
-if (sum(!file.exists(files)) > 0) {
-  print(subset(files, ! file.exists(files)))
+if (sum(!file.exists(count.files)) > 0) {
+  print(subset(count.files, ! file.exists(count.files)))
   stop('Some input files are missing')
 }
 
@@ -114,34 +97,49 @@ if (keep.dups) {
 
 
 #### Now compute things
-message('Reading the count data')
-DexSeqExons <- read.HTSeqCounts(countfiles=files, design=rep(NA, length(files)), flattenedfile=gff)
-save(list = 'DexSeqExons', file = dexseq.counts)
 
-genes.counts <- geneCountTable(DexSeqExons)
+message('Reading the count data')
+support$condition <- 1 ## needs a dummy condition for the function below to work
+DexSeqExons <- DEXSeqDataSetFromHTSeq(count.files,
+                                      sampleData = support,
+                                      flattenedfile = gff)
+
+
+
+
+my.counts <- counts( DexSeqExons)[, 1:length(count.files) ]  ##I am puzzled by this "twice the column number" thing
+colnames(my.counts) <- colData(DexSeqExons)$sample.1[ 1:length(count.files) ]
+
+gene.names <- gsub(rownames(my.counts), pattern = ':.*', replacement = '')
+genes.counts <- aggregate(x = my.counts, by = list(gene.names), FUN = sum)
+my.genes <- genes.counts$Group.1
+genes.counts <- as.matrix( genes.counts[, -1])
+row.names(genes.counts) <- my.genes
 save(list = 'genes.counts', file = deseq.counts)
 
-###### Now compute the RPKM data if the feature length information is available
 
+
+###### Now compute the RPKM data if the feature length information is available
 feature.length.file <- gsub( pattern = '.gff', replacement = '_length_features.tab', gff)
 if (!file.exists(feature.length.file)) {
   message('There is no feature length file ', feature.length.file)
 }
 if (file.exists(feature.length.file)) {
   message('There is a feature length file so I will now compute the RPKM values using DESeq normalization')
-  library(DESeq)
   feature.lengths <- read.table( feature.length.file, header = TRUE)
   rpkms <- genes.counts
+
+  support$condition.dummy <- 1
+  support$condition.dummy [1:floor(nrow(support)/2)] <- 2  ##silly hack to make the function below work
   
-  if (!keep.dups) dimnames(rpkms)[[2]] <- gsub( basename(  dimnames(rpkms)[[2]] ), pattern = '_dexseq_counts.txt', replacement = '')
-  if (keep.dups) dimnames(rpkms)[[2]] <- gsub( basename(  dimnames(rpkms)[[2]] ), pattern = '_dexseq_counts_keep_dups.txt', replacement = '')
-  
-  count.data <- newCountDataSet(rpkms, conditions = rep('A', times = ncol(rpkms)) )
-  count.data <- estimateSizeFactors(count.data)
-  sizeFactors <-  pData(count.data)$sizeFactor
+  dds <- DESeqDataSetFromMatrix(countData = genes.counts,
+                                colData = support[, 'condition.dummy', drop = FALSE],
+                                design = ~ condition.dummy)
+  dds <- estimateSizeFactors(dds)
+  sizeFactors <- sizeFactors(dds)
+
   write.csv(x = data.frame( sample =  dimnames(rpkms)[[2]], sizeFactors = sizeFactors),
             file = sizeFactors.file, row.names = FALSE, quote = TRUE)
-
   
   if (sum(is.na(sizeFactors)) > 0) stop('Some of the size factors are equal to NA')
   average.depth <- sum(rpkms)/(10^6*ncol(rpkms))
