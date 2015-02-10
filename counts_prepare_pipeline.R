@@ -197,12 +197,6 @@ write.csv( x = gff.table.genes, file = deseq.geneTable, row.names = FALSE)
 write.csv( x = gff.table.exons, file = dexseq.exonTable, row.names = FALSE)
 
 
-my.counts.norm <- counts(DexSeqExons)
-for (i in 1:ncol(my.counts.norm)) my.counts.norm[,i] <- signif(1000000*my.counts.norm[,i]/sum(my.counts.norm[,i]), 3)
-write.table(my.counts.norm, file = dexseq.counts.norm, row.names = TRUE, quote = FALSE)
-
-
-
 ######################## basic PCA analysis
 my.conditions <- names(support)[grepl(names(support), pattern = '^condition.*')]  ##which condition should we use?
 if (length(my.conditions) > 0) {

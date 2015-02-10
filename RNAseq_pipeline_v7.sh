@@ -39,7 +39,7 @@ echo "Base of RNA-Seq pipeline is located here: $RNASEQPIPBASE"
 
 countPrepareR=${RNASEQPIPBASE}/counts_prepare_pipeline.R
 dexseqFinalProcessR=${RNASEQPIPBASE}/dexseq_pipeline_v2.R
-deseqFinalProcessR=${RNASEQPIPBASE}/deseq_pipeline_v2.R
+deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
 pathwayGOAnalysisR=${RNASEQPIPBASE}/pathwayGO_pipeline.R
 topGOAnalysisR=${RNASEQPIPBASE}/topGO_pipeline.R
 novosort=${software}/novocraft/novosort
