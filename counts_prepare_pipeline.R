@@ -100,11 +100,14 @@ if (keep.dups) {
 
 message('Reading the count data')
 support$condition <- 1 ## needs a dummy condition for the function below to work
+start_t<- proc.time() 
+
 DexSeqExons <- DEXSeqDataSetFromHTSeq(count.files,
                                       sampleData = support,
                                       flattenedfile = gff)
 
-
+message("Time used in dexseqdatasetfromHTseq") 
+message(proc.time()-start_t)
 
 
 my.counts <- counts( DexSeqExons)[, 1:length(count.files) ]  ##I am puzzled by this "twice the column number" thing
@@ -142,7 +145,7 @@ if (file.exists(feature.length.file)) {
             file = sizeFactors.file, row.names = FALSE, quote = TRUE)
   
   if (sum(is.na(sizeFactors)) > 0) stop('Some of the size factors are equal to NA')
-  average.depth <- sum(rpkms)/(10^6*ncol(rpkms))
+  average.depth <- sum(as.numeric(rpkms))/(10^6*ncol(rpkms))
 
 ########## Now compute the length of each feature
   compute.lengths <- data.frame( id = dimnames(rpkms)[[1]], length = NA)
