@@ -1,12 +1,18 @@
 library(DESeq2)
 
-if(FALSE) { 
 getArgs <- function() {
   myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
   myargs <- lapply(myargs.list,function(x) x[2] )
   names(myargs) <- lapply(myargs.list,function(x) x[1])
   return (myargs)
 }
+
+### Just for debugging 
+support.frame <- "/cluster/project8/vyp/Tabrizi_Huntington_RNASeq/support/htt_support2.txt"
+code <- "htt"
+keep.dups <- FALSE 
+annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
+iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
 
 ########################## read arguments
 
@@ -16,16 +22,10 @@ if ('code' %in% names(myArgs)) code <- myArgs[['code']]
 if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
 if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
-} 
+ 
 
 extra.plots <- TRUE 
-remove.hb   <- TRUE 
-### Just for debugging 
-support.frame <- "/cluster/project8/vyp/Tabrizi_Huntington_RNASeq/support/htt_support2.txt"
-code <- "htt"
-keep.dups <- FALSE 
-annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
-iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
+remove.hb   <- FALSE 
 
 ###check input files and data frame
 message('Now reading ', support.frame)
@@ -58,9 +58,6 @@ if (!keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '.RD
 load(deseq.counts)
 
 
-### Sanity check that the sex-specific gene expressions are correct 
-
-
 ### Remove the sex chromosome genes 
 
 genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
@@ -79,7 +76,7 @@ if(remove.hb) {
 
 ### Loop over all proposed conditions
 for (condition in list.conditions) {
-
+  num.cond <- FALSE 
   message("Processing for ", condition) 
   samples.to.use   <- !is.na(support[,condition]) 
   
@@ -88,9 +85,10 @@ for (condition in list.conditions) {
   support.loc <-  support[  samples.to.use, ]
 
 ## determines if the condition be treated as a factor or a numeric variable 
-  if (substr(condition, 1, 3) == "Num") { 
+  if (substr(condition, 10, 12) == "Num") { 
+     num.cond <- TRUE 
      support.loc$condition <- as.numeric(support.loc[, condition])
-     loc.code <-  support.loc$condition
+     loc.code <-  condition
   } else { 
      support.loc$condition <- factor(support.loc[, condition])
      loc.code <-  paste(unique(support.loc$condition), collapse = '_')
@@ -143,12 +141,14 @@ for (condition in list.conditions) {
   
 ############# Make the results table into a sensible format 
   deseq.res.df <- data.frame(deseq.res) 
-  deseq.res.df <- deseq.res.df[order(deseq.res.df$padj),]
+  print(head(deseq.res.df)) 
   deseq.res.df$EnsemblID <- row.names( deseq.res.df)
   deseq.res.df <- merge(deseq.res.df, annotation, by = 'EnsemblID', all.x = TRUE)
+  deseq.res.df <- deseq.res.df[order(deseq.res.df$pvalue),]
+  print(head(deseq.res.df)) 
 
 #################### now write the output to a file 
-  write.table(deseq.res.df, file = output.file, quote = FALSE, row.names = FALSE) 
+  write.table(deseq.res.df, file = output.file, quote = FALSE, row.names = FALSE, sep = "\t" ) 
 
 ######### Now add a PCA for the subset of individuals being considered
   if(extra.plots) { 
@@ -158,7 +158,7 @@ for (condition in list.conditions) {
         output.pca <- paste(deseq2.figs, '/', loc.code, '_pca.pdf', sep = '')
      } 
      pdf(output.pca) 
-     plotPCA(CDS, intgroup = condition) 
+     plotPCA(CDS) 
      dev.off() 
 
 ## Visualise the counts versus condition for the genes with best p-values 
@@ -166,7 +166,9 @@ for (condition in list.conditions) {
         output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes_keepdups.pdf", sep = '') 
      } else { 
         output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes.pdf", sep = '') 
-     } 
+     }
+
+     if (!num.cond) { 
      pdf(output.sig.genes) 
      sig.genes <- which(deseq.res.df$padj < 0.1) 
      for (i in sig.genes) { 
@@ -175,6 +177,18 @@ for (condition in list.conditions) {
         mtext(paste("pval: ", deseq.res.df$padj[i], sep = ""), 3)  
      } 
      dev.off() 
+     } 
+
+     if (keep.dups) { 
+        disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp_keepdups.pdf", sep = '') 
+     } else { 
+        disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp.pdf", sep = '') 
+     } 
+
+     pdf(disp.plot) 
+     plotDispEsts(CDS)  
+     dev.off() 
+     
   } # End of extra plots  
 
 } # End looping over conditions 
