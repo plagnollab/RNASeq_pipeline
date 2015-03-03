@@ -444,6 +444,7 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 	queue=blades
 	
 	req=1
+	tmp_req=80
 	if [[ "$miso" == "yes" ]]; then ((nhours=nhours+72)); memory=3.9; fi
 	if [[ "$sampleQC" == "yes" ]]; then ((nhours=nhours+10)); memory=7; fi
 	#if [[ "${dexseqcountslocal}" == "yes" ]]; then ((nhours=nhours+15)); memory=2; ncores=8; fi ## was 7
@@ -512,7 +513,7 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 	    echo "#$ -pe smp $ncores
 #$ -l tmem=${memory}G,h_vmem=${memory}G
 #$ -V
-#$ -l scr=${req}G
+#$ -l scr=${tmp_req}G
 #$ -R y
 #$ -l h_rt=${nhours}:00:00
 
@@ -537,13 +538,35 @@ export PYTHONPATH
 
 	if [[ "$tophatlocal" == "yes" ]]; then 
 	    memory2=10  ##if we run tophat we know that 12G are available, so 11G to sort is OK
-	    
+	  
+            SCRATCH_DIR=/scratch0/${sample}/
+            DATA_DIR=${SCRATCH_DIR}/data/
+            RESULTS_DIR=${SCRATCH_DIR}/results/
+            TMP_DIR=${SCRATCH_DIR}/tmp/  
+
+            fastq1=`basename ${fullfile1}` 
+            fastq2=`basename ${fullfile2}`
 	    echo "
 #export PATH=${bowtie2Folder}:${samtoolsFolder}:\$PATH
 export PATH=${bowtie2Folder}:\$PATH
 
-${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --no-coverage-search -o ${finalOFolder} -p $ncores ${ltype}  ${IndexBowtie2} ${fullfile1} ${fullfile2}
+SCRATCH_DIR=${SCRATCH_DIR}
+DATA_DIR=${DATA_DIR}
+RESULTS_DIR=${RESULTS_DIR}
+TMP_DIR=${TMP_DIR}
 
+mkdir $SCRATCH_DIR 
+mkdir $DATA_DIR
+mkdir $RESULTS_DIR
+mkdir $TMP_DIR
+
+cp ${fullfile1} $DATA_DIR
+cp ${fullfile2} $DATA_DIR
+
+ 
+${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --tmp-dir $TMP_DIR --no-coverage-search -o ${RESULTS_DIR} -p $ncores ${ltype}  ${IndexBowtie2} ${DATA_DIR}/${fastq1} ${DATA_DIR}/${fastq2}
+
+cp -r ${RESULTS_DIR}/* ${finalOFolder} 
 ${samtools1} index ${finalOFolder}/accepted_hits.bam
 
 java -Xmx9g -jar ${picardDup} ${javaTemp} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
@@ -555,6 +578,9 @@ ${samtools1} index ${finalOFolder}/${sample}_unique.bam
 ${samtools1} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_stats.txt
 
 ${samtools1} flagstat ${finalOFolder}/unmapped.bam > ${finalOFolder}/${sample}_unmapped_stats.txt
+
+# Tidy up the scratch files 
+rm -rf $SCRATCH_DIR 
 
 " >> $script
 		
