@@ -128,17 +128,15 @@ for (condition in list.conditions) {
     formula0 <- as.formula(formula0) 
    
     design.deseq <- support.loc[, which(names(support.loc) %in% c(condition, list.covars))]
-    design.deseq$condition <- design.deseq[, condition ]  ##make name standard
-    
   } else {
-    formula1 <- ~ condition
-    formula0 <- ~ 1
+    formula1 <- as.formula(paste0("~ ", condition))
+    formula0 <- as.formula("~ 1")
     design.deseq <- support.loc[, c(condition), drop = FALSE]
   }
 
-  CDS <- DESeqDataSetFromMatrix(countData = genes.counts.loc,
-                                colData = design.deseq,
-                                design = formula1)
+  
+  
+  CDS <- DESeqDataSetFromMatrix(countData = genes.counts.loc, colData = design.deseq, design = formula1)
 
 #################### Do the actual model fitting 
   CDS <- DESeq(CDS, test = "LRT", reduced = formula0, 
@@ -168,7 +166,7 @@ for (condition in list.conditions) {
         output.pca <- paste(deseq2.figs, '/', loc.code, '_pca.pdf', sep = '')
      } 
      pdf(output.pca) 
-     plotPCA(CDS) 
+     plotPCA(CDS, intgroup = condition) 
      dev.off() 
 
 ## Visualise the counts versus condition for the genes with best p-values 
