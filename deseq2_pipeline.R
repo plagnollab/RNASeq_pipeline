@@ -128,7 +128,8 @@ for (condition in list.conditions) {
     formula0 <- as.formula(formula0) 
    
     design.deseq <- support.loc[, which(names(support.loc) %in% c(condition, list.covars))]
-
+    design.deseq$condition <- design.deseq[, condition ]  ##make name standard
+    
   } else {
     formula1 <- ~ condition
     formula0 <- ~ 1
