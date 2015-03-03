@@ -38,7 +38,7 @@ if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']
 ###check input files and data frame
 message('gff file is ', gff)
 message('Now reading ', support.frame)
-support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
+support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE, sep = '\t')
 my.ids <- support$sample
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''))
@@ -145,14 +145,15 @@ for (condition in list.conditions) {
     #                                 featureRanges = GRanges(DexSeqExons@featureData@data$chr, IRanges (start = DexSeqExons@featureData@data$start, end = DexSeqExons@featureData@data$end)) )
 
 
-    ##DexSeqExons.loc <- DexSeqExons.loc[1:300,]  ##VP
+    #DexSeqExons.loc <- DexSeqExons.loc[1:20,]  ##VP
     
     message('Starting the computations')
     DexSeqExons.loc <- estimateSizeFactors(DexSeqExons.loc)
 
     
     message('Here is the part that takes a lot of time')
-    DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, BPPARAM=BPPARAM)
+    #DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, BPPARAM=BPPARAM)
+    fData(DexSeqExons.loc)$dispersion <- fData(DexSeqExons.loc)$dispBeforeSharing
     message('Done with estimateDispersions')    
     DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc, BPPARAM=BPPARAM)
     message('Done with testDEU')    
