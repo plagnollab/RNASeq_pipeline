@@ -14,6 +14,15 @@ keep.dups <- FALSE
 annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
 iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
 
+
+## vincent debugging
+support.frame <- "data/TDP43_m323k.tab"
+code <- "m323k"
+annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/mouse/biomart/biomart_annotations_mouse.tab"
+iFolder <- "/scratch2/vyp-scratch2/IoN_RNASeq/Fratta_RNASeq/brain/m323k"
+keep.dups <- FALSE
+
+
 ########################## read arguments
 
 myArgs <- getArgs()
@@ -29,7 +38,7 @@ remove.hb   <- FALSE
 
 ###check input files and data frame
 message('Now reading ', support.frame)
-support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE, sep = "\t", fill = TRUE )
+support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 list.covars <- grep(names(support), pattern = '^covar.*', value  = TRUE)
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('', 'NA'))

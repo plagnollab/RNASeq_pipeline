@@ -215,8 +215,8 @@ if (length(my.conditions) > 0) {
 }
 
 
-my.sd <- apply(my.counts.norm, MAR = 1, FUN = sd)
-mat.for.pca <- t(my.counts.norm[my.sd > median(my.sd), ])
+my.sd <- apply(genes.counts, MAR = 1, FUN = sd)
+mat.for.pca <- t(genes.counts[my.sd > median(my.sd), ])
 pca.data <- prcomp(mat.for.pca, scale = TRUE)
 
 output.pca <- paste(fig.folder, '/', code, '_pca.pdf', sep = '')
