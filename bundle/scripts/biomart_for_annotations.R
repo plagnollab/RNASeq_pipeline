@@ -4,7 +4,8 @@ library(biomaRt)
 #species <- 'hsapiens_gene_ensembl'
 #species <- 'cfamiliaris_gene_ensembl'
 #species <- 'drerio_gene_ensembl'
-species <- 'sscrofa_gene_ensembl'
+#species <- 'sscrofa_gene_ensembl'
+species <- "ggallus_gene_ensembl"
 
 output.file <- paste('human/biomart/biomart_annotations_', species, '.tab', sep = '')
 ensembl <- useMart("ensembl")
@@ -14,7 +15,7 @@ attributes <- listAttributes(ensembl)
 
 
 
-my.db <- getBM(attributes= c('ensembl_gene_id', 'external_gene_id', 'chromosome_name', 'start_position', 'end_position', 'strand'),
+my.db <- getBM(attributes= c('ensembl_gene_id', 'external_gene_name', 'chromosome_name', 'start_position', 'end_position', 'strand'),
                mart=ensembl)
 
 names(my.db)[1] <- 'EnsemblID'
@@ -24,6 +25,7 @@ if (species == 'mmusculus_gene_ensembl') output.file <- 'mouse/biomart/biomart_a
 if (species == 'cfamiliaris_gene_ensembl') output.file <- 'dog/biomart/biomart_annotations_dog.tab'
 if (species == 'drerio_gene_ensembl') output.file <- 'zebrafish/biomart/biomart_annotations_zebrafish.tab'
 if (species == 'sscrofa_gene_ensembl') output.file <- 'pig/biomart/biomart_annotations_pig.tab'
+if (species == 'ggallus_gene_ensembl') output.file <- 'chicken/biomart/biomart_annotations_chicken.tab'
 
 
 write.table(x = my.db,
