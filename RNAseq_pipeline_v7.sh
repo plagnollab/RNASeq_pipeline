@@ -67,6 +67,7 @@ picardMetrics=${software}/picard-tools-1.100/CalculateHsMetrics.jar
 picardReorder=${software}/picard-tools-1.100/ReorderSam.jar
 
 
+keepSex=FALSE  ## should sex chromosomes be kept in the differential expression analysis?
 superLong=no
 force=yes
 species=mouse
@@ -130,6 +131,9 @@ until [ -z "$1" ]; do
 	--superLong)
 	    shift
 	    superLong=$1;;
+	--keep.sex)
+	    shift
+	    keepSex=$1;;
 	--misoindex)
 	    shift
 	    misoindex=$1;;
@@ -824,7 +828,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${an
 	
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
+${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
 " >> $mainscript
 
     fi
@@ -837,7 +841,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --keep.dup
 	done
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
+${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
 
 " >> $mainscript
     fi

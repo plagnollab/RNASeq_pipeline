@@ -36,6 +36,8 @@ if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
 extra.plots <- TRUE 
 remove.hb   <- FALSE 
 
+message("Should I keep the sex chromosomes? Option set is ", keep.sex)
+
 ###check input files and data frame
 message('Now reading ', support.frame)
 support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
@@ -68,7 +70,7 @@ load(deseq.counts)
 
 
 ### Remove the sex chromosome genes 
-if (keep.sex) {
+if (!keep.sex) {
   genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
   message('Prior to removing chr XY probes: ', nrow(genes.counts))
   genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
