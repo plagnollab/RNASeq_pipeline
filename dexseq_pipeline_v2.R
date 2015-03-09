@@ -14,7 +14,7 @@ getArgs <- function() {
 ########################## read arguments
 dexseq.compute <- TRUE
 
-BPPARAM = MulticoreParam(workers=8)
+BPPARAM = MulticoreParam(workers=4)
 
 annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
 iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
@@ -22,6 +22,8 @@ support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
 code <- 'Zanda_AD_Tc1J20'
 gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/Tc1_mouse/GTF/Tc1.gff'
 keep.dups <- FALSE
+keep.sex <- FALSE
+
 
 myArgs <- getArgs()
 if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
@@ -30,6 +32,7 @@ if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
 if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
 if ('gff' %in% names(myArgs)) gff <- myArgs[['gff']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
+if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
 
 
 

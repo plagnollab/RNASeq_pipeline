@@ -29,7 +29,7 @@ annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundl
 iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
 support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
 code <- 'Zanda_AD_Tc1J20'
-
+keep.sex <- FALSE
 
 
 myArgs <- getArgs()
@@ -38,7 +38,7 @@ if ('code' %in% names(myArgs)) code <- myArgs[['code']]
 if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
 if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
-
+if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
 
 
 
@@ -61,11 +61,12 @@ if (!keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '.RD
 load(deseq.counts)
 
 
-
-genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
-message('Prior to removing chr XY probes: ', nrow(genes.counts))
-genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
-message('After removing chr XY probes: ', nrow(genes.counts))
+if (!keep.sex) {
+  genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
+  message('Prior to removing chr XY probes: ', nrow(genes.counts))
+  genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
+  message('After removing chr XY probes: ', nrow(genes.counts))
+}
 #genes.counts <- genes.counts[1:1000,]
 
 ###loop over all proposed conditions
