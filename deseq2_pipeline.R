@@ -21,7 +21,7 @@ code <- "m323k"
 annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/mouse/biomart/biomart_annotations_mouse.tab"
 iFolder <- "/scratch2/vyp-scratch2/IoN_RNASeq/Fratta_RNASeq/brain/m323k"
 keep.dups <- FALSE
-
+keep.sex <- FALSE
 
 ########################## read arguments
 
@@ -31,7 +31,7 @@ if ('code' %in% names(myArgs)) code <- myArgs[['code']]
 if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
 if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
- 
+if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']]) 
 
 extra.plots <- TRUE 
 remove.hb   <- FALSE 
@@ -68,11 +68,13 @@ load(deseq.counts)
 
 
 ### Remove the sex chromosome genes 
+if (keep.sex) {
+  genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
+  message('Prior to removing chr XY probes: ', nrow(genes.counts))
+  genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
+  message('After removing chr XY probes: ', nrow(genes.counts))
+}
 
-genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
-message('Prior to removing chr XY probes: ', nrow(genes.counts))
-genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
-message('After removing chr XY probes: ', nrow(genes.counts))
 
 ### Remove the hemoglobin genes (for whole blood only) 
 if(remove.hb) { 
