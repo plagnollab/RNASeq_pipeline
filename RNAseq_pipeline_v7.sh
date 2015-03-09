@@ -316,7 +316,7 @@ fi
 
 if [[ "$species" == "chicken" ]]; then
 
-    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel.fa
+    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel
     gtfFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gtf
     gffFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff
     annotationFile=${RNASEQBUNDLE}/chicken/biomart/biomart_annotations_chicken.tab

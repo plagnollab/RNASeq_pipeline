@@ -152,8 +152,8 @@ for (condition in list.conditions) {
 
     
     message('Here is the part that takes a lot of time')
-    #DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, BPPARAM=BPPARAM)
-    fData(DexSeqExons.loc)$dispersion <- fData(DexSeqExons.loc)$dispBeforeSharing
+    DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, BPPARAM=BPPARAM)
+    #fData(DexSeqExons.loc)$dispersion <- fData(DexSeqExons.loc)$dispBeforeSharing
     message('Done with estimateDispersions')    
     DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc, BPPARAM=BPPARAM)
     message('Done with testDEU')    
