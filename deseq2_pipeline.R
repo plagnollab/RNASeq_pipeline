@@ -51,21 +51,11 @@ for (folder in c(deseq2.folder)) {
   if (! file.exists(folder)) dir.create(folder)
 }
 
-## TO FIX: the last step of the pipeline should have already created 
-## the dataset for deseq as well as the folder. Something is wrong if 
-## the folders are not there 
- 
-deseq.folder <- paste(iFolder, '/deseq', sep = '')
-for (folder in c(deseq.folder)) {
-  if (! file.exists(folder)) { 
-     stop("Check that the dataset has been created properly?") 
-  }  
-}
 
 ########## load the count data
 
-if (keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '_keep_dups.RData', sep = '')  
-if (!keep.dups) deseq.counts <- paste(deseq.folder, '/deseq_counts_', code, '.RData', sep = '')  
+if (keep.dups) deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '_keep_dups.RData', sep = '')  
+if (!keep.dups) deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '.RData', sep = '')  
 load(deseq.counts)
 
 

@@ -62,8 +62,8 @@ if (sum(!file.exists(count.files)) > 0) {
 ### dexseq output folders
 fig.folder <- paste(iFolder, '/fig', sep = '')
 dexseq.folder <- paste(iFolder, '/dexseq', sep = '')
-deseq.folder <- paste(iFolder, '/deseq', sep = '')
-deseq.figs <- paste(iFolder, '/deseq/figs', sep = '')
+deseq.folder <- paste(iFolder, '/deseq2', sep = '')
+deseq.figs <- paste(iFolder, '/deseq2/figs', sep = '')
 
 for (folder in c(dexseq.folder, fig.folder, deseq.folder)) {
   if (! file.exists(folder)) dir.create(folder)
