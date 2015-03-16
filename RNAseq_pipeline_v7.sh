@@ -298,6 +298,19 @@ if [[ "$species" == "humanmuscle" ]]; then
 fi
 
 
+
+if [[ "$species" == "Dict_Disc_masked" ]]; then
+    
+    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Dict/dicty_masked_ERCC92
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Dict/dict_no_spike.gtf
+    gffFile=MISSING
+
+    annotationFile=not_done_yet
+
+fi
+
+
+
 if [[ "$species" == "Dict_Disc" ]]; then
     
     IndexBowtie2=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/sequence/Dictyostelium_discoideum.dictybase.01.23.dna.genome
