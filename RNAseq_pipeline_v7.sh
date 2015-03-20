@@ -460,8 +460,6 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 	if [[ "$runCufflinkslocal" == "yes" && "$force" == "no" && -e ${cufflinksFolder}/cufflinks_basic/genes.fpkm_tracking ]]; then runCufflinkslocal=no; fi
 	
 
-    
-
         ################################### the per sample jobs requirements for RAM and nb of cores, sorted by increasing requirements
 	nhours=0
 	memory=7
@@ -477,11 +475,53 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 	if [[ "$tophatlocal" == "yes" ]]; then ((nhours=nhours+72)); ncores=4; memory=3.4; queue=novoalign; fi  ##4 days allowed ##was 1.5
 	if [[ "$runCufflinks" == "yes" ]]; then ((nhours=nhours+10)); ncores=4; memory=3; queue=novoalign; fi
 		
-        ##### check that the fastq files exist
 	
-	if [[ "$tophatlocal" == "yes" ]]; then
-	    
+	######################## Now create the script itself
+	script=${clusterFolder}/submission/X${sample}_${code}_RNASeq.sh
+	echo "
+#!/bin/bash
+#$ -S /bin/bash
+#$ -o ${clusterFolder}/out
+#$ -e ${clusterFolder}/error
+#$ -cwd
+#$ -pe smp $ncores
+#$ -l tmem=${memory}G,h_vmem=${memory}G
+#$ -V
+#$ -l scr=${tmp_req}G
+#$ -R y
+#$ -l h_rt=${nhours}:00:00
 
+PYTHONPATH=/cluster/project8/vyp/vincent/libraries/python/share/apps/python-2.7.1/lib/python2.7/site-packages:/cluster/project8/vyp/vincent/libraries/python/lib/python:\$PYTHONPATH
+
+export PYTHONPATH
+
+" > $script
+	
+	
+	if [[ "$tophatlocal" == "yes" ]]; then 
+	    memory2=10  ##if we run tophat we know that 12G are available, so 11G to sort is OK
+	    
+            SCRATCH_DIR=/scratch0/${sample}
+            DATA_DIR=${SCRATCH_DIR}/data
+            RESULTS_DIR=${SCRATCH_DIR}/results
+            TMP_DIR=${SCRATCH_DIR}/tmp
+	    
+	    
+	    echo "
+export PATH=${bowtie2Folder}:\$PATH
+
+SCRATCH_DIR=${SCRATCH_DIR}
+DATA_DIR=${DATA_DIR}
+RESULTS_DIR=${RESULTS_DIR}
+TMP_DIR=${TMP_DIR}
+
+mkdir $SCRATCH_DIR 
+mkdir $DATA_DIR
+mkdir $RESULTS_DIR
+mkdir $TMP_DIR
+" >> $script
+
+	    
     	    ###################### first read of the pair
 	    fullfile1=""
 	    first1=TRUE
@@ -489,12 +529,15 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 		ifastq=${iFolder}/${lfile}
 		ls -ltrh ${ifastq}
 		if [ ! -e $ifastq ]; then echo "File $ifastq does not exist"; fi
+		fastq1=`basename ${ifastq}` 
+
+		echo "cp $ifastq ${DATA_DIR}/$fastq1" >> $script
 
 		if [[ "$first1" == "TRUE" ]]; then
-		    fullfile1="${ifastq}"
 		    first1=FALSE
+		    fullfile1=${DATA_DIR}/${fastq1}
 		else
-		    fullfile1="${fullfile1},${ifastq}"
+		    fullfile1="${fullfile1},${DATA_DIR}/${fastq1}"
 		fi
 	    done
 	    	    
@@ -511,85 +554,23 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
    		    ifastq=${iFolder}/${lfile}
 		    ls -ltrh ${ifastq}
 		    if [ ! -e $ifastq ]; then echo "File $ifastq does not exist"; fi
+		   
+		    fastq2=`basename ${ifastq}`
+		    echo "cp $ifastq $DATA_DIR/$fastq2" >> $script
 		    
+    
 		    if [[ "$first2" == "TRUE" ]]; then
-			fullfile2="${ifastq}"
 			first2=FALSE
+			fullfile2=${DATA_DIR}/${fastq2}
 		    else
-		      fullfile2="${fullfile2},${ifastq}"
+		      fullfile2="${fullfile2},${DATA_DIR}/${fastq2}"
 		    fi
 		done
-
 	    fi
-	fi
-
-
-	######################## Now create the script itself
-	script=${clusterFolder}/submission/X${sample}_${code}_RNASeq.sh
-	echo "
-#!/bin/bash
-#$ -S /bin/bash
-#$ -o ${clusterFolder}/out
-#$ -e ${clusterFolder}/error
-#$ -cwd
-" > $script
-
-	if [[ "$computer" == "CS" ]]; then
-	    echo "#$ -pe smp $ncores
-#$ -l tmem=${memory}G,h_vmem=${memory}G
-#$ -V
-#$ -l scr=${tmp_req}G
-#$ -R y
-#$ -l h_rt=${nhours}:00:00
-
-PYTHONPATH=/cluster/project8/vyp/vincent/libraries/python/share/apps/python-2.7.1/lib/python2.7/site-packages:/cluster/project8/vyp/vincent/libraries/python/lib/python:\$PYTHONPATH
-
-export PYTHONPATH
-
-
-" >> $script
-	fi
-	
-	if [[ "$computer" == "vanHeel" ]]; then
-	    echo "#$ -q $queue
-
-PYTHONPATH=/data_n2/vplagnol/libraries/python/lib/python/:\$PYTHONPATH
-
-export PYTHONPATH
-
-" >> $script
-	fi	
-
-
-	if [[ "$tophatlocal" == "yes" ]]; then 
-	    memory2=10  ##if we run tophat we know that 12G are available, so 11G to sort is OK
-	  
-            SCRATCH_DIR=/scratch0/${sample}/
-            DATA_DIR=${SCRATCH_DIR}/data/
-            RESULTS_DIR=${SCRATCH_DIR}/results/
-            TMP_DIR=${SCRATCH_DIR}/tmp/  
-
-            fastq1=`basename ${fullfile1}` 
-            fastq2=`basename ${fullfile2}`
+	    
 	    echo "
-#export PATH=${bowtie2Folder}:${samtoolsFolder}:\$PATH
-export PATH=${bowtie2Folder}:\$PATH
-
-SCRATCH_DIR=${SCRATCH_DIR}
-DATA_DIR=${DATA_DIR}
-RESULTS_DIR=${RESULTS_DIR}
-TMP_DIR=${TMP_DIR}
-
-mkdir $SCRATCH_DIR 
-mkdir $DATA_DIR
-mkdir $RESULTS_DIR
-mkdir $TMP_DIR
-
-cp ${fullfile1} $DATA_DIR
-cp ${fullfile2} $DATA_DIR
-
  
-${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --tmp-dir $TMP_DIR --no-coverage-search -o ${RESULTS_DIR} -p $ncores ${ltype}  ${IndexBowtie2} ${DATA_DIR}/${fastq1} ${DATA_DIR}/${fastq2}
+${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --tmp-dir $TMP_DIR --no-coverage-search -o ${RESULTS_DIR} -p $ncores ${ltype}  ${IndexBowtie2} $fullfile1 $fullfile2
 
 cp -r ${RESULTS_DIR}/* ${finalOFolder} 
 ${samtools1} index ${finalOFolder}/accepted_hits.bam
@@ -634,6 +615,7 @@ ${pythonbin} ${runMiso} --summarize-samples ${misoFolder} ${misoFolder}
 	fi
 
 #######
+
 	if [[ "${dexseqcountslocal}" == "yes" ]]; then
 	    echo "Counting step"
 	    memory2=6 ##We should have at least 7G or RAM available here so 6 is fine
