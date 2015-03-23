@@ -340,6 +340,15 @@ if [[ "$species" == "chicken" ]]; then
 fi
 
 
+if [[ "$species" == "drosophila" ]]; then
+    refFolder=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
+    IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
+    gtfFile=${refFolder}/Annotation/Genes/genes.gtf
+    
+    annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
+
+fi
+
 
 if [[ "$species" == "dog" ]]; then
     refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
