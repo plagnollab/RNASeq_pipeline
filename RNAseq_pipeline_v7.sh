@@ -790,11 +790,12 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     mem=0
     
     
-    if [[ "$prepareCounts" == "yes" ]]; then mem=1.9; ((nminutes=nminutes+9)); fi
-    if [[ "$Rdeseq" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
+    if [[ "$prepareCounts" == "yes" ]]; then mem=13.9; ((nminutes=nminutes+50)); fi
+    if [[ "$Rdeseq" == "yes" ]]; then ((nhours=nhours+3)); mem=13.9; fi
     if [[ "$Rdexseq" == "yes" ]]; then ((nhours=nhours+18)); ncores=4;mem=5.9; fi
     if [[ "$RpathwayGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
     if [[ "$RtopGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
+
     echo "
 #!/bin/bash
 #$ -S /bin/bash
