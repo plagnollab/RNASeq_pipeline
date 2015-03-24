@@ -332,7 +332,6 @@ if [[ "$species" == "pig" ]]; then
 fi
 
 if [[ "$species" == "chicken" ]]; then
-
     IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel
     gtfFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gtf
     gffFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff
@@ -343,10 +342,9 @@ fi
 if [[ "$species" == "drosophila" ]]; then
     refFolder=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-    gtfFile=${refFolder}/Annotation/Genes/genes.gtf
-    
+    gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
+    gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
     annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
-
 fi
 
 

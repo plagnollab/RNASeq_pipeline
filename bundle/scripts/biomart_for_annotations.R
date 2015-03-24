@@ -1,11 +1,14 @@
 library(biomaRt)
 
+#53     dmelanogaster_gene_ensembl       Drosophila melanogaster genes (BDGP5)
+
 #species <- 'mmusculus_gene_ensembl'
 #species <- 'hsapiens_gene_ensembl'
 #species <- 'cfamiliaris_gene_ensembl'
 #species <- 'drerio_gene_ensembl'
 #species <- 'sscrofa_gene_ensembl'
-species <- "ggallus_gene_ensembl"
+#species <- "ggallus_gene_ensembl"
+species <- "dmelanogaster_gene_ensembl"
 
 output.file <- paste('human/biomart/biomart_annotations_', species, '.tab', sep = '')
 ensembl <- useMart("ensembl")
@@ -26,6 +29,7 @@ if (species == 'cfamiliaris_gene_ensembl') output.file <- 'dog/biomart/biomart_a
 if (species == 'drerio_gene_ensembl') output.file <- 'zebrafish/biomart/biomart_annotations_zebrafish.tab'
 if (species == 'sscrofa_gene_ensembl') output.file <- 'pig/biomart/biomart_annotations_pig.tab'
 if (species == 'ggallus_gene_ensembl') output.file <- 'chicken/biomart/biomart_annotations_chicken.tab'
+if (species == 'dmelanogaster_gene_ensembl') output.file <- 'drosophila/biomart/biomart_annotations_drosophila.tab'
 
 
 write.table(x = my.db,
