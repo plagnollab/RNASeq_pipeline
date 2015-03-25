@@ -219,7 +219,7 @@ if (file.exists(feature.length.file)) {  ##if a RPKM file has been created
   }
   
 
-  rpkms.num <- as.matrix(rpkms[, sample.names])
+  rpkms.num <- as.matrix(rpkms[, samples.names])
   my.sd <- apply(rpkms.num, MAR = 1, FUN = sd)
   mat.for.pca <- t(rpkms.num[my.sd > median(my.sd), ])
   pca.data <- prcomp(mat.for.pca, scale = TRUE)
