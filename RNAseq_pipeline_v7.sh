@@ -512,20 +512,18 @@ export PYTHONPATH
             DATA_DIR=${SCRATCH_DIR}/data
             RESULTS_DIR=${SCRATCH_DIR}/results
             TMP_DIR=${SCRATCH_DIR}/tmp
+            JAVA_DIR=${SCRATCH_DIR}/java
 	    
 	    
 	    echo "
 export PATH=${bowtie2Folder}:\$PATH
 
-SCRATCH_DIR=${SCRATCH_DIR}
-DATA_DIR=${DATA_DIR}
-RESULTS_DIR=${RESULTS_DIR}
-TMP_DIR=${TMP_DIR}
-
 mkdir $SCRATCH_DIR 
 mkdir $DATA_DIR
 mkdir $RESULTS_DIR
 mkdir $TMP_DIR
+mkdir $JAVA_DIR
+
 " >> $script
 
 	    
@@ -580,9 +578,12 @@ mkdir $TMP_DIR
 ${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --tmp-dir $TMP_DIR --no-coverage-search -o ${RESULTS_DIR} -p $ncores ${ltype}  ${IndexBowtie2} $fullfile1 $fullfile2
 
 cp -r ${RESULTS_DIR}/* ${finalOFolder} 
+
+rm -rf ${RESULTS_DIR} ${DATA_DIR}
+
 ${samtools1} index ${finalOFolder}/accepted_hits.bam
 
-java -Xmx9g -jar ${picardDup} ${javaTemp} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
 
