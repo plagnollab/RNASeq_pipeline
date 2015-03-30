@@ -43,7 +43,7 @@ message('Now reading ', support.frame)
 support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 list.covars <- grep(names(support), pattern = '^covar.*', value  = TRUE)
-annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('', 'NA'))
+annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('', 'NA'), quote = "" )
 
 ### deseq output folders and files
 deseq2.folder <- paste(iFolder, '/deseq2', sep = '')

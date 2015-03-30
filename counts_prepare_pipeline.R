@@ -41,7 +41,7 @@ if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
 
 
-annotations <- read.table(annotation.file, header = TRUE, sep = '\t')
+annotations <- read.table(annotation.file, header = TRUE, sep = '\t', quote = "")
 names(annotations) <- ifelse (names(annotations) == "external_gene_name", "external_gene_id", names(annotations)) # trying to agree on the column names
 
 ###check input files and data frame

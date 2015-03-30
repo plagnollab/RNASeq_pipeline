@@ -44,7 +44,7 @@ message('Now reading ', support.frame)
 support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE, sep = '\t')
 my.ids <- support$sample
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
-annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''))
+annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''), quote = "")
 
 files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
 if (sum(!file.exists(files)) > 0) stop('Some input files are missing')
