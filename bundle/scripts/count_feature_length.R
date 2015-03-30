@@ -1,6 +1,17 @@
 library(Rsubread)
 
-species <- 'Tc1_mouse'
+species <- 'chicken'
+
+if (species == 'chicken') {
+ system('samtools view -b /scratch2/vyp-scratch2/Daudet_RNASeq/processed/ND1/ND1_unique.bam -o dummy_chicken.bam  1:100-1000')
+ gtf <- "chicken/GTF/Gallus_gallus.Galgal4.78.gtf"
+ test <- featureCounts  (files = 'dummy_chicken.bam', annot.ext = gtf, isGTFAnnotationFile = TRUE,
+                         GTF.featureType = "exon", GTF.attrType = "gene_id")
+ 
+ new.file <- gsub(pattern = ".gtf", replacement = "_length_features.tab", gtf) 
+ write.table(x = test$annotation, file = new.file, row.names = FALSE, sep = '\t', quote = FALSE)
+
+}
 
 if (species == 'human') {
   system('samtools view -b /scratch2/vyp-scratch2/Nejentsev_TB_RNASeq/processed/SLX-7934/A013/A013_unique.bam -o dummy_human.bam  1:100-1000')

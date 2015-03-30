@@ -18,12 +18,18 @@ keep.dups <- FALSE
 
 
 
-gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/GTF/Tc1.gff"
-annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
-iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
-support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
-code <- 'Zanda_AD_Tc1J20'
+#gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/GTF/Tc1.gff"
+#annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
+#iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
+#support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
+#code <- 'Zanda_AD_Tc1J20'
 
+
+gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff"
+annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/biomart/biomart_annotations_chicken.tab"
+iFolder <- "/scratch2/vyp-scratch2/Daudet_RNASeq/processed"
+support.frame <- "support/Daudet_RNASeq.tab"
+code <- "Daudet"
 
 
 myArgs <- getArgs()
@@ -36,7 +42,7 @@ if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']
 
 
 annotations <- read.table(annotation.file, header = TRUE, sep = '\t')
-
+names(annotations) <- ifelse (names(annotations) == "external_gene_name", "external_gene_id", names(annotations)) # trying to agree on the column names
 
 ###check input files and data frame
 message('Now reading ', support.frame)
@@ -132,8 +138,8 @@ if (file.exists(feature.length.file)) {
   feature.lengths <- read.table( feature.length.file, header = TRUE)
   rpkms <- genes.counts
 
-  support$condition.dummy <- 1
-  support$condition.dummy [1:floor(nrow(support)/2)] <- 2  ##silly hack to make the function below work
+  support$condition.dummy <- "nocondition"
+  support$condition.dummy [1:floor(nrow(support)/2)] <- "somecondition"  ##silly hack to make the function below work
   
   dds <- DESeqDataSetFromMatrix(countData = genes.counts,
                                 colData = support[, 'condition.dummy', drop = FALSE],
