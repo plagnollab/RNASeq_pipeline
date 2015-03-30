@@ -165,7 +165,7 @@ if (file.exists(feature.length.file)) {
   compute.lengths$length [ as.numeric(row.names(problematic)) ] <- problematic$length
 
 ###### Now normalize for everything
-  for (i in 1:ncol(rpkms)) {rpkms[, i ] <- (rpkms[, i ] /(average.depth * sizeFactors [ i ])) / (1000 / compute.lengths$length)}
+  for (i in 1:ncol(rpkms)) {rpkms[, i ] <- (rpkms[, i ] /(compute.lengths$length/1000*average.depth * sizeFactors [ i ]))}
   my.median <- apply(rpkms, MAR = 1, FUN = median)
   rpkms <- as.data.frame(rpkms [ order( my.median, decreasing = TRUE), ]) ##reorder
 
