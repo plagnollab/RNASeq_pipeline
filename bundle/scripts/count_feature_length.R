@@ -1,6 +1,6 @@
 library(Rsubread)
 
-species <- 'chicken'
+species <- 'drosophila'
 
 if (species == 'chicken') {
  system('samtools view -b /scratch2/vyp-scratch2/Daudet_RNASeq/processed/ND1/ND1_unique.bam -o dummy_chicken.bam  1:100-1000')
@@ -42,6 +42,18 @@ if (species == 'Tc1_mouse') {
                           GTF.featureType = "exon", GTF.attrType = "gene_id")
   
   write.table(x = test$annotation, file = 'Tc1_mouse/GTF/Tc1_with_ensembl_length_features.tab', row.names = FALSE, sep = '\t', quote = FALSE)
+
+
+}
+
+
+if (species == 'drosophila') {
+  system('samtools view -b /cluster/project9/uclgenomics/Bolukbasi/output/Bolukbasi-B2/Bolukbasi-B2_unique.bam -o dummy_drosophila.bam  1:100-1000')
+  
+  test <- featureCounts  (files = 'dummy_drosophila.bam', annot.ext ='drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf', isGTFAnnotationFile = TRUE,
+                          GTF.featureType = "exon", GTF.attrType = "gene_id")
+  
+  write.table(x = test$annotation, file = 'drosophila/GTF/Drosophila_melanogaster.BDGP5.75_length_features.tab', row.names = FALSE, sep = '\t', quote = FALSE)
 
 
 }
