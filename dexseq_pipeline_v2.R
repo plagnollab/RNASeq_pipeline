@@ -46,7 +46,7 @@ my.ids <- support$sample
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''), quote = "")
-names(annotations) <- ifelse (names(annotations) == "external_gene_name", "external_gene_id", names(annotations)) # trying to agree on the column names
+names(annotation) <- ifelse (names(annotation) == "external_gene_name", "external_gene_id", names(annotation)) # trying to agree on the column names
 
 
 files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
