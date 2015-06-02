@@ -342,7 +342,7 @@ fi
 if [[ "$species" == "rat" ]]; then
     IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.dna_rm.toplevel
     gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
-    gffFile=NOTYET
+    gffFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gff
     annotationFile=${RNASEQBUNDLE}/rat/biomart/biomart_annotations_rat.tab
 fi
 
