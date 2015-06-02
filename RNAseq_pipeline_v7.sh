@@ -339,6 +339,14 @@ if [[ "$species" == "chicken" ]]; then
 fi
 
 
+if [[ "$species" == "rat" ]]; then
+    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.dna_rm.toplevel
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
+    gffFile=NOTYET
+    annotationFile=${RNASEQBUNDLE}/rat/biomart/biomart_annotations_rat.tab
+fi
+
+
 if [[ "$species" == "drosophila" ]]; then
     refFolder=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
