@@ -261,9 +261,6 @@ if [[ "$species" == "human" ]]; then
     fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
 
-
-
-
     ### stuff below should go to the bundle
     SNPlist=${RNASEQBUNDLE}/human/exonic_snps_human_hg19_clean.tab
     gffFile=${RNASEQBUNDLE}/human/GTF/human_iGenomes_NCBI37_with_ensembl.gff
@@ -280,7 +277,11 @@ if [[ "$species" == "human_hg38" ]]; then
     
     fasta=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/UCSC_hg38_human.gtf
+    #gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/UCSC_hg38_human.gtf
+    
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38.gtf
+    gffFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38.gff
+    annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
 fi
 
@@ -344,6 +345,14 @@ if [[ "$species" == "rat" ]]; then
     gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
     gffFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gff
     annotationFile=${RNASEQBUNDLE}/rat/biomart/biomart_annotations_rat.tab
+fi
+
+
+if [[ "$species" == "sheep" ]]; then
+    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.dna_rm.toplevel
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gtf
+    gffFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
+    annotationFile=${RNASEQBUNDLE}/sheep/biomart/biomart_annotations_sheep.tab
 fi
 
 
