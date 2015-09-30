@@ -380,8 +380,14 @@ fi
 
 if [[ "$species" == "mouse" ]]; then
     if [[ "$computer" == "CS" ]]; then
+	
+	if [ -e /cluster/scratch3/vyp-scratch2/ ]; then
+	    refFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/mouse_reference_sequence/NCBI/GRCm38    
+	else 
+	    refFolder=/scratch2/vyp-scratch2/reference_datasets/mouse_reference_sequence/NCBI/GRCm38    
+	fi
 
-	refFolder=/scratch2/vyp-scratch2/reference_datasets/mouse_reference_sequence/NCBI/GRCm38
+	
 	##refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
 	IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
 	gtfFile=${refFolder}/Annotation/Genes/genes.gtf
