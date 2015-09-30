@@ -278,8 +278,12 @@ if [[ "$species" == "human_hg38" ]]; then
     fasta=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     
-    gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38_fixed.gtf
-    gffFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38_fixed.gff
+    #gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38_fixed.gtf
+    #gffFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/human_hg38_fixed.gff
+
+    gffFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/Homo_sapiens.GRCh38.78.gff
+    gtfFile=/scratch2/vyp-scratch2/reference_datasets/human_reference_sequence/GTF_files/Homo_sapiens.GRCh38.78.gtf
+
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
 fi
