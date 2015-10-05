@@ -41,7 +41,7 @@ if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
 ###check input files and data frame
 message('gff file is ', gff)
 message('Now reading ', support.frame)
-support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE, sep = '\t')
+support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 my.ids <- support$sample
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 
@@ -50,7 +50,10 @@ names(annotation) <- ifelse (names(annotation) == "external_gene_name", "externa
 
 
 files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
-if (sum(!file.exists(files)) > 0) stop('Some input files are missing')
+if (sum(!file.exists(files)) > 0) {
+  print(files [ !file.exists(files) ])
+  stop('Some input files are missing')
+}
 
 
 
