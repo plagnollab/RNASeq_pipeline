@@ -65,7 +65,7 @@ load(deseq.counts)
 
 ### Remove the sex chromosome genes 
 if (!keep.sex) {
-  genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y'), 'EnsemblID', drop = TRUE))
+  genes.on.XY <- as.character(subset(annotation, chromosome_name %in% c('X' ,'Y', 'chrX', 'chrY'), 'EnsemblID', drop = TRUE))
   message('Prior to removing chr XY probes: ', nrow(genes.counts))
   genes.counts <- genes.counts[ ! dimnames(genes.counts)[[1]] %in% genes.on.XY, ]                 
   message('After removing chr XY probes: ', nrow(genes.counts))
