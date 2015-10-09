@@ -212,22 +212,26 @@ for (condition in list.conditions) {
   
   for (i in 1:length(genes.to.plot)) {
     gene <- as.character(genes.to.plot[i])
-    gene.pretty <- as.character(pretty.gene.names[ i ])
-    
-    message(i, ' ', gene, ' ', gene.pretty)
-    output.pdf <- paste(dexseq.figs, '/DEXSeq-', gene.pretty, '.pdf', sep = '')
-    pdf(output.pdf, width = 8, height = 4.9)
-    plotDEXSeq(res,
-               geneID = gene,  ##I suspect it has to be gene, otherwise it crashes
-               cex.axis = 1.2,
-               cex=1.3,
-               lwd=2,
-               legend=TRUE,
-               displayTranscripts = TRUE,
-               names = TRUE,
-               main = gene.pretty)
-    dev.off()
-    print(output.pdf)
+
+    if (!is.na(pretty.gene.names[ i ])) {
+      gene.pretty <- as.character(pretty.gene.names[ i ])
+      
+      message(i, ' ', gene, ' ', gene.pretty)
+      
+      output.pdf <- paste(dexseq.figs, '/DEXSeq-', gene.pretty, '.pdf', sep = '')
+      pdf(output.pdf, width = 8, height = 4.9)
+      plotDEXSeq(res,
+                 geneID = gene,  ##I suspect it has to be gene, otherwise it crashes
+                 cex.axis = 1.2,
+                 cex=1.3,
+                 lwd=2,
+                 legend=TRUE,
+                 displayTranscripts = TRUE,
+                 names = TRUE,
+                 main = gene.pretty)
+      dev.off()
+      print(output.pdf)
+    }
   }
   
   
