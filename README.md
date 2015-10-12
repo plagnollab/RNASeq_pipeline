@@ -5,15 +5,16 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 R packages and software:
 
-- R >= 3.1.2, use
+- R = 3.2.2
+- BioConductor 3.1
 ```
-/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
+/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
 ```
-- DESeq  >= 1.18
-- DEXSeq >= 1.10.8
-- BiocParallel >= 1.0.1 
+- DESeq2  >= 1.8.2
+- DEXSeq >= 1.14.2
+- BiocParallel >= 1.2.22 
 
-Notes for installation of DEXSeq:
+Notes for installation of DEXSeq/DESeq2:
 
 - Need to add /share/apps/binutils-2.25/bin to the PATH
 - type 
