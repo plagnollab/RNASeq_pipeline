@@ -16,6 +16,9 @@ if [[ "$computer" == "CS" ]]; then
     javaTemp="TMP_DIR=${javaTemp2}"
 
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
+    bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets/
+    if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/
+    fi
 fi
 
 
@@ -280,11 +283,11 @@ if [[ "$species" == "human_hg38" ]]; then
 	else 
 	    refFolder=/scratch2/vyp-scratch2/reference_datasets   
 	fi
-    fasta=${refFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    IndexBowtie2=${refFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    IndexBowtie2=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     
-    gffFile=${refFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gff
-    gtfFile=${refFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gtf
+    gffFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gff
+    gtfFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gtf
 
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
@@ -307,8 +310,8 @@ fi
 
 if [[ "$species" == "Dict_Disc_masked" ]]; then
     
-    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Dict/dicty_masked_ERCC92
-    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Dict/dict_no_spike.gtf
+    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Dict/dicty_masked_ERCC92
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Dict/dict_no_spike.gtf
     gffFile=MISSING
 
     annotationFile=not_done_yet
@@ -338,7 +341,7 @@ if [[ "$species" == "pig" ]]; then
 fi
 
 if [[ "$species" == "chicken" ]]; then
-    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel
+    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel
     gtfFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gtf
     gffFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff
     annotationFile=${RNASEQBUNDLE}/chicken/biomart/biomart_annotations_chicken.tab
@@ -346,23 +349,23 @@ fi
 
 
 if [[ "$species" == "rat" ]]; then
-    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.dna_rm.toplevel
-    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
-    gffFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gff
+    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.dna_rm.toplevel
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
+    gffFile=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gff
     annotationFile=${RNASEQBUNDLE}/rat/biomart/biomart_annotations_rat.tab
 fi
 
 
 if [[ "$species" == "sheep" ]]; then
-    IndexBowtie2=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.dna_rm.toplevel
-    gtfFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gtf
-    gffFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
+    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.dna_rm.toplevel
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gtf
+    gffFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
     annotationFile=${RNASEQBUNDLE}/sheep/biomart/biomart_annotations_sheep.tab
 fi
 
 
 if [[ "$species" == "drosophila" ]]; then
-    refFolder=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
+    refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
     gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
     gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
@@ -383,16 +386,11 @@ fi
 if [[ "$species" == "mouse" ]]; then
     if [[ "$computer" == "CS" ]]; then
 	
-	if [ -e /cluster/scratch3/vyp-scratch2/ ]; then
-	    refFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/mouse_reference_sequence/NCBI/GRCm38    
-	else 
-	    refFolder=/scratch2/vyp-scratch2/reference_datasets/mouse_reference_sequence/NCBI/GRCm38    
-	fi
 
 	
 	##refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
-	IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-	gtfFile=${refFolder}/Annotation/Genes/genes.gtf
+	IndexBowtie2=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Sequence/Bowtie2Index/genome	
+	gtfFile=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Annotation/Genes/genes.gtf
 
 	#### stuff below should go to the bundle
 	gffFile=${RNASEQBUNDLE}/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff
