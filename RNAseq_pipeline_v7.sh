@@ -55,7 +55,7 @@ done
 
 
 
-
+starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STAR
 tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
 bowtie2Folder=${software}/bowtie2-2.2.6
 samtoolsFolder=${software}/samtools-0.1.19
@@ -132,6 +132,9 @@ until [ -z "$1" ]; do
 	--force)
 	    shift
 	    force=$1;;
+	--star)
+	    shift
+	    star=$1;;
 	--superLong)
 	    shift
 	    superLong=$1;;
@@ -384,9 +387,6 @@ if [[ "$species" == "dog" ]]; then
 fi
 
 if [[ "$species" == "mouse" ]]; then
-    if [[ "$computer" == "CS" ]]; then
-	
-
 	
 	##refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
 	IndexBowtie2=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Sequence/Bowtie2Index/genome	
@@ -396,6 +396,7 @@ if [[ "$species" == "mouse" ]]; then
 	gffFile=${RNASEQBUNDLE}/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff
 	annotationFile=${RNASEQBUNDLE}/mouse/biomart/biomart_annotations_mouse.tab
 	
+	STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
 
 	#geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_chr1.bed
 	#geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_nochr.bed
@@ -403,12 +404,6 @@ if [[ "$species" == "mouse" ]]; then
         db=mmusculus_gene_ensembl
 
 	if [[ "$misoindex" == "NA" ]]; then misoindex=${RNASEQBUNDLE}/mouse/miso_mm10/v2/indexed_SE_events; fi
-    fi
-
-    if [[ "$computer" == "UGI" ]]; then
-	refFolder=/ugi/scratch/vincent/tophat_reference/Mus_musculus/NCBI/build37.2
-	IndexFolder=${refFolder}/Sequence/Bowtie2Index
-    fi
 
 fi
 
@@ -804,6 +799,48 @@ if [[ "$summary" == "yes" ]]; then
     ls -ltrh $outSum
 fi
 
+
+if [[ "$star" == "yes" ]]; then
+
+    SCRATCH_DIR=/scratch0/${sample}
+    JAVA_DIR=${SCRATCH_DIR}/java
+    
+    
+    starScript=cluster/submission/star_RNASeq.sh
+
+    echo "#$ -S /bin/bash
+#$ -l h_vmem=8.4G
+#$ -l tmem=8.4G
+#$ -l h_rt=12:00:00
+#$ -pe smp 4
+#$ -R y
+#$ -o cluster/out
+#$ -e cluster/error
+#$ -cwd
+
+mkdir $JAVA_DIR
+" > $starScript
+
+    awk '{if ($1 != "sample") print}'  $dataframe | head -1 | while read sample f1 f2 condition; do
+
+	if [ ! -e ${oFolder}/${sample} ]; then mkdir ${oFolder}/${sample}; fi
+	
+	finalOFolder=${oFolder}/${sample}
+
+	echo "
+${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM SortedByCoordinate 
+
+java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}Aligned.out.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+" >> $starScript
+
+    done
+
+    echo "
+rm -rf $JAVA_DIR
+" >> $starScript
+
+    ls -ltrh $starScript
+fi
 
 
 ################################################# Now the scripts that take all samples together    
