@@ -14,7 +14,8 @@ if [[ "$computer" == "CS" ]]; then
 
     javaTemp2="/scratch2/vyp-scratch2/vincent/java_temp"
     javaTemp="TMP_DIR=${javaTemp2}"
-
+    java=/share/apps/jdk1.7.0_45/bin/java
+    
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets/
     if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/
@@ -830,9 +831,10 @@ mkdir $JAVA_DIR
 	echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
 
-### now need to sort
+### now need to sor
+$novosort -n -f -t /scratch0/ -0 -c 4 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
-java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}Aligned.out.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 " >> $starScript
 
     done
