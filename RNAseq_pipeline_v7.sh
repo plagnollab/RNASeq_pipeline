@@ -60,7 +60,7 @@ starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STA
 tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
 bowtie2Folder=${software}/bowtie2-2.2.6
 samtoolsFolder=${software}/samtools-0.1.19
-samtools1=${software}/samtools-1.1/samtools
+samtools1=${software}/samtools-1.2/samtools
 
 cufflinks=${software}/cufflinks-2.1.1.Linux_x86_64/cufflinks
 
@@ -607,7 +607,7 @@ rm -rf ${RESULTS_DIR} ${DATA_DIR}
 
 ${samtools1} index ${finalOFolder}/accepted_hits.bam
 
-java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
 
@@ -822,21 +822,27 @@ if [[ "$star" == "yes" ]]; then
 mkdir $JAVA_DIR
 " > $starScript
 
-    awk '{if ($1 != "sample") print}'  $dataframe | head -1 | while read sample f1 f2 condition; do
+    tail -n +2  $dataframe | while read sample f1 f2 condition; do
 
-	if [ ! -e ${oFolder}/${sample} ]; then mkdir ${oFolder}/${sample}; fi
-	
 	finalOFolder=${oFolder}/${sample}
-
-	echo "
+	if [ ! -e ${finalOFolder} ]; then mkdir ${finalOFolder}; fi
+	
+	if [[ "$force" == "yes" || ! -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then
+	    
+	    
+	    echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
 
-### now need to sor
+### now need to sort
 $novosort -f -t /scratch0/ -0 -c 4 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
 $java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
-" >> $starScript
 
+${samtools1} index ${finalOFolder}/${sample}_unique.bam
+
+rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
+" >> $starScript
+	fi
     done
 
     echo "
