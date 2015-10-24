@@ -828,7 +828,9 @@ mkdir $JAVA_DIR
 	finalOFolder=${oFolder}/${sample}
 
 	echo "
-${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM SortedByCoordinate 
+${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+
+### now need to sort
 
 java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}Aligned.out.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 " >> $starScript
