@@ -2,8 +2,8 @@ library(biomaRt)
 
 #53     dmelanogaster_gene_ensembl       Drosophila melanogaster genes (BDGP5)
 
-#species <- 'mmusculus_gene_ensembl'
-species <- 'hsapiens_gene_ensembl'
+species <- 'mmusculus_gene_ensembl'
+#species <- 'hsapiens_gene_ensembl'
 #species <- 'cfamiliaris_gene_ensembl'
 #species <- 'drerio_gene_ensembl'
 #species <- 'sscrofa_gene_ensembl'
@@ -39,6 +39,12 @@ if (species == 'oaries_gene_ensembl') output.file <- 'sheep/biomart/biomart_anno
 
 if (species == 'hsapiens_gene_ensembl') {
   my.db <- subset(my.db, chromosome_name %in% c(as.character(1:22), "X", "Y"))
+  my.db$chromosome_name <- paste0("chr", my.db$chromosome_name)
+}
+
+
+if (species == 'mmusculus_gene_ensembl') {
+  my.db <- subset(my.db, chromosome_name %in% c(as.character(1:20), "X", "Y"))
   my.db$chromosome_name <- paste0("chr", my.db$chromosome_name)
 }
 

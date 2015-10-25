@@ -388,24 +388,10 @@ if [[ "$species" == "dog" ]]; then
 fi
 
 if [[ "$species" == "mouse" ]]; then
-	
-    refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
-    IndexBowtie2=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Sequence/Bowtie2Index/genome	
-    gtfFile=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Annotation/Genes/genes.gtf
-
-	#### stuff below should go to the bundle
-    gffFile=${RNASEQBUNDLE}/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff
-    annotationFile=${RNASEQBUNDLE}/mouse/biomart/biomart_annotations_mouse.tab
-	
     STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
-	##annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
-    
-    
-	#geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_chr1.bed
-	#geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_nochr.bed
-    
-    if [[ "$misoindex" == "NA" ]]; then misoindex=${RNASEQBUNDLE}/mouse/miso_mm10/v2/indexed_SE_events; fi
-
+    annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+    gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
 fi
 
 
