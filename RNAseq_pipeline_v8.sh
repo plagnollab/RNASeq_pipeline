@@ -761,10 +761,10 @@ if [[ "$summary" == "yes" ]]; then
 	ls -ltrh $sFile
 	
 	mappedReads=`awk '{if (NR == 1) {print $1}}' $sFile`
-	dupReads=`awk '{if (NR == 2) {print $1}}' $sFile`
+	dupReads=`awk '{if (NR == 4) {print $1}}' $sFile`
 	unmappedReads=`awk '{if (NR == 1) {print $1}}' $uFile`
-	Read1=`awk '{if (NR == 5) {print $1}}' $sFile`
-	Read2=`awk '{if (NR == 6) {print $1}}' $sFile`
+	Read1=`awk '{if (NR == 7) {print $1}}' $sFile`
+	Read2=`awk '{if (NR == 8) {print $1}}' $sFile`
 
 	
 	if [[ "$summaryRegions" == "yes" ]]; then
