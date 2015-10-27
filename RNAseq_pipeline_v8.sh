@@ -79,7 +79,6 @@ mart=ensembl
 db=mmusculus_gene_ensembl
 
 summary=no
-summaryRegions=no
 prepareCounts=no
 Rdexseq=no
 Rdeseq=no
@@ -145,10 +144,6 @@ until [ -z "$1" ]; do
 	--summary)
 	    shift
 	    summary=$1;;
-	--summaryRegions)
-	    shift
-	    summaryRegions=yes
-	    regionsCount=$1;;
 	--miso)
 	    shift
 	    miso=$1;;
@@ -182,9 +177,6 @@ until [ -z "$1" ]; do
 	--code)
             shift
             code=$1;;
-	--segmentLength)
-            shift
-            segmentLength=$1;;
 	--submit)
 	    shift
             submit=$1;;
@@ -498,7 +490,7 @@ $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCoun
     done
 
     echo "
-${starexec} --genomeLoad Remove
+${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 " >> $starSubmissionStep1a
 
 
