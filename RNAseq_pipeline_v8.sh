@@ -456,10 +456,10 @@ mkdir $JAVA_DIR
 	    
 	    echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
-" > $straScript
+" > $starScript
 	    
 	    echo "
-$novosort -f -t /scratch0/ -0 -c 1 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -0 -c 1 -m 7G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
 $java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
