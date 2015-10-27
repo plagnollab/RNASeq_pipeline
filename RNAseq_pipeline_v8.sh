@@ -207,6 +207,17 @@ done
 echo "Strand information $stranded $libstrand"
 ########################## estimate the duration of the jobs
 
+countStrand=no
+if [[ "$libstrand" == "fr-firststrand" ]]; then
+    countStrand=yes
+    countStrandReverse=reverse
+fi
+
+if [[ "$libstrand" == "fr-secondstrand" ]]; then
+    countStrand=reverse
+    countStrandReverse=yes
+fi
+
 
 if [[ "$stem" == "" ]]; then stem=$code; fi
 
@@ -442,8 +453,6 @@ mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
 
 
-
-
     tail -n +2  $dataframe | while read sample f1 f2 condition; do
 
 	echo "Sample $sample"
@@ -470,6 +479,7 @@ rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
 
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
 	    
+	    if [[ "$f2" == "NA" ]]; then paired=yes;  else paired=no; fi;
 
 	    echo "
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
