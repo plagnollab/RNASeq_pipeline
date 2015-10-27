@@ -422,11 +422,9 @@ if [[ "$star" == "yes" ]]; then
     starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
     starMasterTableStep3=${oFolder}/cluster/submission/starMasterTableStep3.tab
 
-    starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.tab
-    starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.tab
+    starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.sh
+    starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh
 
-    nscripts=0
-    
     echo "scripts" > $starMasterTableStep2
     echo "scripts" > $starMasterTableStep3
     
@@ -448,11 +446,14 @@ mkdir $JAVA_DIR
 
     tail -n +2  $dataframe | while read sample f1 f2 condition; do
 
+	echo "Sample $sample"
 	finalOFolder=${oFolder}/${sample}
+	dexseqfolder=${oFolder}/${sample}/dexseq
+
 	if [ ! -e ${finalOFolder} ]; then mkdir ${finalOFolder}; fi
+	if [ ! -e ${dexseqfolder} ]; then mkdir ${dexseqfolder}; fi
 	
 	if [[ "$force" == "yes" || ! -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then
-	    
 	    
 	    echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
@@ -486,6 +487,8 @@ $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCoun
 
     done
 
+    njobs3=`wc -l $starMasterTableStep3 | awk '{print $1}'`
+
     echo "#$ -S /bin/bash
 #$ -l h_vmem=8.4G
 #$ -l tmem=8.4G
@@ -498,9 +501,9 @@ $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCoun
 #$ -t 1-${nscripts}
 #$ -tc 20
 
-script=`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2
+script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2\`
 
-sh $script
+sh \$script
 
 " > $starSubmissionStep2
 
@@ -513,12 +516,12 @@ sh $script
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -wd ${oFolder}
-#$ -t 1-${nscripts}
+#$ -t 2-${njobs3}
 #$ -tc 20
 
-script=`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2
+script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep3\`
 
-sh $script
+sh \$script
 
 " > $starSubmissionStep3
 
