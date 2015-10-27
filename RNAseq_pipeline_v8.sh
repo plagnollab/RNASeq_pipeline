@@ -414,19 +414,19 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 if [[ "$star" == "yes" ]]; then
 
-    SCRATCH_DIR=/scratch0/${sample}
-    JAVA_DIR=${SCRATCH_DIR}/java
+    SCRATCH_DIR=/scratch0/RNASeq
+    JAVA_DIR=${SCRATCH_DIR}/javastar
     
     
-    starScript=cluster/submission/star_RNASeq.sh
+    starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
     starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
-    starMasterTableStep3=${oFolder}/cluster/submission/starMasterTableStep3.tab
 
+    starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
+    starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
     starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.sh
-    starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh
 
+    echo "scripts" > $starMasterTableStep1b
     echo "scripts" > $starMasterTableStep2
-    echo "scripts" > $starMasterTableStep3
     
     echo "#$ -S /bin/bash
 #$ -l h_vmem=8.4G
@@ -438,8 +438,8 @@ if [[ "$star" == "yes" ]]; then
 #$ -e cluster/error
 #$ -cwd
 
-mkdir $JAVA_DIR
-" > $starScript
+mkdir -p $JAVA_DIR
+" > $starSubmissionStep1a
 
 
 
@@ -457,7 +457,7 @@ mkdir $JAVA_DIR
 	    
 	    echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
-" > $starScript
+" >> $starSubmissionStep1a
 	    
 	    echo "
 $novosort -f -t /scratch0/ -0 -c 1 -m 7G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
@@ -468,7 +468,7 @@ ${samtools} index ${finalOFolder}/${sample}_unique.bam
 
 rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
 
-" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+" > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
 	    
 
 	    echo "
@@ -476,18 +476,24 @@ $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${
 
 $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
 
-" > ${oFolder}/cluster/submission/star_step3_${sample}.sh
+" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
 
 
+	    echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
 	    echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
-	    echo "${oFolder}/cluster/submission/star_step3_${sample}.sh" >> $starMasterTableStep3
 	    ((nscripts=nscripts+1))
 
 	fi
 
     done
 
-    njobs3=`wc -l $starMasterTableStep3 | awk '{print $1}'`
+    echo "
+${starexec} --genomeLoad Remove
+" >> $starSubmissionStep1a
+
+
+    njobs1b=`wc -l $starMasterTableStep1b | awk '{print $1}'`
+    njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
 
     echo "#$ -S /bin/bash
 #$ -l h_vmem=8.4G
@@ -498,7 +504,25 @@ $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCoun
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -wd ${oFolder}
-#$ -t 1-${nscripts}
+#$ -t 1-${njobs1b}
+#$ -tc 20
+
+script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep1b\`
+
+sh \$script
+
+" > $starSubmissionStep1b
+
+    echo "#$ -S /bin/bash
+#$ -l h_vmem=8.4G
+#$ -l tmem=8.4G
+#$ -l h_rt=12:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
+#$ -wd ${oFolder}
+#$ -t 2-${njobs2}
 #$ -tc 20
 
 script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2\`
@@ -507,30 +531,12 @@ sh \$script
 
 " > $starSubmissionStep2
 
-    echo "#$ -S /bin/bash
-#$ -l h_vmem=8.4G
-#$ -l tmem=8.4G
-#$ -l h_rt=12:00:00
-#$ -pe smp 1
-#$ -R y
-#$ -o ${oFolder}/cluster/out
-#$ -e ${oFolder}/cluster/error
-#$ -wd ${oFolder}
-#$ -t 2-${njobs3}
-#$ -tc 20
-
-script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep3\`
-
-sh \$script
-
-" > $starSubmissionStep3
-
 
     echo "
 rm -rf $JAVA_DIR
-" >> $starScript
+" >> $starSubmissionStep1a
 
-    ls -ltrh $starScript $starSubmissionStep2 $starSubmissionStep3
+    ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
 fi
 
 
