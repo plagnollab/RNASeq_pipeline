@@ -57,10 +57,7 @@ done
 
 
 starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STAR
-tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
-bowtie2Folder=${software}/bowtie2-2.2.6
-samtoolsFolder=${software}/samtools-0.1.19
-samtools1=${software}/samtools-1.2/samtools
+samtools=${software}/samtools-1.2/samtools
 
 cufflinks=${software}/cufflinks-2.1.1.Linux_x86_64/cufflinks
 
@@ -152,24 +149,12 @@ until [ -z "$1" ]; do
 	    shift
 	    summaryRegions=yes
 	    regionsCount=$1;;
-	--tophat)
-	    shift
-	    tophat=$1;;
 	--miso)
 	    shift
 	    miso=$1;;
 	--prepareCounts)
 	    shift
 	    prepareCounts=$1;;
-	--dexseqcounts)
-	    shift
-	    dexseqcounts=$1;;
-	--sampleQC)
-	    shift
-	    sampleQC=$1;;
-	--runCufflinks)
-	    shift
-	    runCufflinks=$1;;
 	--Rdexseq)
 	    shift
 	    Rdexseq=$1;;
@@ -416,25 +401,6 @@ fi
 
 
 
-indexTranscriptome=${IndexBowtie2}_${species}_transcriptome
-if [ ! -e ${indexTranscriptome}.rev.2.bt2 ]; then
-
-    echo "No transcriptome bowtie index found, will now create it, which can take a while (about 30 minutes, but done once per species)"
-    echo "$indexTranscriptome"
-    echo "Script is create_transcriptome_index.sh, running it now"
-
-    echo "
-export PATH=${bowtie2Folder}:\$PATH
-
-${tophatbin} --transcriptome-index=${indexTranscriptome} -G ${gtfFile} ${IndexBowtie2}
-" > create_transcriptome_index.sh
-
-    sh create_transcriptome_index.sh
-    exit
-fi
-
-
-
 ############### checking the input dataframe
 h1=`awk '{if (NR == 1) print $1}'  $dataframe` 
 h2=`awk '{if (NR == 1) print $2}'  $dataframe` 
@@ -444,347 +410,6 @@ if [[ "$h2" != "f1" ]]; then echo "header 2 must be f1 for fastq1"; exit; fi
 if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 
-if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$runCufflinks" == "yes" || "$sampleQC" == "yes" ]]; then  ##in this case we proceed per sample
-    awk '{if ($1 != "sample") print}'  $dataframe | while read sample f1 f2 condition; do
-	sleep 0.2
-
-	echo "Sample $sample"
-	if [[ "$f2" == "NA" ]]; then 
-	    paired=no
-	    viewOption=""
-	else 
-	    paired=yes
-	    viewOption="-F 0x0400"
-	fi
-
-	
-	
-	#### create the folders
-	finalOFolder=${oFolder}/${sample}
-	cufflinksFolder=${finalOFolder}/cufflinks
-
-	for folder in ${oFolder} ${finalOFolder}; do
-	    if [ ! -e $folder ]; then mkdir $folder; fi
-	done
-	dexseqfolder=${finalOFolder}/dexseq
-	
-	#################################
-	tophatlocal=$tophat
-	if [[ "$tophatlocal" == "yes" && "$force" == "no" && -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then tophatlocal=no; fi
-	dexseqcountslocal=$dexseqcounts
-	if [[ "$dexseqcountslocal" == "yes" && "$force" == "no" && -e ${dexseqfolder}/${sample}_dexseq_counts.txt ]]; then dexseqcountslocal=no; fi
-	runCufflinkslocal=$runCufflinks
-	if [[ "$runCufflinkslocal" == "yes" && "$force" == "no" && -e ${cufflinksFolder}/cufflinks_basic/genes.fpkm_tracking ]]; then runCufflinkslocal=no; fi
-	
-
-        ################################### the per sample jobs requirements for RAM and nb of cores, sorted by increasing requirements
-	nhours=0
-	memory=7
-	ncores=1
-	queue=blades
-	
-	req=1
-	tmp_req=80
-	if [[ "$miso" == "yes" ]]; then ((nhours=nhours+72)); memory=3.9; fi
-	if [[ "$sampleQC" == "yes" ]]; then ((nhours=nhours+10)); memory=7; fi
-	#if [[ "${dexseqcountslocal}" == "yes" ]]; then ((nhours=nhours+15)); memory=2; ncores=8; fi ## was 7
-	if [[ "${dexseqcountslocal}" == "yes" ]]; then ((nhours=nhours+15)); memory=7; ncores=1; fi ## was 7
-	if [[ "$tophatlocal" == "yes" ]]; then ((nhours=nhours+72)); ncores=4; memory=3.4; queue=novoalign; fi  ##4 days allowed ##was 1.5
-	if [[ "$runCufflinks" == "yes" ]]; then ((nhours=nhours+10)); ncores=4; memory=3; queue=novoalign; fi
-		
-	
-	######################## Now create the script itself
-	script=${clusterFolder}/submission/X${sample}_${code}_RNASeq.sh
-	echo "
-#!/bin/bash
-#$ -S /bin/bash
-#$ -o ${clusterFolder}/out
-#$ -e ${clusterFolder}/error
-#$ -cwd
-#$ -pe smp $ncores
-#$ -l tmem=${memory}G,h_vmem=${memory}G
-#$ -V
-#$ -l scr=${tmp_req}G
-#$ -R y
-#$ -l h_rt=${nhours}:00:00
-
-PYTHONPATH=/cluster/project8/vyp/vincent/libraries/python/share/apps/python-2.7.1/lib/python2.7/site-packages:/cluster/project8/vyp/vincent/libraries/python/lib/python:\$PYTHONPATH
-
-export PYTHONPATH
-
-" > $script
-	
-	
-	if [[ "$tophatlocal" == "yes" ]]; then 
-	    memory2=10  ##if we run tophat we know that 12G are available, so 11G to sort is OK
-	    
-            SCRATCH_DIR=/scratch0/${sample}
-            DATA_DIR=${SCRATCH_DIR}/data
-            RESULTS_DIR=${SCRATCH_DIR}/results
-            TMP_DIR=${SCRATCH_DIR}/tmp
-            JAVA_DIR=${SCRATCH_DIR}/java
-	    
-	    
-	    echo "
-export PATH=${bowtie2Folder}:\$PATH
-
-mkdir $SCRATCH_DIR 
-mkdir $DATA_DIR
-mkdir $RESULTS_DIR
-mkdir $TMP_DIR
-mkdir $JAVA_DIR
-
-" >> $script
-
-	    
-    	    ###################### first read of the pair
-	    fullfile1=""
-	    first1=TRUE
-	    for lfile in `echo $f1 | sed -e 's/,/ /g'`; do ##for multiple files
-		ifastq=${iFolder}/${lfile}
-		ls -ltrh ${ifastq}
-		if [ ! -e $ifastq ]; then echo "File $ifastq does not exist"; fi
-		fastq1=`basename ${ifastq}` 
-
-		echo "cp $ifastq ${DATA_DIR}/$fastq1" >> $script
-
-		if [[ "$first1" == "TRUE" ]]; then
-		    first1=FALSE
-		    fullfile1=${DATA_DIR}/${fastq1}
-		else
-		    fullfile1="${fullfile1},${DATA_DIR}/${fastq1}"
-		fi
-	    done
-	    	    
-	    ###################### second read of the pair
-	    fullfile2=""
-	    if [[ "$f2" == "NA" ]]; then 
-		ltype="--segment-length $segmentLength"
-		fastqinput="${fastqFiles[ 1 ]}"
-	    else 
-		ltype="-r 220 --library-type $libstrand --segment-length $segmentLength"
-		
-		first2=TRUE
-		for lfile in `echo $f2 | sed -e 's/,/ /g'`; do ##for multiple files        
-   		    ifastq=${iFolder}/${lfile}
-		    ls -ltrh ${ifastq}
-		    if [ ! -e $ifastq ]; then echo "File $ifastq does not exist"; fi
-		   
-		    fastq2=`basename ${ifastq}`
-		    echo "cp $ifastq $DATA_DIR/$fastq2" >> $script
-		    
-    
-		    if [[ "$first2" == "TRUE" ]]; then
-			first2=FALSE
-			fullfile2=${DATA_DIR}/${fastq2}
-		    else
-		      fullfile2="${fullfile2},${DATA_DIR}/${fastq2}"
-		    fi
-		done
-	    fi
-	    
-	    echo "
- 
-${tophatbin} --keep-fasta-order --transcriptome-index=${indexTranscriptome} --rg-id ${sample} --rg-sample ${sample} --rg-platform Illumina --tmp-dir $TMP_DIR --no-coverage-search -o ${RESULTS_DIR} -p $ncores ${ltype}  ${IndexBowtie2} $fullfile1 $fullfile2
-
-cp -r ${RESULTS_DIR}/* ${finalOFolder} 
-
-rm -rf ${RESULTS_DIR} ${DATA_DIR}
-
-${samtools1} index ${finalOFolder}/accepted_hits.bam
-
-$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
-
-rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
-
-${samtools1} index ${finalOFolder}/${sample}_unique.bam
-
-${samtools1} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_stats.txt
-
-${samtools1} flagstat ${finalOFolder}/unmapped.bam > ${finalOFolder}/${sample}_unmapped_stats.txt
-
-# Tidy up the scratch files 
-rm -rf $SCRATCH_DIR 
-
-" >> $script
-		
-	fi
-
-#########
-	if [[ "$miso" == "yes" ]]; then 
-	    
-	    MISOcode=`basename ${misoindex}`
-
-	    misoMain=${finalOFolder}/miso
-	    misoFolder=${finalOFolder}/miso/${MISOcode}
-
-	    for folder in ${misoMain} ${misoFolder}; do
-		if [ ! -e $folder ]; then mkdir $folder; fi 
-	    done
-
-
-	    echo "
-rm -rf ${misoFolder}/*
-
-${pythonbin} ${misoRunEvents} --compute-genes-psi ${misoindex} ${finalOFolder}/${sample}_unique.bam --output-dir ${misoFolder} --read-len 40 --paired-end 250 15
-
-${pythonbin} ${runMiso} --summarize-samples ${misoFolder} ${misoFolder}
-" >> $script
-	fi
-
-#######
-
-	if [[ "${dexseqcountslocal}" == "yes" ]]; then
-	    echo "Counting step"
-	    memory2=6 ##We should have at least 7G or RAM available here so 6 is fine
-	    
-
-	    for folder in $dexseqfolder; do
-		if [ ! -e $folder ]; then mkdir $folder; fi 
-	    done
-
-	    if [ ! -e ${gffFile} ]; then echo "Missing gff file ${gffFile}"; exit; fi
-	    
-	    
-	    ###handling of the stranddeness below, a tad tricky really
-	    countStrand=no
-	    if [[ "$libstrand" == "fr-firststrand" ]]; then
-		countStrand=yes
-		countStrandReverse=reverse
-	    fi
-	    
-	    if [[ "$libstrand" == "fr-secondstrand" ]]; then
-		countStrand=reverse
-		countStrandReverse=yes
-	    fi
-	    
-	    echo "
-
-${samtoolsFolder}/samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
-
-${samtoolsFolder}/samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
-
-" >> $script
-
-	    if [[ "$stranded" == "yes" ]]; then
-		echo "
-$novosort -n -f -t /scratch0/ -0 -c $ncores -m ${memory2}G ${finalOFolder}/${sample}_unique.bam | ${samtoolsFolder}/samtools view -F 0x0400 - | ${pythonbin} ${dexseqCount} --paired=${paired} --stranded=${countStrandReverse} ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_antisense.txt
-
-$novosort -n -f -t /scratch0/ -0 -c $ncores -m ${memory2}G ${finalOFolder}/${sample}_unique.bam | ${samtoolsFolder}/samtools view - | ${pythonbin} ${dexseqCount} --paired=${paired} --stranded=${countStrandReverse} ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_antisense_keep_dups.txt
-" >> $script
-
-	    fi
-	fi
-
-
-	if [[ "$sampleQC" == "yes" ]]; then
-
-	QCfolder=${finalOFolder}/${sample}_QC
-	if [ ! -e $QCfolder ]; then mkdir $QCfolder; fi
-	
-	    echo "
-
-echo \"QC step\"
-
-echo \"First where do reads map?\"
-${pythonbin} ${rseqQCscripts}/read_distribution.py -i ${finalOFolder}/${sample}_unique.bam -r ${geneModelSummaryStats} >  ${QCfolder}/${sample}_summaryStats.tab 
-
-echo \"Infer strandedness\"
-${pythonbin} ${rseqQCscripts}/infer_experiment.py -i ${finalOFolder}/${sample}_unique.bam -r ${geneModel} >  ${QCfolder}/${sample}_inferExperiment.tab
-
-echo \"Annotating junctions\"
-${pythonbin} ${rseqQCscripts}/junction_annotation.py -i ${finalOFolder}/${sample}_unique.bam -r ${geneModel} -o ${QCfolder}/${sample}_splicing
-${pythonbin} ${rseqQCscripts}/junction_saturation.py -i ${finalOFolder}/${sample}_unique.bam -r ${geneModel} -o ${QCfolder}/${sample}_splicing_saturation
-
-echo \"Annotating read quality and duplication\"
-${pythonbin} ${rseqQCscripts}/read_duplication.py -i ${finalOFolder}/accepted_hits.bam -o ${QCfolder}/${sample}_duplicate_prior_removal
-${pythonbin} ${rseqQCscripts}/read_duplication.py -i ${finalOFolder}/${sample}_unique.bam -o ${QCfolder}/${sample}_duplicate_after_removal
-${pythonbin} ${rseqQCscripts}/read_quality.py -i ${finalOFolder}/${sample}_unique.bam -o ${QCfolder}/${sample}_quality
-
-echo \"Now computing RPKM within the QC step\"
-${pythonbin} ${rseqQCscripts}/RPKM_count.py -r ${geneModel} -i ${finalOFolder}/${sample}_unique.bam -o ${QCfolder}/${sample}_RPKM
-
-" >> $script
-
-	fi
-
-	
-	if [[ "$runCufflinkslocal" == "yes" ]]; then   ##creates some RPKM data. Is it what we want to use? Not so sure.
-	    echo "Cufflinks step"
-
-	    cufflinksFolderBasic=${cufflinksFolder}/cufflinks_basic
-	    cufflinksFolderBetter=${cufflinksFolder}/cufflinks_better
-
-	    for folder in ${cufflinksFolder} ${cufflinksFolderBasic} ${cufflinksFolderBetter}; do
-		if [ ! -e $folder ]; then mkdir $folder; fi
-	    done
-
-	    echo "
-
-$cufflinks -p ${ncores} --library-type ${libstrand} -o ${cufflinksFolderBasic} --GTF $cleanGtfFile ${finalOFolder}/${sample}_unique.bam
-
-#$cufflinks -p ${ncores} -o ${cufflinksFolderBetter} --GTF-guide $cleanGtfFile ${finalOFolder}/${sample}_unique.bam
-
-" >> $script
-
-	fi
-	
-	echo $script
-	if [[ "$submit" == "yes" && "$nhours" != "0" ]]; then qsub $script; fi
-	if [[ "$submit" == "local" ]]; then sh $script; fi
-    done
-fi
-
-
-
-
-if [[ "$summary" == "yes" ]]; then
-    
-    outSum=${oFolder}/summary_reads.tab
-
-    if [[ "$summaryRegions" == "yes" ]]; then
-	extra=""
-	for locregion in `echo $regionsCount | sed -e 's/,/ /g'`; do
-	    extra="$extra\t$locregion"
-	    echo -e "sample\tmappedReads\tdupReads\tunmappedReads\tRead1\tRead2$extra" > $outSum
-	done
-    else 
-	echo -e "sample\tmappedReads\tdupReads\tunmappedReads\tRead1\tRead2" > $outSum
-    fi
-
-    
-
-    awk '{if ($1 != "sample") print}' $dataframe | while read sample f1 f2 condition; do
-	sFile=${oFolder}/${sample}/${sample}_stats.txt
-	uFile=${oFolder}/${sample}/${sample}_unmapped_stats.txt
-	echo "Looking at $sFile"
-	ls -ltrh $sFile
-	
-	mappedReads=`awk '{if (NR == 1) {print $1}}' $sFile`
-	dupReads=`awk '{if (NR == 4) {print $1}}' $sFile`
-	unmappedReads=`awk '{if (NR == 1) {print $1}}' $uFile`
-	Read1=`awk '{if (NR == 7) {print $1}}' $sFile`
-	Read2=`awk '{if (NR == 8) {print $1}}' $sFile`
-
-	
-	if [[ "$summaryRegions" == "yes" ]]; then
-	    extra=""
-	    for locregion in `echo $regionsCount | sed -e 's/,/ /g'`; do
-		echo "Counting reads for $locregion"
-		extra="$extra\t`${samtoolsFolder}/samtools view -c ${oFolder}/${sample}/${sample}_unique.bam $locregion`"
-
-	    done
-	    echo -e "$sample\t$mappedReads\t$dupReads\t$unmappedReads\t$Read1\t$Read2$extra" >> $outSum
-	else
-	    echo -e "$sample\t$mappedReads\t$dupReads\t$unmappedReads\t$Read1\t$Read2" >> $outSum
-	fi
-	
-
-		
-    done
-
-    ls -ltrh $outSum
-fi
 
 
 if [[ "$star" == "yes" ]]; then
@@ -794,7 +419,17 @@ if [[ "$star" == "yes" ]]; then
     
     
     starScript=cluster/submission/star_RNASeq.sh
+    starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
+    starMasterTableStep3=${oFolder}/cluster/submission/starMasterTableStep3.tab
 
+    starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.tab
+    starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.tab
+
+    nscripts=0
+    
+    echo "scripts" > $starMasterTableStep2
+    echo "scripts" > $starMasterTableStep3
+    
     echo "#$ -S /bin/bash
 #$ -l h_vmem=8.4G
 #$ -l tmem=8.4G
@@ -808,6 +443,9 @@ if [[ "$star" == "yes" ]]; then
 mkdir $JAVA_DIR
 " > $starScript
 
+
+
+
     tail -n +2  $dataframe | while read sample f1 f2 condition; do
 
 	finalOFolder=${oFolder}/${sample}
@@ -818,24 +456,78 @@ mkdir $JAVA_DIR
 	    
 	    echo "
 ${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
-
-### now need to sort
-$novosort -f -t /scratch0/ -0 -c 4 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+" > $straScript
+	    
+	    echo "
+$novosort -f -t /scratch0/ -0 -c 1 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
 $java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
-${samtools1} index ${finalOFolder}/${sample}_unique.bam
+${samtools} index ${finalOFolder}/${sample}_unique.bam
 
 rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
-" >> $starScript
+
+" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+	    
+
+	    echo "
+$samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
+
+$samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
+
+" > ${oFolder}/cluster/submission/star_step3_${sample}.sh
+
+
+	    echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
+	    echo "${oFolder}/cluster/submission/star_step3_${sample}.sh" >> $starMasterTableStep3
+	    ((nscripts=nscripts+1))
+
 	fi
+
     done
+
+    echo "#$ -S /bin/bash
+#$ -l h_vmem=8.4G
+#$ -l tmem=8.4G
+#$ -l h_rt=12:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
+#$ -wd ${oFolder}
+#$ -t 1-${nscripts}
+#$ -tc 20
+
+script=`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2
+
+sh $script
+
+" > $starSubmissionStep2
+
+    echo "#$ -S /bin/bash
+#$ -l h_vmem=8.4G
+#$ -l tmem=8.4G
+#$ -l h_rt=12:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
+#$ -wd ${oFolder}
+#$ -t 1-${nscripts}
+#$ -tc 20
+
+script=`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2
+
+sh $script
+
+" > $starSubmissionStep3
+
 
     echo "
 rm -rf $JAVA_DIR
 " >> $starScript
 
-    ls -ltrh $starScript
+    ls -ltrh $starScript $starSubmissionStep2 $starSubmissionStep3
 fi
 
 
