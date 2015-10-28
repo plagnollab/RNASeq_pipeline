@@ -17,8 +17,8 @@ if [[ "$computer" == "CS" ]]; then
     java=/share/apps/jdk1.7.0_45/bin/java
     
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
-    bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets/
-    if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/
+    bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
+    if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
     fi
 fi
 
@@ -259,7 +259,7 @@ if [[ "$species" == "human_hg38" ]]; then
     fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
     gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
-    STARdir=${bigFilesBundleFolder}/RNASeq/Human/STAR
+    STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 fi
 
@@ -381,7 +381,7 @@ if [[ "$species" == "tc1_mouse" ]]; then
 fi
 
 
-for file in $gtfFile $gffFile; do
+for file in $gtfFile $gffFile $STARdir; do
     if [ ! -e $file ]; then echo "File $file does not exist"; exit; fi
 done
 
@@ -399,7 +399,7 @@ hold=""
 
 
 
-if [[ "$star" == "yes" ]]; then
+if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]; then
 
     SCRATCH_DIR=/scratch0/RNASeq
     JAVA_DIR=${SCRATCH_DIR}/javastar
@@ -492,7 +492,7 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 #$ -e ${oFolder}/cluster/error
 #$ -N step1b_${code}
 #$ -wd ${oFolder}
-#$ -t 1-${njobs1b}
+#$ -t 2-${njobs1b}
 #$ -tc 20
 
 script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep1b\`
@@ -651,7 +651,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${c
 #############
     
     echo $mainscript
-	
+    qsub $hold $mainscript
 
 fi
 
