@@ -92,10 +92,10 @@ for folder in $oFolder; do
 done
 
 
-tophat=no
-miso=no
-runCufflinks=no
-submit=yes
+starStep1a=no
+starStep1b=no
+starStep2=no
+
 
 stranded=no
 libstrand=fr-unstranded
@@ -129,9 +129,13 @@ until [ -z "$1" ]; do
 	--force)
 	    shift
 	    force=$1;;
-	--star)
+	--starStep1)
 	    shift
-	    star=$1;;
+	    starStep1a=$1
+	    starStep1b=$1;;
+	--starStep2)
+	    shift
+	    starStep2=$1;;
 	--superLong)
 	    shift
 	    superLong=$1;;
@@ -413,6 +417,8 @@ if [[ "$h2" != "f1" ]]; then echo "header 2 must be f1 for fastq1"; exit; fi
 if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 
+hold=""
+
 
 
 if [[ "$star" == "yes" ]]; then
@@ -439,6 +445,7 @@ if [[ "$star" == "yes" ]]; then
 #$ -R y
 #$ -o cluster/out
 #$ -e cluster/error
+#$ -N step1a_${code}
 #$ -cwd
 
 mkdir -p $JAVA_DIR
@@ -505,6 +512,7 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
+#$ -N step1b_${code}
 #$ -wd ${oFolder}
 #$ -t 1-${njobs1b}
 #$ -tc 20
@@ -519,7 +527,7 @@ sh \$script
 #$ -l h_vmem=3.9G
 #$ -l tmem=3.9G
 #$ -l h_rt=12:00:00
-#$ -pe smp 1
+#$ -N step2_${code}
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
@@ -539,6 +547,25 @@ rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
 
     ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
+
+    if [[ "$starStep1a" == "yes" ]]; then
+	qsub $hold $starSubmissionStep1a
+	if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
+        hold="-hold_jid step1a_${code}"
+    fi
+
+    if [[ "$starStep1b" == "yes" ]]; then
+	qsub $hold $starSubmissionStep1b
+	if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
+    fi
+
+    if [[ "$starStep2" == "yes" ]]; then
+	qsub $hold $starSubmissionStep2
+	if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
+    fi
+
+
+
 fi
 
 
