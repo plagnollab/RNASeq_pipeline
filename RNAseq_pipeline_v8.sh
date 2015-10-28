@@ -70,7 +70,6 @@ picardReorder=${software}/picard-tools-1.100/ReorderSam.jar
 
 
 keepSex=FALSE  ## should sex chromosomes be kept in the differential expression analysis?
-superLong=no
 force=yes
 species=mouse
 segmentLength=25
@@ -91,6 +90,7 @@ for folder in $oFolder; do
     if [ ! -e $folder ]; then mkdir $folder; fi
 done
 
+submit=no
 
 starStep1a=no
 starStep1b=no
@@ -136,9 +136,6 @@ until [ -z "$1" ]; do
 	--starStep2)
 	    shift
 	    starStep2=$1;;
-	--superLong)
-	    shift
-	    superLong=$1;;
 	--keep.sex)
 	    shift
 	    keepSex=$1;;
@@ -421,10 +418,10 @@ if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" 
 #$ -l h_rt=12:00:00
 #$ -pe smp 4
 #$ -R y
-#$ -o cluster/out
-#$ -e cluster/error
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
-#$ -cwd
+#$ -wd ${oFolder}
 
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
@@ -441,10 +438,24 @@ mkdir -p $JAVA_DIR
 	
 	if [[ "$force" == "yes" || ! -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then
 	    
-	    echo "
-${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+	    if [ ! -e ${iFolder}/$f1 ]; then echo "File ${iFolder}/$f1 does not exist. Script will stop."; exit; fi
+
+	    if [[ ! "$f2" == "NA" ]]; then
+		if [ ! -e ${iFolder}/$f2 ]; then echo "File ${iFolder}/$f2 does not exist. Script will stop."; exit; fi
+
+		echo "
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
 " >> $starSubmissionStep1a
+	    fi
+
+	    if [[  "$f2" == "NA" ]]; then
+		echo "
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+" >> $starSubmissionStep1a
+	    fi
 	    
+
+
 	    echo "
 $novosort -f -t /scratch0/ -0 -c 1 -m 7G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
@@ -526,18 +537,18 @@ rm -rf $JAVA_DIR
 
     ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
 
-    if [[ "$starStep1a" == "yes" ]]; then
+    if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]; then
 	qsub $hold $starSubmissionStep1a
 	if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
         hold="-hold_jid step1a_${code}"
     fi
 
-    if [[ "$starStep1b" == "yes" ]]; then
+    if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]; then
 	qsub $hold $starSubmissionStep1b
 	if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
     fi
 
-    if [[ "$starStep2" == "yes" ]]; then
+    if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]; then
 	qsub $hold $starSubmissionStep2
 	if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
     fi
@@ -552,7 +563,7 @@ fi
 if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" ]]; then
     
 
-    
+    starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh    
 
     ncores=1
     nhours=0
@@ -650,9 +661,9 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${c
 
 #############
     
-    echo $mainscript
-    qsub $hold $mainscript
-
+    ls -ltrh $starSubmissionStep3
+    if [[ "$submit" == "yes" ]]; then qsub $hold $starSubmissionStep3; fi
+    
 fi
 
     
