@@ -255,38 +255,12 @@ if [[ "$species" == "DvH_sc_human" ]]; then
 fi
 
 
-if [[ "$species" == "human" ]]; then
-    refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Homo_sapiens/NCBI/build37.2
-    gtfFile=${refFolder}/Annotation/Genes/genes.gtf    
-    fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
-    IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
-
-    ### stuff below should go to the bundle
-    SNPlist=${RNASEQBUNDLE}/human/exonic_snps_human_hg19_clean.tab
-    gffFile=${RNASEQBUNDLE}/human/GTF/human_iGenomes_NCBI37_with_ensembl.gff
-    cleanGtfFile=${RNASEQBUNDLE}/human/GTF/human_iGenomes_NCBI37_with_ensembl.gtf
-    annotationFile=${RNASEQBUNDLE}/human/biomart/biomart_annotations_human.tab
-    geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_nochr.bed
-    geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_chr1.bed
-
-    db=hsapiens_gene_ensembl
-fi
-
-
 if [[ "$species" == "human_hg38" ]]; then
-    if [ -e /cluster/scratch3/vyp-scratch2/ ]; then
-	    refFolder=/cluster/scratch3/vyp-scratch2/reference_datasets    
-	else 
-	    refFolder=/scratch2/vyp-scratch2/reference_datasets   
-	fi
     fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    IndexBowtie2=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    
-    gffFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gff
-    gtfFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gtf
-
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
+    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
+    STARdir=${bigFilesBundleFolder}/RNASeq/Human/STAR
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
-
 fi
 
 if [[ "$species" == "humanmuscle" ]]; then
@@ -406,6 +380,10 @@ if [[ "$species" == "tc1_mouse" ]]; then
 
 fi
 
+
+for file in $gtfFile $gffFile; do
+    if [ ! -e $file ]; then echo "File $file does not exist"; exit; fi
+done
 
 
 ############### checking the input dataframe
