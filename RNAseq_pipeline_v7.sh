@@ -14,7 +14,9 @@ if [[ "$computer" == "CS" ]]; then
 
     javaTemp2="/scratch2/vyp-scratch2/vincent/java_temp"
     javaTemp="TMP_DIR=${javaTemp2}"
-
+    java=/share/apps/jdk1.7.0_45/bin/java
+    if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
+    
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets/
     if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets/
@@ -55,11 +57,11 @@ done
 
 
 
-
+starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STAR
 tophatbin=${software}/tophat-2.0.13.Linux_x86_64/tophat2
 bowtie2Folder=${software}/bowtie2-2.2.6
 samtoolsFolder=${software}/samtools-0.1.19
-samtools1=${software}/samtools-1.1/samtools
+samtools1=${software}/samtools-1.2/samtools
 
 cufflinks=${software}/cufflinks-2.1.1.Linux_x86_64/cufflinks
 
@@ -132,6 +134,9 @@ until [ -z "$1" ]; do
 	--force)
 	    shift
 	    force=$1;;
+	--star)
+	    shift
+	    star=$1;;
 	--superLong)
 	    shift
 	    superLong=$1;;
@@ -384,31 +389,23 @@ if [[ "$species" == "dog" ]]; then
 fi
 
 if [[ "$species" == "mouse" ]]; then
-    if [[ "$computer" == "CS" ]]; then
 	
-
-	
-	##refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
-	IndexBowtie2=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Sequence/Bowtie2Index/genome	
-	gtfFile=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Annotation/Genes/genes.gtf
+    refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Mus_musculus/NCBI/GRCm38
+    IndexBowtie2=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Sequence/Bowtie2Index/genome	
+    gtfFile=${bigFilesBundleFolder}/mouse_reference_sequence/NCBI/GRCm38/Annotation/Genes/genes.gtf
 
 	#### stuff below should go to the bundle
-	gffFile=${RNASEQBUNDLE}/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff
-	annotationFile=${RNASEQBUNDLE}/mouse/biomart/biomart_annotations_mouse.tab
+    gffFile=${RNASEQBUNDLE}/mouse/GTF/mouse_iGenomes_GRCm38_with_ensembl.gff
+    annotationFile=${RNASEQBUNDLE}/mouse/biomart/biomart_annotations_mouse.tab
 	
-
+    STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
+	##annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+    
+    
 	#geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_chr1.bed
 	#geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_nochr.bed
-	
-        db=mmusculus_gene_ensembl
-
-	if [[ "$misoindex" == "NA" ]]; then misoindex=${RNASEQBUNDLE}/mouse/miso_mm10/v2/indexed_SE_events; fi
-    fi
-
-    if [[ "$computer" == "UGI" ]]; then
-	refFolder=/ugi/scratch/vincent/tophat_reference/Mus_musculus/NCBI/build37.2
-	IndexFolder=${refFolder}/Sequence/Bowtie2Index
-    fi
+    
+    if [[ "$misoindex" == "NA" ]]; then misoindex=${RNASEQBUNDLE}/mouse/miso_mm10/v2/indexed_SE_events; fi
 
 fi
 
@@ -611,7 +608,7 @@ rm -rf ${RESULTS_DIR} ${DATA_DIR}
 
 ${samtools1} index ${finalOFolder}/accepted_hits.bam
 
-java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
 
@@ -804,6 +801,57 @@ if [[ "$summary" == "yes" ]]; then
     ls -ltrh $outSum
 fi
 
+
+if [[ "$star" == "yes" ]]; then
+
+    SCRATCH_DIR=/scratch0/${sample}
+    JAVA_DIR=${SCRATCH_DIR}/java
+    
+    
+    starScript=cluster/submission/star_RNASeq.sh
+
+    echo "#$ -S /bin/bash
+#$ -l h_vmem=8.4G
+#$ -l tmem=8.4G
+#$ -l h_rt=12:00:00
+#$ -pe smp 4
+#$ -R y
+#$ -o cluster/out
+#$ -e cluster/error
+#$ -cwd
+
+mkdir $JAVA_DIR
+" > $starScript
+
+    tail -n +2  $dataframe | while read sample f1 f2 condition; do
+
+	finalOFolder=${oFolder}/${sample}
+	if [ ! -e ${finalOFolder} ]; then mkdir ${finalOFolder}; fi
+	
+	if [[ "$force" == "yes" || ! -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then
+	    
+	    
+	    echo "
+${starexec} --readFilesIn $f1 $f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+
+### now need to sort
+$novosort -f -t /scratch0/ -0 -c 4 -m 20G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
+$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+
+${samtools1} index ${finalOFolder}/${sample}_unique.bam
+
+rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
+" >> $starScript
+	fi
+    done
+
+    echo "
+rm -rf $JAVA_DIR
+" >> $starScript
+
+    ls -ltrh $starScript
+fi
 
 
 ################################################# Now the scripts that take all samples together    
