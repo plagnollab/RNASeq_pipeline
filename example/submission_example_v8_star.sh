@@ -9,10 +9,11 @@ pipeline=${RNASEQPIPBASE}/RNAseq_pipeline_v8.sh
 #############
 species=Human_hg38
 submit=yes
+force=yes
 
-starStep1a=no
+starStep1a=yes
 starStep1b=yes
-starStep2=no
+starStep2=yes
 
 summary=no
 prepareCounts=no
@@ -24,7 +25,8 @@ Rdexseq=no
 oFolder=/scratch2/vyp-scratch2/IoO_RNASeq/processed/Owen_blood
 iFolder=/SAN/biosciences/ioo_no_aw/data/Project/A2914/fastq
 
-sh $pipeline --iFolder ${iFolder} --oFolder ${oFolder} --dataframe support/Owen_blood.tab --code Owen_blood --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq}  --summary ${summary} --starStep1a ${starStep1a} --starStep1b ${starStep1b} --starStep2 ${starStep2} --species human_hg38 --submit ${submit}
+sh $pipeline --iFolder ${iFolder} --oFolder ${oFolder} --dataframe support/Owen_blood.tab --code Owen_blood --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq}  --summary ${summary} --starStep1a ${starStep1a} --starStep1b ${starStep1b} --starStep2 ${starStep2} --species human_hg38 --submit ${submit} --force ${force}
+
 
 echo $mainscript
 
