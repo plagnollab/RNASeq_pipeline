@@ -133,6 +133,12 @@ until [ -z "$1" ]; do
 	    shift
 	    starStep1a=$1
 	    starStep1b=$1;;
+	--starStep1a)
+	    shift
+	    starStep1a=$1;;
+	--starStep1b)
+	    shift
+	    starStep1b=$1;;
 	--starStep2)
 	    shift
 	    starStep2=$1;;
@@ -459,7 +465,7 @@ ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad Lo
 	    echo "
 $novosort -f -t /scratch0/ -0 -c 1 -m 7G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
-$java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+$java -Xmx9g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
 
