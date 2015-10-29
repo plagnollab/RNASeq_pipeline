@@ -15,6 +15,7 @@ if [[ "$computer" == "CS" ]]; then
     javaTemp2="/scratch2/vyp-scratch2/vincent/java_temp"
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
+    if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
     
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets/
