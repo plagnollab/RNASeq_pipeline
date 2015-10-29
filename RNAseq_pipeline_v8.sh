@@ -129,10 +129,6 @@ until [ -z "$1" ]; do
 	--force)
 	    shift
 	    force=$1;;
-	--starStep1)
-	    shift
-	    starStep1a=$1
-	    starStep1b=$1;;
 	--starStep1a)
 	    shift
 	    starStep1a=$1;;
@@ -421,7 +417,7 @@ if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" 
     echo "#$ -S /bin/bash
 #$ -l h_vmem=8.4G
 #$ -l tmem=8.4G
-#$ -l h_rt=12:00:00
+#$ -l h_rt=24:00:00
 #$ -pe smp 4
 #$ -R y
 #$ -o ${oFolder}/cluster/out
@@ -450,7 +446,7 @@ mkdir -p $JAVA_DIR
 		if [ ! -e ${iFolder}/$f2 ]; then echo "File ${iFolder}/$f2 does not exist. Script will stop."; exit; fi
 
 		echo "
-${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 " >> $starSubmissionStep1a
 	    fi
 
@@ -463,11 +459,13 @@ ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad Lo
 
 
 	    echo "
-$novosort -f -t /scratch0/ -0 -c 1 -m 7G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -0 -c 1 -m 6G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
-$java -Xmx9g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+$java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
+
+${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
 
 rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
 
