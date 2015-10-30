@@ -25,7 +25,13 @@ Rdexseq=no
 oFolder=/scratch2/vyp-scratch2/IoO_RNASeq/processed/Owen_blood
 iFolder=/SAN/biosciences/ioo_no_aw/data/Project/A2914/fastq
 
-sh $pipeline --iFolder ${iFolder} --oFolder ${oFolder} --dataframe support/Owen_blood.tab --code Owen_blood --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq}  --summary ${summary} --starStep1a ${starStep1a} --starStep1b ${starStep1b} --starStep2 ${starStep2} --species human_hg38 --submit ${submit} --force ${force}
+dataframe=support/Owen_blood.tab
+code=Owen_blood
+species=human_hg38
+
+sh $pipeline --iFolder ${iFolder} --oFolder ${oFolder} --dataframe ${dataframe} --code ${code} --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq}  --summary ${summary} --starStep1a ${starStep1a} --starStep1b ${starStep1b} --starStep2 ${starStep2} --species ${species} --submit ${submit} --force ${force}
+
+
 
 
 echo $mainscript
