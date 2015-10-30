@@ -288,8 +288,8 @@ if [[ "$species" == "human_hg38" ]]; then
     fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     IndexBowtie2=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     
-    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens_GRCh38.82_fixed.gff
-    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens_GRCh38.82_fixed.gtf
+    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
 
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
