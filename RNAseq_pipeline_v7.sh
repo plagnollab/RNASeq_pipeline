@@ -284,16 +284,12 @@ fi
 
 
 if [[ "$species" == "human_hg38" ]]; then
-    if [ -e /cluster/scratch3/vyp-scratch2/ ]; then
-	    refFolder=/cluster/scratch3/vyp-scratch2/reference_datasets    
-	else 
-	    refFolder=/scratch2/vyp-scratch2/reference_datasets   
-	fi
-    fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    IndexBowtie2=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     
-    gffFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gff
-    gtfFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gtf
+    fasta=${bigFilesBundleFolder}/RNASeq/Human_hg38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Human_hg38/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+    
+    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens_GRCh38_78_fixed.gff
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens_GRCh38_78_fixed.gtf
 
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
