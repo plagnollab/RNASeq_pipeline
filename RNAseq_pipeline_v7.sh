@@ -6,7 +6,7 @@ computer=CS
 if [[ "$computer" == "CS" ]]; then
     software=/cluster/project8/vyp/vincent/Software
     pythonbin=/share/apps/python-2.7.1/bin/python2.7
-    if [! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
+    if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
 
