@@ -609,7 +609,7 @@ $java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUP
 
 if [ -e ${finalOFolder}/${sample}_unique.bam ]
 	then rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
-else echo "unique bam not created! Either an error with Java or with Picard has occurred."
+else echo \"unique bam not created! Either an error with Java or with Picard has occurred.\"
 fi
 ${samtools1} index ${finalOFolder}/${sample}_unique.bam
 
