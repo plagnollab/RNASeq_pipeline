@@ -593,7 +593,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
 #$ -R y
 #$ -l h_rt=${nhours}:${nminutes}:00
 
-" > $mainscript
+" > $starSubmissionStep3
 	
 
     if [[ "$prepareCounts" == "yes" ]]; then
@@ -602,7 +602,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
 
 ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${annotationFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --iFolder=${oFolder} ${countPrepareR} ${clusterFolder}/R/count_prepare.out
 
-" >> $mainscript
+" >> $starSubmissionStep3
 	
     fi
 
@@ -617,7 +617,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${an
 
 	echo "
 ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
-" >> $mainscript
+" >> $starSubmissionStep3
 
     fi
 
@@ -631,7 +631,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=$
 	echo "
 ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
 
-" >> $mainscript
+" >> $starSubmissionStep3
     fi
 
 
@@ -644,7 +644,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} 
 
 	echo "
 ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${pathwayGOAnalysisR} ${clusterFolder}/R/pathwayGO_${stem}.out 
-" >> $mainscript
+" >> $starSubmissionStep3
 
     fi
     
@@ -658,7 +658,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${c
 	
 	echo "
 ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${topGOAnalysisR} ${clusterFolder}/R/topGO_${stem}.out 
-" >> $mainscript
+" >> $starSubmissionStep3
 
     fi
     
