@@ -6,7 +6,7 @@ computer=CS
 if [[ "$computer" == "CS" ]]; then
     software=/cluster/project8/vyp/vincent/Software
     pythonbin=/share/apps/python-2.7.1/bin/python2.7
-    if [! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
+    if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
 
@@ -284,16 +284,12 @@ fi
 
 
 if [[ "$species" == "human_hg38" ]]; then
-    if [ -e /cluster/scratch3/vyp-scratch2/ ]; then
-	    refFolder=/cluster/scratch3/vyp-scratch2/reference_datasets    
-	else 
-	    refFolder=/scratch2/vyp-scratch2/reference_datasets   
-	fi
+    
     fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     IndexBowtie2=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
     
-    gffFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gff
-    gtfFile=${bigFilesBundleFolder}/human_reference_sequence/GTF_files/Homo_sapiens_GRCh38_78_fixed.gtf
+    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
+    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
 
     annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
 
@@ -611,8 +607,10 @@ ${samtools1} index ${finalOFolder}/accepted_hits.bam
 
 $java -Xmx9g -jar ${picardDup} TMP_DIR=${JAVA_DIR} ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/accepted_hits.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 
-rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
-
+if [ -e ${finalOFolder}/${sample}_unique.bam ]
+	then rm ${finalOFolder}/accepted_hits.bam ${finalOFolder}/accepted_hits.bam.bai
+else echo \"unique bam not created! Either an error with Java or with Picard has occurred.\"
+fi
 ${samtools1} index ${finalOFolder}/${sample}_unique.bam
 
 ${samtools1} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_stats.txt
