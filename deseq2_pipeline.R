@@ -163,8 +163,10 @@ for (condition in list.conditions) {
      } else { 
         output.pca <- paste(deseq2.figs, '/', loc.code, '_pca.pdf', sep = '')
      } 
-     pdf(output.pca) 
-     plotPCA(CDS, intgroup = condition) 
+
+     rld <- rlog(CDS)
+     pdf(output.pca)
+     plotPCA(rld, intgroup = condition) 
      dev.off() 
 
 ## Visualise the counts versus condition for the genes with best p-values 
