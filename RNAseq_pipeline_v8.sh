@@ -419,8 +419,8 @@ if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" 
     echo "scripts" > $starMasterTableStep2
     
     echo "#$ -S /bin/bash
-#$ -l h_vmem=8.4G
-#$ -l tmem=8.4G
+#$ -l h_vmem=8.9G
+#$ -l tmem=8.9G
 #$ -l h_rt=24:00:00
 #$ -pe smp 4
 #$ -R y
