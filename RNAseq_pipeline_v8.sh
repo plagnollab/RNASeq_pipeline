@@ -6,15 +6,19 @@ computer=CS
 if [[ "$computer" == "CS" ]]; then
     software=/cluster/project8/vyp/vincent/Software
     pythonbin=/share/apps/python-2.7.1/bin/python2.7
+    if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.10-shared/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
+    if [ ! -e $Rbin ]; then Rbin=/share/apps/R/bin/R; fi
 
     misoRunEvents=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_events_analysis.py
     runMiso=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_miso.py
 
     javaTemp2="/scratch2/vyp-scratch2/vincent/java_temp"
+    if [ ! -e $javaTemp2 ]; then javaTemp2="/cluster/scratch3/vyp-scratch2/vincent/java_temp/"; fi
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
+    if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
     
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
