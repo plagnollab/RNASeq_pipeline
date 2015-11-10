@@ -419,8 +419,8 @@ if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" 
     echo "scripts" > $starMasterTableStep2
     
     echo "#$ -S /bin/bash
-#$ -l h_vmem=8.9G
-#$ -l tmem=8.9G
+#$ -l h_vmem=12.5G
+#$ -l tmem=12.5G
 #$ -l h_rt=24:00:00
 #$ -pe smp 4
 #$ -R y
@@ -502,10 +502,10 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
     njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
 
     echo "#$ -S /bin/bash
-#$ -l h_vmem=8.4G
-#$ -l tmem=8.4G
+#$ -l h_vmem=12.5G
+#$ -l tmem=12.5G
 #$ -l h_rt=12:00:00
-#$ -pe smp 1
+#$ -pe smp 4
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
