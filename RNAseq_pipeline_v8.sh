@@ -517,8 +517,8 @@ sh \$script
 " > $starSubmissionStep1b
 
     echo "#$ -S /bin/bash
-#$ -l h_vmem=3.9G
-#$ -l tmem=3.9G
+#$ -l h_vmem=5.9G
+#$ -l tmem=5.9G
 #$ -l h_rt=12:00:00
 #$ -N step2_${code}
 #$ -R y
