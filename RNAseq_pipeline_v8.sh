@@ -471,8 +471,8 @@ rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
 
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
 	    
-	    if [[ "$f2" == "NA" ]]; then paired=yes;  else paired=no; fi;
-
+	    if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
+	    
 	    echo "
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
 
