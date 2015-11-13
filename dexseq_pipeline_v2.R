@@ -219,7 +219,7 @@ for (condition in list.conditions) {
       message(i, ' ', gene, ' ', gene.pretty)
       
       output.pdf <- paste(dexseq.figs, '/DEXSeq-', gene.pretty, '.pdf', sep = '')
-      pdf(output.pdf, width = 8, height = 4.9)
+      pdf(output.pdf, width = 16, height = 9.8)
       plotDEXSeq(res,
                  geneID = gene,  ##I suspect it has to be gene, otherwise it crashes
                  cex.axis = 1.2,
