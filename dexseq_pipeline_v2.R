@@ -53,6 +53,8 @@ if('cryptic' %in% ls() ){
 files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') 
 }else{files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')}
 
+files
+
 if (sum(!file.exists(files)) > 0) {
   print(files [ !file.exists(files) ])
   stop('Some input files are missing')
@@ -72,7 +74,9 @@ if (!file.exists(dexseq.folder)) dir.create(dexseq.folder)
 my.ids <- support$sample
 if (!keep.dups) countFiles <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
 if (keep.dups) countFiles <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = '')
+if ( "cryptic" %in% ls() ) countFiles <- paste(iFolder, '/counts/', my.ids, '_dexseq_counts.txt', sep = '')
 
+countFiles
 
 for (condition in list.conditions) {
 
