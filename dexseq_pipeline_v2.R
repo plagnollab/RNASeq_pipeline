@@ -33,6 +33,7 @@ if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation
 if ('gff' %in% names(myArgs)) gff <- myArgs[['gff']]
 if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
 if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
+if ('cryptic' %in% names(myArgs)) cryptic <- as.logical(myArgs[['cryptic']])
 
 
 
@@ -48,8 +49,11 @@ list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''), quote = "")
 names(annotation) <- ifelse (names(annotation) == "external_gene_name", "external_gene_id", names(annotation)) # trying to agree on the column names
 
+if('cryptic' %in% ls() ){
+files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') }
+else {
+files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')}
 
-files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
 if (sum(!file.exists(files)) > 0) {
   print(files [ !file.exists(files) ])
   stop('Some input files are missing')
