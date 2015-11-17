@@ -471,7 +471,11 @@ ${samtools} index ${finalOFolder}/${sample}_unique.bam
 
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
 
-rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam 
+#make sure that the sorted unique file exists and is at least 10MB before removing the original bams
+let filesize=`du ${finalOFolder}/${sample}_unique.bam | cut -f1`
+if [ -e ${finalOFolder}/${sample}_unique.bam ]  && [ $filesize -gt 1000 ]
+	then rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
+fi
 
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
 	    
