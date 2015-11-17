@@ -50,9 +50,8 @@ annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string =
 names(annotation) <- ifelse (names(annotation) == "external_gene_name", "external_gene_id", names(annotation)) # trying to agree on the column names
 
 if('cryptic' %in% ls() ){
-files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') }
-else {
-files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')}
+files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') 
+}else{files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')}
 
 if (sum(!file.exists(files)) > 0) {
   print(files [ !file.exists(files) ])
