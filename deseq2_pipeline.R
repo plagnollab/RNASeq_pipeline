@@ -155,7 +155,8 @@ for (condition in list.conditions) {
 
 #################### now write the output to a file 
   write.table(deseq.res.df, file = output.file, quote = FALSE, row.names = FALSE, sep = "\t" ) 
-
+  save(list = c("CDS"), file = paste0(loc.deseq2.folder, "/deseq2_object.RData")) 
+  
 ######### Now add a PCA for the subset of individuals being considered
   if(extra.plots) { 
      if (keep.dups) { 
