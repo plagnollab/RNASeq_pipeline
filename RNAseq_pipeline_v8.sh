@@ -472,11 +472,10 @@ ${samtools} index ${finalOFolder}/${sample}_unique.bam
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
 
 #make sure that the sorted unique file exists and is at least 10MB before removing the original bams
-if [ -e ${finalOFolder}/${sample}_unique.bam ]
-then	
+if [ -e ${finalOFolder}/${sample}_unique.bam ]; then	
 let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
-	if [ $filesize -gt 1000 ]
-	then rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
+	if [ \$filesize -gt 1000 ]; then
+	   rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
 	fi
 fi
 
@@ -510,10 +509,10 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
     njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
 
     echo "#$ -S /bin/bash
-#$ -l h_vmem=12.5G
-#$ -l tmem=12.5G
+#$ -l h_vmem=7.9G
+#$ -l tmem=7.9G
 #$ -l h_rt=12:00:00
-#$ -pe smp 4
+#$ -pe smp 1
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
