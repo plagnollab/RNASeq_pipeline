@@ -509,8 +509,8 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
     njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
 
     echo "#$ -S /bin/bash
-#$ -l h_vmem=7.9G
-#$ -l tmem=7.9G
+#$ -l h_vmem=9.5G
+#$ -l tmem=9.5G
 #$ -l h_rt=12:00:00
 #$ -pe smp 1
 #$ -R y
