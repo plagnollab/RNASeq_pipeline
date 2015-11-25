@@ -16,7 +16,7 @@ R packages and software:
 
 Notes for installation of DEXSeq/DESeq2:
 
-- Need to add /share/apps/binutils-2.25/bin to the PATH
+- Need to add /share/apps/binutils-2.25/bin to the PATH (make sure it's at the front of your PATH so ``ld`` is fetched from there)
 - type 
 ```
 scl enable devtoolset-1.1 'bash'
