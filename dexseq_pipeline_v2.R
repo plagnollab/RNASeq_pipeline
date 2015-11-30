@@ -43,6 +43,8 @@ if ('cryptic' %in% names(myArgs)) cryptic <- as.logical(myArgs[['cryptic']])
 message('gff file is ', gff)
 message('Now reading ', support.frame)
 support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
+#remove any columns that are just NA values - occurs in special cases
+support <- support[,apply(X=support,MARGIN=2,FUN=function(x) !(sum(is.na(x))==length(x)))]
 my.ids <- support$sample
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 

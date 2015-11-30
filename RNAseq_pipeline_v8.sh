@@ -270,7 +270,8 @@ if [[ "$species" == "human_hg38" ]]; then
     gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
     gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
     STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
-    annotationFile=${RNASEQBUNDLE}/human_hg38/biomart/biomart_annotations_human.tab
+    #annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
+    annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
 fi
 
 if [[ "$species" == "humanmuscle" ]]; then
@@ -279,7 +280,8 @@ if [[ "$species" == "humanmuscle" ]]; then
     gtfFile=${refFolder}/Annotation/Genes/genes.gtf	
 
     gffFile=/cluster/project8/vyp/vincent/data/reference_genomes/gff/humanmuscle_iGenomes_NCBI37_with_ensembl.gff
-    annotationFile=${RNASEQBUNDLE}/human/biomart/biomart_annotations_human.tab
+    #annotationFile=${bigFilesBundleFolder}/human/biomart/biomart_annotations_human.tab
+    annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
     geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_nochr.bed
     geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_chr1.bed
 
