@@ -1,4 +1,4 @@
-## version v7
+## version v8
 
 #computer=vanHeel
 computer=CS
@@ -9,7 +9,6 @@ if [[ "$computer" == "CS" ]]; then
     if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
-    if [ ! -e $Rbin ]; then Rbin=/share/apps/R/bin/R; fi
 
     misoRunEvents=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_events_analysis.py
     runMiso=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_miso.py
@@ -23,6 +22,7 @@ if [[ "$computer" == "CS" ]]; then
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
     if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
+    Rbin=/share/apps/R/bin/R
     fi
 fi
 
@@ -52,7 +52,10 @@ deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
 pathwayGOAnalysisR=${RNASEQPIPBASE}/pathwayGO_pipeline.R
 topGOAnalysisR=${RNASEQPIPBASE}/topGO_pipeline.R
 novosort=${software}/novocraft/novosort
-
+trim_galore=${software}/trim_galore/trim_galore
+cutadapt=/share/apps/python-2.7.8/bin/cutadapt
+#for the old cluster
+if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
 for file in $countPrepareR; do
     if [ ! -e $file ]; then echo "Missing script fule $countPrepareR"; fi
@@ -95,7 +98,8 @@ for folder in $oFolder; do
 done
 
 submit=no
-
+# If QC is wanted, the pipeline will send each fastq or pair of fastqs through FastQC. If adapters are present then the offending fastq files will be trimmed with Trim Galore! and these trimmmed fastqs will be the ones aligned with STAR. 
+QC=yes
 starStep1a=no
 starStep1b=no
 starStep2=no
@@ -193,6 +197,9 @@ until [ -z "$1" ]; do
 	--keepDups)
 	    keepDups=TRUE
 	    shift;;
+	--QC)
+	    shift
+	    QC=$1;;
 	-* )
 	    echo "Unrecognized option: $1"
 	    exit 1;;
@@ -400,8 +407,6 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 hold=""
 
-
-
 if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]; then
 
     SCRATCH_DIR=/scratch0/RNASeq
@@ -432,7 +437,6 @@ if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" 
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
 
-
     tail -n +2  $dataframe | while read sample f1 f2 condition; do
 
 	echo "Sample $sample"
@@ -445,17 +449,45 @@ mkdir -p $JAVA_DIR
 	if [[ "$force" == "yes" || ! -e ${finalOFolder}/${sample}_unique.bam.bai ]]; then
 	    
 	    if [ ! -e ${iFolder}/$f1 ]; then echo "File ${iFolder}/$f1 does not exist. Script will stop."; exit; fi
-
+#If paired end
 	    if [[ ! "$f2" == "NA" ]]; then
 		if [ ! -e ${iFolder}/$f2 ]; then echo "File ${iFolder}/$f2 does not exist. Script will stop."; exit; fi
-
-		echo "
+#QC paired end
+			if [[ "$QC" == "yes" ]]; then
+echo "
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
+			" >>  $starSubmissionStep1a
+			
+			#the trimmed files have a slightly different output
+			f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
+			f2=`echo $f2 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
+			#check that the trimming has happened. If not then exit
+			
+			echo "
+if [ ! -e ${iFolder}/$f1 ]; then exit;fi
+			" >> $starSubmissionStep1a
+			fi
+#if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.		
+echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 " >> $starSubmissionStep1a
 	    fi
 
+#if single ended
 	    if [[  "$f2" == "NA" ]]; then
-		echo "
+		if [[ "$QC" == "yes" ]];then
+			echo "
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
+		" >> $starSubmissionStep1a
+		#the trimmed files have a slightly different output
+                f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
+	#check that the trimming has happened. If not then exit
+                        echo "  
+if [ ! -e ${iFolder}/$f1 ]; then exit;fi
+                        " >> $starSubmissionStep1a
+                        fi
+#if trimming has occurred then the trimmed fastq will be aligned		
+echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
 " >> $starSubmissionStep1a
 	    fi
