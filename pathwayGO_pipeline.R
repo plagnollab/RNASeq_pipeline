@@ -1,31 +1,39 @@
+#!/usr/bin/env Rscript
+
 library(RCurl)
 library(biomaRt)
-
-getArgs <- function() {
-  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
-  myargs <- lapply(myargs.list,function(x) x[2] )
-  names(myargs) <- lapply(myargs.list,function(x) x[1])
-  return (myargs)
-}
+library(optparse)
 
 ##iFolder <- "/SAN/biomed/biomed14/vyp-scratch/Zanda_Uveitis_RNASeq/processed"
-iFolder <- "~/uveitis_scratch/processed"
-
+#iFolder <- "~/uveitis_scratch/processed"
 
 ## support.frame <- "~/Zanda_Uveitis_ConTh17_ConTh0.tab"
 ## output.path <- "~/uveitis_scratch/try_topGO/test_output"
-db        <- "hsapiens_gene_ensembl"
-mart      <- "ensembl"
-num.genes <- 300
-pval.thr  <- 0.00104
-code <- "Zanda_uveitis"
-myArgs <- getArgs()
-if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
-if ('mart' %in% names(myArgs)) mart <- myArgs[['mart']]
-if ('db' %in% names(myArgs)) db <- myArgs[['db']]
-if ('code' %in% names(myArgs)) code <- myArgs[['code']]
-if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
+#code <- "Zanda_uveitis"
 
+
+option_list <- list(
+    make_option(c('--num.genes'), help='', default=300),
+    make_option(c('--support.frame'), help=''),
+    make_option(c('--output.path'), help=''),
+    make_option(c('--code'), help=''),
+    make_option(c('--iFolder'), help=''),
+    make_option(c('--mart'), help='', default='ensembl'),
+    make_option(c('--db'), help='', default="hsapiens_gene_ensembl"),
+    make_option(c('--pval.thr',)help='', default=0.00104)
+)
+
+option.parser <- OptionParser(option_list=option_list)
+opt <- parse_args(option.parser)
+
+num.genes <- opt$num.genes
+support.frame <- opt$support.frame
+code <- opt$code
+iFolder <- opt$iFolder
+output.path <- opt$output.path
+mart <- opt$mart
+db <-  opt$db
+pval.thr <- opt$pval.thr
 
 ###check input files and data frame
 message('Now reading ', support.frame)
@@ -33,12 +41,10 @@ support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 
-
 ### deseq output folders and files
 
 loc.pathwayGO.folder <- ''
 pathwayGO.figs <- ''
-
 
 
 ###loop over all proposed conditions

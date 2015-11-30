@@ -1,37 +1,45 @@
-library(DESeq2)
 
-getArgs <- function() {
-  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
-  myargs <- lapply(myargs.list,function(x) x[2] )
-  names(myargs) <- lapply(myargs.list,function(x) x[1])
-  return (myargs)
-}
+library(DESeq2)
+library(optparse)
+
+option_list <- list(
+    make_option(c('--support.frame'), help=''),
+    make_option(c('--code'), help=''),
+    make_option(c('--gff'), help=''),
+    make_option(c('--iFolder'), help=''),
+    make_option(c('--annotation.file'), help=''),
+    make_option(c('--keep.dups'), help='', default=FALSE),
+    make_option(c('--keep.sex'), help='', default=FALSE) 
+)
 
 ### Just for debugging 
-support.frame <- "/cluster/project8/vyp/Tabrizi_Huntington_RNASeq/support/htt_support2.txt"
-code <- "htt"
-keep.dups <- FALSE 
-annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
-iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
-
+#support.frame <- "/cluster/project8/vyp/Tabrizi_Huntington_RNASeq/support/htt_support2.txt"
+#code <- "htt"
+#keep.dups <- FALSE 
+#annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"
+#iFolder <- "/scratch2/vyp-scratch2/Tabrizi_Huntington_RNASeq/processed/Nov2014/"
 
 ## vincent debugging
-support.frame <- "data/TDP43_m323k.tab"
-code <- "m323k"
-annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/mouse/biomart/biomart_annotations_mouse.tab"
-iFolder <- "/scratch2/vyp-scratch2/IoN_RNASeq/Fratta_RNASeq/brain/m323k"
-keep.dups <- FALSE
-keep.sex <- FALSE
+#support.frame <- "data/TDP43_m323k.tab"
+#code <- "m323k"
+#annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/mouse/biomart/biomart_annotations_mouse.tab"
+#iFolder <- "/scratch2/vyp-scratch2/IoN_RNASeq/Fratta_RNASeq/brain/m323k"
+#keep.dups <- FALSE
+#keep.sex <- FALSE
+
+option.parser <- OptionParser(option_list=option_list)
+opt <- parse_args(option.parser)
+
+support.frame <- opt$support.frame
+code <- opt$code
+gff <- opt$gff
+iFolder <- opt$iFolder
+annotation.file <- opt$annotation.file
+keep.dups <- opt$keep.dups
+keep.sex <- opt$keep.sex
+
 
 ########################## read arguments
-
-myArgs <- getArgs()
-if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
-if ('code' %in% names(myArgs)) code <- myArgs[['code']]
-if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
-if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
-if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
-if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']]) 
 
 extra.plots <- TRUE 
 remove.hb   <- FALSE 
@@ -58,8 +66,8 @@ for (folder in c(deseq2.folder)) {
 
 ########## load the count data
 
-if (keep.dups) deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '_keep_dups.RData', sep = '')  
-if (!keep.dups) deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '.RData', sep = '')  
+if (keep.dups) print( deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '_keep_dups.RData', sep = '') )
+if (!keep.dups) print( deseq.counts <- paste(deseq2.folder, '/deseq_counts_', code, '.RData', sep = '') )
 load(deseq.counts)
 
 

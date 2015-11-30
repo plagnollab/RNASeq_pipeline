@@ -1,43 +1,45 @@
+#!/usr/bin/env Rscript
+
 library(DEXSeq)
 library(BiocParallel)
+library(optparse)
 
 
-getArgs <- function() {
-  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
-  myargs <- lapply(myargs.list,function(x) x[2] )
-  names(myargs) <- lapply(myargs.list,function(x) x[1])
-  return (myargs)
-}
-
-
+option_list <- list(
+    make_option(c('--support.frame'), help=''),
+    make_option(c('--code'), help=''),
+    make_option(c('--gff'), help=''),
+    make_option(c('--iFolder'), help=''),
+    make_option(c('--annotation.file'), help=''),
+    make_option(c('--keep.dups'), help='', default=FALSE),
+    make_option(c('--keep.sex'), help='', default=FALSE),
+    make_option(c('--cryptic'), help='', default=FALSE) 
+)
 
 ########################## read arguments
-dexseq.compute <- TRUE
+option.parser <- OptionParser(option_list=option_list)
+opt <- parse_args(option.parser)
 
+
+#annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
+#iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
+#support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
+#code <- 'Zanda_AD_Tc1J20'
+#gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/Tc1_mouse/GTF/Tc1.gff'
+#keep.dups <- FALSE
+#keep.sex <- FALSE
+
+support.frame <- opt$support.frame
+code <- opt$code
+iFolder <- opt$iFolder
+annotation.file <- opt$annotation.file
+gff <- opt$gff
+keep.dups <- opt$keep.dups
+keep.sex <- opt$keep.sex
+cryptic <-  opt$cryptic
+
+dexseq.compute <- TRUE 
 BPPARAM = MulticoreParam(workers=4)
-
-annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
-iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
-support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
-code <- 'Zanda_AD_Tc1J20'
-gff <- '/cluster/project8/vyp/vincent/Software/pipeline/RNASeq/bundle/Tc1_mouse/GTF/Tc1.gff'
-keep.dups <- FALSE
-keep.sex <- FALSE
-
-
-myArgs <- getArgs()
-if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
-if ('code' %in% names(myArgs)) code <- myArgs[['code']]
-if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
-if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
-if ('gff' %in% names(myArgs)) gff <- myArgs[['gff']]
-if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
-if ('keep.sex' %in% names(myArgs)) keep.sex <- as.logical(myArgs[['keep.sex']])
-if ('cryptic' %in% names(myArgs)) cryptic <- as.logical(myArgs[['cryptic']])
-
-
-
-
 
 ###check input files and data frame
 message('gff file is ', gff)
@@ -51,18 +53,17 @@ list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('NA', ''), quote = "")
 names(annotation) <- ifelse (names(annotation) == "external_gene_name", "external_gene_id", names(annotation)) # trying to agree on the column names
 
-if('cryptic' %in% ls() ){
-files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') 
-}else{files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')}
+if( cryptic ){
+    print(files <- paste(iFolder, '/counts/',my.ids, '_dexseq_counts.txt', sep = '') )
+} else {
+    print( files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '') )
+}
 
-files
 
 if (sum(!file.exists(files)) > 0) {
   print(files [ !file.exists(files) ])
   stop('Some input files are missing')
 }
-
-
 
 
 ### dexseq output folders
@@ -72,11 +73,10 @@ if (!file.exists(dexseq.folder)) dir.create(dexseq.folder)
 
 
 
-
 my.ids <- support$sample
 if (!keep.dups) countFiles <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
 if (keep.dups) countFiles <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = '')
-if ( "cryptic" %in% ls() ) countFiles <- paste(iFolder, '/counts/', my.ids, '_dexseq_counts.txt', sep = '')
+if ( cryptic ) countFiles <- paste(iFolder, '/counts/', my.ids, '_dexseq_counts.txt', sep = '')
 
 countFiles
 

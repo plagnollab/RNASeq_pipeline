@@ -1,45 +1,39 @@
+#!/usr/bin/env Rscript
+
 library(DEXSeq)
-library(DESeq2)
-
-getArgs <- function() {
-  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
-  myargs <- lapply(myargs.list,function(x) x[2] )
-  names(myargs) <- lapply(myargs.list,function(x) x[1])
-  return (myargs)
-}
-
-
+library(DESeq2) 
+library(optparse)
 
 ########################## read arguments
-dexseq.compute <- TRUE
-deseq.compute <- TRUE
-extra.plots <- FALSE
-keep.dups <- FALSE
 
+option_list <- list(
+    make_option(c('--support.frame'), help='', default='data/RNASeq_AD_Tc1J20.tab'),
+    make_option(c('--code'), help=''),
+    make_option(c('--gff'), help='', default="/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff"),
+    make_option(c('--iFolder'), help='', default="/scratch2/vyp-scratch2/Daudet_RNASeq/processed"),
+    make_option(c('--annotation.file'), help=''),
+    make_option(c('--keep.dups'), help='', default=FALSE)
+)
 
+option.parser <- OptionParser(option_list=option_list)
+opt <- parse_args(option.parser)
+
+support.frame <- opt$support.frame
+code <- opt$code
+gff <- opt$gff
+iFolder <- opt$iFolder
+annotation.file <- opt$annotation.file
+keep.dups <- opt$keep.dups
 
 #gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/GTF/Tc1.gff"
 #annotation.file <- '/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/Tc1_mouse/tc1_annotations.tab'
 #iFolder <- '/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed'
-#support.frame <- 'data/RNASeq_AD_Tc1J20.tab'
 #code <- 'Zanda_AD_Tc1J20'
 
 
-gff <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff"
-annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/biomart/biomart_annotations_chicken.tab"
-iFolder <- "/scratch2/vyp-scratch2/Daudet_RNASeq/processed"
-support.frame <- "support/Daudet_RNASeq.tab"
-code <- "Daudet"
-
-
-myArgs <- getArgs()
-if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
-if ('code' %in% names(myArgs)) code <- myArgs[['code']]
-if ('gff' %in% names(myArgs)) gff <- myArgs[['gff']]
-if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
-if ('annotation.file' %in% names(myArgs)) annotation.file <- myArgs[['annotation.file']]
-if ('keep.dups' %in% names(myArgs)) keep.dups <- as.logical(myArgs[['keep.dups']])
-
+#gff <- annotation.file <- "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/biomart/biomart_annotations_chicken.tab"
+#support.frame <- "support/Daudet_RNASeq.tab"
+#code <- "Daudet"
 
 annotations <- read.table(annotation.file, header = TRUE, sep = '\t', quote = "")
 names(annotations) <- ifelse (names(annotations) == "external_gene_name", "external_gene_id", names(annotations)) # trying to agree on the column names
@@ -53,16 +47,14 @@ support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 my.ids <- support$sample
 
 
-if (!keep.dups) count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = '')
-if (keep.dups) count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = '')
+if (!keep.dups) print(count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts.txt', sep = ''))
+if (keep.dups) print(count.files <- paste(iFolder, '/', my.ids, '/dexseq/', my.ids, '_dexseq_counts_keep_dups.txt', sep = ''))
 
 
 if (sum(!file.exists(count.files)) > 0) {
   print(subset(count.files, ! file.exists(count.files)))
   stop('Some input files are missing')
 }
-
-
 
 
 ### dexseq output folders
@@ -108,15 +100,23 @@ message('Reading the count data')
 support$condition <- 1 ## needs a dummy condition for the function below to work
 start_t<- proc.time() 
 
-DexSeqExons <- DEXSeqDataSetFromHTSeq(count.files,
-                                      sampleData = support,
-                                      flattenedfile = gff)
+DexSeqExons <- DEXSeqDataSetFromHTSeq(count.files, sampleData = support, flattenedfile = gff)
+
+# converting counts to integer mode
+# the design formula contains a numeric variable with integer values,
+# specifying a model with increasing fold change for higher values.
+# did you mean for this to be a factor? if so, first convert
+# this variable to a factor using the factor() function
+# Error: all(object@modelFrameBM$sample %in% colData(object)$sample) is not TRUE
+# In addition: Warning message:
+# In DESeqDataSet(rse, design, ignoreRank = TRUE) :
+# some variables in design formula are characters, converting to factors
 
 message("Time used in dexseqdatasetfromHTseq") 
 message(proc.time()-start_t)
 
-
-my.counts <- counts( DexSeqExons)[, 1:length(count.files) ]  ##I am puzzled by this "twice the column number" thing
+##I am puzzled by this "twice the column number" thing
+my.counts <- counts( DexSeqExons)[, 1:length(count.files) ]  
 colnames(my.counts) <- colData(DexSeqExons)$sample.1[ 1:length(count.files) ]
 
 gene.names <- gsub(rownames(my.counts), pattern = ':.*', replacement = '')

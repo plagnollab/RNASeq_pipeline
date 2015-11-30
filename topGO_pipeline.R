@@ -27,6 +27,47 @@ options(stringsAsFactors = FALSE)
 
 library(RCurl)
 library(biomaRt)
+library(topGO)
+library(optparse)
+library(optparse)
+
+
+option_list <- list(
+    make_option(c('--support.frame'), help=''),
+    make_option(c('--output.path'), help=''),
+    make_option(c('--code'), help=''),
+    make_option(c('--iFolder'), help=''),
+    make_option(c('--mart'), help=''),
+    make_option(c('--db'), help='') 
+)
+
+option.parser <- OptionParser(option_list=option_list)
+opt <- parse_args(option.parser)
+
+support.frame <- opt$support.frame
+code <- opt$code
+iFolder <- opt$iFolder
+output.path <- opt$output.path
+mart <- opt$mart
+db <-  opt$db
+
+#iFolder <- "/SAN/biomed/biomed14/vyp-scratch/Zanda_Uveitis_RNASeq/processed"
+##iFolder <- "~/uveitis_scratch/processed"
+
+### input/output directory to be replaced with script arguments
+##input.file <- "~/uveitis_scratch/processed/deseq/report/ConTh17_ConTh0/deseq_Zanda_uveitis_differential_expression.tab"
+
+#support.frame <- "/cluster/project4/vyp/Zanda_Uveitis_RNASeq/manu/data/Zanda_Uveitis_ConTh17_ConTh0.tab"
+##output.path <- "~/uveitis_scratch/try_topGO/test_output"
+#db <- "hsapiens_gene_ensembl"
+#mart    <- "ensembl"
+#num.genes <- 300
+#pval.thr <- 0.00104
+#use.adj.pval <- FALSE
+#node.size = 10
+#code <- "Zanda_uveitis"
+
+##if ('use.adj.pval' %in% names(myArgs)) use.adj.pval <- myArgs[['use.adj.pval']]
 
 
 ## Load topGO library
@@ -35,7 +76,6 @@ library(biomaRt)
 ## library("graph", lib.loc="~/software/R/x86_64-unknown-linux-gnu-library/2.15/")
 ## library("SparseM", lib.loc="~/software/R/x86_64-unknown-linux-gnu-library/2.15/")
 ##library("topGO", lib.loc="~/software/R/x86_64-unknown-linux-gnu-library/2.15/")
-library("topGO")
 
 
 ## support.frame='~/Zanda_Uveitis_RNASeq/manu/data/Zanda_Uveitis_ConTh17_ConTh0.tab'
@@ -256,38 +296,6 @@ output.table$GO_term<- gsub(pattern = ',', replacement = '_', output.table$GO_te
 }
 
 
-##############################
-getArgs <- function() {
-  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")
-  myargs <- lapply(myargs.list,function(x) x[2] )
-  names(myargs) <- lapply(myargs.list,function(x) x[1])
-  return (myargs)
-}
-
-iFolder <- "/SAN/biomed/biomed14/vyp-scratch/Zanda_Uveitis_RNASeq/processed"
-##iFolder <- "~/uveitis_scratch/processed"
-
-### input/output directory to be replaced with script arguments
-##input.file <- "~/uveitis_scratch/processed/deseq/report/ConTh17_ConTh0/deseq_Zanda_uveitis_differential_expression.tab"
-
-support.frame <- "/cluster/project4/vyp/Zanda_Uveitis_RNASeq/manu/data/Zanda_Uveitis_ConTh17_ConTh0.tab"
-output.path <- "~/uveitis_scratch/try_topGO/test_output"
-db <- "hsapiens_gene_ensembl"
-mart    <- "ensembl"
-num.genes <- 300
-pval.thr <- 0.00104
-use.adj.pval <- FALSE
-node.size = 10
-code <- "Zanda_uveitis"
-
-myArgs <- getArgs()
-if ('support.frame' %in% names(myArgs)) support.frame <- myArgs[['support.frame']]
-if ('mart' %in% names(myArgs)) mart <- myArgs[['mart']]
-if ('db' %in% names(myArgs)) db  <- myArgs[['db']]
-if ('code' %in% names(myArgs)) code <- myArgs[['code']]
-if ('iFolder' %in% names(myArgs)) iFolder <- myArgs[['iFolder']]
-##if ('use.adj.pval' %in% names(myArgs)) use.adj.pval <- myArgs[['use.adj.pval']]
-
 
 ###check input files and data frame
 message('Now reading ', support.frame)
@@ -362,10 +370,6 @@ if (!file.exists(GO.file)) {
 } else {
   load(GO.file)
 }
-
-
-
-
 
 
 ## Step 2) Load gene data

@@ -9,6 +9,7 @@ if [[ "$computer" == "CS" ]]; then
     if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
+    RScript=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/RScript
 
     misoRunEvents=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_events_analysis.py
     runMiso=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_miso.py
@@ -23,6 +24,7 @@ if [[ "$computer" == "CS" ]]; then
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
     if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
     Rbin=/share/apps/R/bin/R
+    Rscript=/share/apps/R/bin/Rscript
     fi
 fi
 
@@ -33,6 +35,7 @@ if [[ "$computer" == "vanHeel" ]]; then
     software=/data_n2/vplagnol/Software
     pythonbin=/software/additional/epd-7.3.1/bin/python
     Rbin=/data_n2/vplagnol/Software/R-3.0.2/bin/R
+    Rscript=/data_n2/vplagnol/Software/R-3.0.2/bin/Rscript
     
     dexseqCount=/data_n2/vplagnol/Rlibs/installed/DEXSeq/python_scripts/dexseq_count.py
 
@@ -644,9 +647,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     if [[ "$prepareCounts" == "yes" ]]; then
 
 	echo "
-
-${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${annotationFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --iFolder=${oFolder} ${countPrepareR} ${clusterFolder}/R/count_prepare.out
-
+Rscript ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
 " >> $starSubmissionStep3
 	
     fi
@@ -661,7 +662,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${an
 	
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
+${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${dataframe} --keep.dups ${keepDups} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/deseq_${stem}.out 
 " >> $starSubmissionStep3
 
     fi
@@ -674,8 +675,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=$
 	done
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
-
+${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/dexseq_${stem}.out
 " >> $starSubmissionStep3
     fi
 
@@ -688,7 +688,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} 
 	done
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${pathwayGOAnalysisR} ${clusterFolder}/R/pathwayGO_${stem}.out 
+    ${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/pathwayGO_${stem}.out 
 " >> $starSubmissionStep3
 
     fi
@@ -702,7 +702,7 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${c
 	done
 	
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${topGOAnalysisR} ${clusterFolder}/R/topGO_${stem}.out 
+${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/topGO_${stem}.out 
 " >> $starSubmissionStep3
 
     fi
