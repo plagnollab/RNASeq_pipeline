@@ -61,7 +61,7 @@ if( cryptic ){
 
 
 if (sum(!file.exists(files)) > 0) {
-  print(files [ !file.exists(files) ])
+  message(files [ !file.exists(files) ])
   stop('Some input files are missing')
 }
 
