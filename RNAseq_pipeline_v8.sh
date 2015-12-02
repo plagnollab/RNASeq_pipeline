@@ -1,8 +1,17 @@
-## version v8
+#! /bin/bash
+# this script has only been tested with bash and may not work with other shells
 
-
+# script exits if return value of a command is not zero
+set -e
+# this forces all variables to be defined
 set -u
+# for debugging prints out every line before executing it
 set -x
+
+# prints to stderr in red
+function error() { >&2 echo -e "\033[31m$*\033[0m"; }
+function stop() { error "$*"; exit 1; }
+try() { "$@" || stop "cannot $*"; }
 
 #computer=vanHeel
 computer=CS
@@ -14,30 +23,25 @@ then
     pythonbin=/share/apps/python-2.7.1/bin/python2.7
     if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
-    Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
-    RScript=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/RScript
-
     misoRunEvents=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_events_analysis.py
     runMiso=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_miso.py
-
     javaTemp2="/scratch2/vyp-scratch2/vincent/java_temp"
     if [ ! -e $javaTemp2 ]; then javaTemp2="/cluster/scratch3/vyp-scratch2/vincent/java_temp/"; fi
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
     if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
-    
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
     if [ ! -e $bigFilesBundleFolder ]
     then
         bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
     fi
-    Rbin=/share/apps/R/bin/R
-    Rscript=/share/apps/R/bin/Rscript
+    #which R should we be using?
+    Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
+    RScript=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/RScript
+    #Rbin=/share/apps/R/bin/R
+    #Rscript=/share/apps/R/bin/Rscript
 fi
-
-
-
 
 if [[ "$computer" == "vanHeel" ]]
 then
@@ -53,9 +57,6 @@ fi
 
 
 echo "Base of RNA-Seq pipeline is located here: $RNASEQPIPBASE"
-
-
-
 countPrepareR=${RNASEQPIPBASE}/counts_prepare_pipeline.R
 dexseqFinalProcessR=${RNASEQPIPBASE}/dexseq_pipeline_v2.R
 deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
@@ -258,85 +259,64 @@ fi
 cp "$dataframe" "${oFolder}/"
 
 
-if [[ "$species" == "zebrafish" ]]; then
-    refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Danio_rerio/NCBI/Zv9
-    gtfFile=${refFolder}/Annotation/Genes/genes.gtf    
-    fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
-    IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
-
-    gffFile=${RNASEQBUNDLE}/zebrafish/GTF/zebrafish_iGenomes_Zv9_with_ensembl.gff
-    annotationFile=${RNASEQBUNDLE}/zebrafish/biomart/biomart_annotations_zebrafish.tab
-
-    #geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/zebraFish_refSeqTable_zv9_nochr.bed
-    #geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/zebraFish_refSeqTable_zv9_chr1.bed
-fi
-
-if [[ "$species" == "DvH_sc_human" ]]; then
-    refFolder=/data_n1/vanheel_singlecellgenomics/support/Homo_sapiens/NCBI/build37.2
-    gtfFile=${refFolder}/Annotation/Genes/genes.gtf    
-    fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
-    IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/human_b37_with_spikes
-fi
-
-
-if [[ "$species" == "human_hg38" ]]; then
-    fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
-    gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
-    gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
-    STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
-    #annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
-    annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
-fi
-
-if [[ "$species" == "humanmuscle" ]]; then
-    refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Homo_sapiens/NCBI/build37.2
-    IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
-    gtfFile=${refFolder}/Annotation/Genes/genes.gtf	
-
-    gffFile=/cluster/project8/vyp/vincent/data/reference_genomes/gff/humanmuscle_iGenomes_NCBI37_with_ensembl.gff
-    #annotationFile=${bigFilesBundleFolder}/human/biomart/biomart_annotations_human.tab
-    annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
-    geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_nochr.bed
-    geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_chr1.bed
-
-    db=hsapiens_gene_ensembl
-fi
-
-
-
-if [[ "$species" == "Dict_Disc_masked" ]]; then
-    
-    IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Dict/dicty_masked_ERCC92
-    gtfFile=${bigFilesBundleFolder}/RNASeq/Dict/dict_no_spike.gtf
-    gffFile=MISSING
-
-    annotationFile=not_done_yet
-
-fi
-
-
-
-if [[ "$species" == "Dict_Disc" ]]; then
-    
-    IndexBowtie2=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/sequence/Dictyostelium_discoideum.dictybase.01.23.dna.genome
-    gtfFile=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/GTF/Dictyostelium_discoideum.dictybase.01.23.gtf
-    gffFile=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/GTF/Dictyostelium_discoideum.dictybase.01.23.gff
-
-    annotationFile=not_done_yet
-
-fi
-
-if [[ "$species" == "pig" ]]; then
-
+case "$species" in
+    zebrafish)
+        refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Danio_rerio/NCBI/Zv9
+        gtfFile=${refFolder}/Annotation/Genes/genes.gtf    
+        fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
+        IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
+        gffFile=${RNASEQBUNDLE}/zebrafish/GTF/zebrafish_iGenomes_Zv9_with_ensembl.gff
+        annotationFile=${RNASEQBUNDLE}/zebrafish/biomart/biomart_annotations_zebrafish.tab
+        #geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/zebraFish_refSeqTable_zv9_nochr.bed
+        #geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/zebraFish_refSeqTable_zv9_chr1.bed
+        ;;
+    DvH_sc_human)
+        refFolder=/data_n1/vanheel_singlecellgenomics/support/Homo_sapiens/NCBI/build37.2
+        gtfFile=${refFolder}/Annotation/Genes/genes.gtf    
+        fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
+        IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/human_b37_with_spikes
+        ;;
+    human_hg38)
+        fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
+        gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
+        STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
+        #annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
+        annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
+        ;;
+    humanmuscle)
+        refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Homo_sapiens/NCBI/build37.2
+        IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
+        gtfFile=${refFolder}/Annotation/Genes/genes.gtf	
+        gffFile=/cluster/project8/vyp/vincent/data/reference_genomes/gff/humanmuscle_iGenomes_NCBI37_with_ensembl.gff
+        #annotationFile=${bigFilesBundleFolder}/human/biomart/biomart_annotations_human.tab
+        annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
+        geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_nochr.bed
+        geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/homoSapiens_geneTable_hg19_chr1.bed
+        db=hsapiens_gene_ensembl
+    Dict_Disc_masked)
+        IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Dict/dicty_masked_ERCC92
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Dict/dict_no_spike.gtf
+        gffFile=MISSING
+        annotationFile=not_done_yet
+        ;;
+    Dict_Disc)
+        IndexBowtie2=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/sequence/Dictyostelium_discoideum.dictybase.01.23.dna.genome
+        gtfFile=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/GTF/Dictyostelium_discoideum.dictybase.01.23.gtf
+        gffFile=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Dictyostelium_discoideum/GTF/Dictyostelium_discoideum.dictybase.01.23.gff
+        annotationFile=not_done_yet
+        ;;
+pig)
+then
     refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Sus_scrofa/NCBI/Sscrofa10.2
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
     gtfFile=${refFolder}/Annotation/Genes/genes.gtf
-
     gffFile=${RNASEQBUNDLE}/pig/GTF/pig_iGenomes_NCBI_10_2_with_ensembl.gff
     annotationFile=${RNASEQBUNDLE}/pig/biomart/biomart_annotations_pig.tab
 fi
 
-if [[ "$species" == "chicken" ]]; then
+if [[ "$species" == "chicken" ]]
+then
     IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Chicken/Gallus_gallus.Galgal4.dna.toplevel
     gtfFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gtf
     gffFile=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff
@@ -344,7 +324,8 @@ if [[ "$species" == "chicken" ]]; then
 fi
 
 
-if [[ "$species" == "rat" ]]; then
+if [[ "$species" == "rat" ]]
+then
     IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.dna_rm.toplevel
     gtfFile=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gtf
     gffFile=${bigFilesBundleFolder}/RNASeq/Rat/Rattus_norvegicus.Rnor_5.0.79.gff
@@ -352,7 +333,8 @@ if [[ "$species" == "rat" ]]; then
 fi
 
 
-if [[ "$species" == "sheep" ]]; then
+if [[ "$species" == "sheep" ]]
+then
     IndexBowtie2=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.dna_rm.toplevel
     gtfFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gtf
     gffFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
@@ -360,7 +342,8 @@ if [[ "$species" == "sheep" ]]; then
 fi
 
 
-if [[ "$species" == "drosophila" ]]; then
+if [[ "$species" == "drosophila" ]]
+then
     refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
     gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
@@ -369,17 +352,18 @@ if [[ "$species" == "drosophila" ]]; then
 fi
 
 
-if [[ "$species" == "dog" ]]; then
+if [[ "$species" == "dog" ]]
+then
     refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
     gtfFile=${refFolder}/Annotation/Genes/genes.gtf
-
     gffFile=${RNASEQBUNDLE}/dog/GTF/dog_iGenomes_NCBI_3_1_with_ensembl.gff
     annotationFile=${RNASEQBUNDLE}/dog/biomart/biomart_annotations_dog.tab
 
 fi
 
-if [[ "$species" == "mouse" ]]; then
+if [[ "$species" == "mouse" ]]
+then
     STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
     annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
     gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
@@ -393,22 +377,31 @@ then
 
     refFolder=/SAN/biomed/biomed14/vyp-scratch/Zanda_AD_Tc1J20_RNASeq/Zanda_Tc1_reference/build1 
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
-	
     gtfFile=${RNASEQBUNDLE}/Tc1_mouse/GTF/Tc1.gtf #${refFolder}/Annotation/Genes/genes.gtf
     gffFile=${RNASEQBUNDLE}/Tc1_mouse/GTF/Tc1.gff  #${refFolder}/gff/tc1.gff
     cleanGtfFile=${RNASEQBUNDLE}/Tc1_mouse/GTF/Tc1.gtf #${refFolder}/Annotation/Genes/genes.gtf
     annotationFile=${RNASEQBUNDLE}/Tc1_mouse/tc1_annotations.tab #${refFolder}/annotations/biomart/tc1.tab
-
-
     geneModelSummaryStats=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_chr1.bed
     geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_nochr.bed
-    
     ##db=mmusculus_gene_ensembl
+fi
+
+
+        *)
+    
+fi
+
+
+
+    
 
 fi
 
 
-for file in $gtfFile $gffFile $STARdir; do
+
+# check existence of GTF, GFF and STARdir
+for file in $gtfFile $gffFile $STARdir
+do
     if [ ! -e $file ]; then echo "File $file does not exist"; exit; fi
 done
 
@@ -424,11 +417,11 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 hold=""
 
-if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]; then
+if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
+then
 
     SCRATCH_DIR=/scratch0/RNASeq
     JAVA_DIR=${SCRATCH_DIR}/javastar
-    
     
     starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
     starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
@@ -491,44 +484,39 @@ ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat 
 	    fi
 
 #if single ended
-	    if [[  "$f2" == "NA" ]]; then
-		if [[ "$QC" == "yes" ]];then
+	    if [[  "$f2" == "NA" ]]
+        then
+		if [[ "$QC" == "yes" ]]
+        then
 			echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 		" >> $starSubmissionStep1a
-		#the trimmed files have a slightly different output
-                f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
-	#check that the trimming has happened. If not then exit
-                        echo "  
-if [ ! -e ${iFolder}/$f1 ]; then exit;fi
-                        " >> $starSubmissionStep1a
-                        fi
+            #the trimmed files have a slightly different output
+            f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
+        #check that the trimming has happened. If not then exit
+            echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
+        fi
 #if trimming has occurred then the trimmed fastq will be aligned		
-echo "
+        echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
 " >> $starSubmissionStep1a
 	    fi
-	    
-
 
 	    echo "
+# sort reads
 $novosort -f -t /scratch0/ -0 -c 1 -m 6G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
-
+# remove duplicates
 $java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
-
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
-
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
-
 #make sure that the sorted unique file exists and is at least 10MB before removing the original bams
 if [ -e ${finalOFolder}/${sample}_unique.bam ]; then	
 let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
-	if [ \$filesize -gt 1000 ]; then
+	if [ \$filesize -gt 1000 ]
+    then
 	   rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
 	fi
 fi
-
-
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
 	    
 	    if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
@@ -617,14 +605,13 @@ rm -rf $JAVA_DIR
 	if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
     fi
 
-
-
 fi
 
 
 ################################################# Now the scripts that take all samples together    
 
-if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" ]]; then
+if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" ]]
+then
     
 
     starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh    
@@ -656,7 +643,8 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
 " > $starSubmissionStep3
 	
 
-    if [[ "$prepareCounts" == "yes" ]]; then
+    if [[ "$prepareCounts" == "yes" ]]
+    then
 
 	echo "
 ${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
@@ -668,8 +656,10 @@ ${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile}
 ##############
     if [[ "$Rdeseq" == "yes" ]]; then
 
-        for file in $deseqFinalProcessR $dataframe; do
-            if [ ! -e $file ]; then echo "$file does not exist"; exit; fi
+        for file in $deseqFinalProcessR $dataframe
+        do
+            if [ ! -e $file ]; then echo "$file does not exist"; exit
+        fi
 	done
 	
 
@@ -707,29 +697,32 @@ ${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --m
     
 
 ##############
-    if [[ "$RtopGO" == "yes" ]]
-    then
-        for file in $topGOAnalysisR $dataframe
-        do
-            if [ ! -e $file ]
-            then
-                echo "$file does not exist"
-                exit
-            fi
-        done
+if [[ "$RtopGO" == "yes" ]]
+then
+   for file in $topGOAnalysisR $dataframe
+   do
+     if [ ! -e $file ]
+     then
+        echo "$file does not exist"
+        exit
+     fi
+   done
 	echo "
 ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/topGO_${stem}.out 
 " >> $starSubmissionStep3
 
-    fi
+fi
     
 
 #############
     
-    ls -ltrh $starSubmissionStep3
-    if [[ "$submit" == "yes" ]]; then qsub $hold $starSubmissionStep3; fi
-    
+ls -ltrh $starSubmissionStep3
+
+if [[ "$submit" == "yes" ]]
+then
+    qsub $hold $starSubmissionStep3
 fi
+    
 
     
 
