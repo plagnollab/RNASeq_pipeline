@@ -1,9 +1,15 @@
 ## version v8
 
+
+set -u
+set -x
+
 #computer=vanHeel
 computer=CS
+superLong=
 
-if [[ "$computer" == "CS" ]]; then
+if [[ "$computer" == "CS" ]]
+then
     software=/cluster/project8/vyp/vincent/Software
     pythonbin=/share/apps/python-2.7.1/bin/python2.7
     if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
@@ -22,23 +28,24 @@ if [[ "$computer" == "CS" ]]; then
     
     dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
-    if [ ! -e $bigFilesBundleFolder ]; then bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
+    if [ ! -e $bigFilesBundleFolder ]
+    then
+        bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
+    fi
     Rbin=/share/apps/R/bin/R
     Rscript=/share/apps/R/bin/Rscript
-    fi
 fi
 
 
 
 
-if [[ "$computer" == "vanHeel" ]]; then
+if [[ "$computer" == "vanHeel" ]]
+then
     software=/data_n2/vplagnol/Software
     pythonbin=/software/additional/epd-7.3.1/bin/python
     Rbin=/data_n2/vplagnol/Software/R-3.0.2/bin/R
     Rscript=/data_n2/vplagnol/Software/R-3.0.2/bin/Rscript
-    
     dexseqCount=/data_n2/vplagnol/Rlibs/installed/DEXSeq/python_scripts/dexseq_count.py
-
     javaTemp2="/data_n1/vanheel_singlecellgenomics/tmp"
     javaTemp="TMP_DIR=${javaTemp2}"
 
@@ -60,7 +67,8 @@ cutadapt=/share/apps/python-2.7.8/bin/cutadapt
 #for the old cluster
 if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
-for file in $countPrepareR; do
+for file in $countPrepareR
+do
     if [ ! -e $file ]; then echo "Missing script fule $countPrepareR"; fi
 done
 
@@ -230,7 +238,10 @@ fi
 
 if [[ "$stem" == "" ]]; then stem=$code; fi
 
-if [[ "$superLong" == "yes" ]]; then ((nhours=nhours+nhours)); fi
+if [[ "$superLong" == "yes" ]]
+then
+    ((nhours=nhours+nhours))
+fi
 
 
 ## create the output folders
@@ -377,7 +388,8 @@ fi
 
 
 
-if [[ "$species" == "tc1_mouse" ]]; then
+if [[ "$species" == "tc1_mouse" ]]
+then
 
     refFolder=/SAN/biomed/biomed14/vyp-scratch/Zanda_AD_Tc1J20_RNASeq/Zanda_Tc1_reference/build1 
     IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
@@ -647,7 +659,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     if [[ "$prepareCounts" == "yes" ]]; then
 
 	echo "
-Rscript ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
+${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
 " >> $starSubmissionStep3
 	
     fi
@@ -688,19 +700,23 @@ ${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.
 	done
 
 	echo "
-    ${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/pathwayGO_${stem}.out 
+${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/pathwayGO_${stem}.out 
 " >> $starSubmissionStep3
 
     fi
     
 
 ##############
-    if [[ "$RtopGO" == "yes" ]]; then
-
-        for file in $topGOAnalysisR $dataframe; do
-            if [ ! -e $file ]; then echo "$file does not exist"; exit; fi
-	done
-	
+    if [[ "$RtopGO" == "yes" ]]
+    then
+        for file in $topGOAnalysisR $dataframe
+        do
+            if [ ! -e $file ]
+            then
+                echo "$file does not exist"
+                exit
+            fi
+        done
 	echo "
 ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/topGO_${stem}.out 
 " >> $starSubmissionStep3
