@@ -58,6 +58,8 @@ else
 fi
 
 
+#RNASEQPIPBASE=/Users/pontikos/bin/RNASeq_pipeline/
+#RNASEQPIPBASE=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline
 
 echo "Base of RNA-Seq pipeline is located here: $RNASEQPIPBASE"
 countPrepareR=${RNASEQPIPBASE}/counts_prepare_pipeline.R
@@ -74,9 +76,6 @@ if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
 starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STAR
 samtools=${software}/samtools-1.2/samtools
-
-cufflinks=${software}/cufflinks-2.1.1.Linux_x86_64/cufflinks
-
 rseqQCscripts=${software}/RSeQC-2.3.3/scripts
 
 picardDup=${software}/picard-tools-1.100/MarkDuplicates.jar
@@ -378,6 +377,7 @@ hold=""
 SCRATCH_DIR=/scratch0/RNASeq
 JAVA_DIR=${SCRATCH_DIR}/javastar
 
+# alignment
 function starSubmissionStep1a(){
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
     echo "
@@ -427,14 +427,15 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
             fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
-${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina " >> $starSubmissionStep1a
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+" >> $starSubmissionStep1a
         #if single ended
         else
             if [[ "$QC" == "yes" ]]
             then
                 echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
-    " >> $starSubmissionStep1a
+" >> $starSubmissionStep1a
                 #the trimmed files have a slightly different output
                 f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
                 #check that the trimming has happened. If not then exit
@@ -442,7 +443,8 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
             fi
             #if trimming has occurred then the trimmed fastq will be aligned
             echo "
-${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted " >> $starSubmissionStep1a
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+" >> $starSubmissionStep1a
         fi
     done
     echo "
@@ -453,38 +455,14 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 " >> $starSubmissionStep1a
 }
 
-function start_step2() {
-    echo "scripts" > $starMasterTableStep2
-    echo "
-$samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
-$samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
-" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
-    echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
-    ((nscripts=nscripts+1))
-}
 
+# sorting and duplication removal
 function starSubmissionStep1b() {
-    njobs1b=`wc -l $starMasterTableStep1b | awk '{print $1}'`
-    echo "#$ -S /bin/bash
-#$ -l h_vmem=9.5G
-#$ -l tmem=9.5G
-#$ -l h_rt=12:00:00
-#$ -pe smp 1
-#$ -R y
-#$ -o ${oFolder}/cluster/out
-#$ -e ${oFolder}/cluster/error
-#$ -N step1b_${code}
-#$ -wd ${oFolder}
-#$ -t 2-${njobs1b}
-#$ -tc 20
-script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep1b\`
-sh \$script
-" > $starSubmissionStep1b
-#samples
-    tail -n +2  $dataframe | while read sample f1 f2 condition
-    do
-    # sort
-        echo "
+# per sample
+  starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
+  tail -n +2  $dataframe | while read sample f1 f2 condition
+  do
+   echo "
 # sort reads
 $novosort -f -t /scratch0/ -0 -c 1 -m 6G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 # remove duplicates
@@ -499,15 +477,50 @@ then
      then
         rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
      fi
-  fi " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
-     echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
+  fi
+" > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
+      echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
   done
-
+  njobs1b=`wc -l $starMasterTableStep1b | awk '{print $1}'`
+# submission script
+  starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
+  echo "
+#$ -S /bin/bash
+#$ -l h_vmem=9.5G
+#$ -l tmem=9.5G
+#$ -l h_rt=12:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
+#$ -N step1b_${code}
+#$ -wd ${oFolder}
+#$ -t 2-${njobs1b}
+#$ -tc 20
+script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep1b\`
+sh \$script
+" > $starSubmissionStep1b
 }
 
+# dexseqCount
 function starSubmissionStep2() {
+# per sample
+    starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
+    echo "scripts" > $starMasterTableStep2
+    tail -n +2  $dataframe | while read sample f1 f2 condition
+    do
+        echo "
+$samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
+$samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
+" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+        echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
+    done
+    #((nscripts=nscripts+1))
     njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
-    echo "#$ -S /bin/bash
+# submission script
+    starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.sh
+    echo "
+#$ -S /bin/bash
 #$ -l h_vmem=5.9G
 #$ -l tmem=5.9G
 #$ -l h_rt=12:00:00
@@ -529,6 +542,7 @@ sh \$script
 ################################################# Now the scripts that take all samples together    
 
 function starSubmissionStep3() {
+# analyse all samples together
     starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh    
     ncores=1
     nhours=0
@@ -603,23 +617,22 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
 
 if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
 then
-    starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
-    starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
-    starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
-    starSubmissionStep2=${oFolder}/cluster/submission/starSubmissionStep2.sh
+    starSubmissionStep1a()
+    starSubmissionStep1b()
+    starSubmissionStep2()
     ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
     if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
     then
-        qsub $hold $starSubmissionStep1a
+        echo qsub $hold $starSubmissionStep1a
         if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
             hold="-hold_jid step1a_${code}"
         fi
         if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]; then
-        qsub $hold $starSubmissionStep1b
+        echo qsub $hold $starSubmissionStep1b
         if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
         fi
         if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]; then
-        qsub $hold $starSubmissionStep2
+        echo qsub $hold $starSubmissionStep2
         if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
     fi
 fi
