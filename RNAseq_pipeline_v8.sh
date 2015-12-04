@@ -268,9 +268,9 @@ case "$species" in
         fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
         gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
         gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
-        STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
-        #annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
-        annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
+        STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR 
+	annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
+        #annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
         ;;
     humanmuscle)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Homo_sapiens/NCBI/build37.2
