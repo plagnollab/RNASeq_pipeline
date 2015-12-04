@@ -606,11 +606,11 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
 
 if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
 then
-    ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
     echo step1a: align
     if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep1a
+       file_exists $starSubmissionStep1a 
        qsub $hold $starSubmissionStep1a
        if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
     fi
@@ -618,6 +618,7 @@ then
     if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep1b
+       file_exists $starSubmissionStep1b
        qsub $hold $starSubmissionStep1b
        if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
     fi
@@ -625,6 +626,7 @@ then
     if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep2
+       file_exists $starSubmissionStep2
        qsub $hold $starSubmissionStep2
        if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
     fi
