@@ -380,7 +380,6 @@ JAVA_DIR=${SCRATCH_DIR}/javastar
 
 function starSubmissionStep1a(){
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
-    echo "scripts" > $starMasterTableStep2
     echo "
 #$ -S /bin/bash
 #$ -l h_vmem=12.5G,tmem=12.5G
@@ -416,25 +415,25 @@ mkdir -p $JAVA_DIR
             if [[ "$QC" == "yes" ]]
             then
                 echo "
-    $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
                 " >>  $starSubmissionStep1a
                 #the trimmed files have a slightly different output
                 f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
                 f2=`echo $f2 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
                 #check that the trimming has happened. If not then exit
                 echo "
-    if [ ! -e ${iFolder}/$f1 ]; then exit;fi
+if [ ! -e ${iFolder}/$f1 ]; then exit;fi
                 " >> $starSubmissionStep1a
             fi
-            #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.		
+            #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
-    ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina " >> $starSubmissionStep1a
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina " >> $starSubmissionStep1a
         #if single ended
         else
             if [[ "$QC" == "yes" ]]
             then
                 echo "
-    $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
     " >> $starSubmissionStep1a
                 #the trimmed files have a slightly different output
                 f1=`echo $f1 | awk -F'.' '{print $1"_trimmed.fq.gz"}'`
@@ -443,25 +442,25 @@ mkdir -p $JAVA_DIR
             fi
             #if trimming has occurred then the trimmed fastq will be aligned
             echo "
-    ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted " >> $starSubmissionStep1a
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted " >> $starSubmissionStep1a
         fi
     done
     echo "
 rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
-
-}
-
-function start_step2() {
-	echo "
-$samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
-$samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
-" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
-	echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
-	((nscripts=nscripts+1))
     echo "
 ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 " >> $starSubmissionStep1a
+}
+
+function start_step2() {
+    echo "scripts" > $starMasterTableStep2
+    echo "
+$samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
+$samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
+" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+    echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
+    ((nscripts=nscripts+1))
 }
 
 function starSubmissionStep1b() {
