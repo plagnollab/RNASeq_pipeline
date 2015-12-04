@@ -13,6 +13,8 @@ R packages and software:
 - DESeq2  >= 1.8.2
 - DEXSeq >= 1.14.2
 - BiocParallel >= 1.2.22 
+- data.table
+- optparse
 
 Notes for installation of DEXSeq/DESeq2:
 
