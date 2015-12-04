@@ -2,7 +2,6 @@
 
 library(RCurl)
 library(biomaRt)
-library(optparse)
 
 ##iFolder <- "/SAN/biomed/biomed14/vyp-scratch/Zanda_Uveitis_RNASeq/processed"
 #iFolder <- "~/uveitis_scratch/processed"
@@ -11,29 +10,46 @@ library(optparse)
 ## output.path <- "~/uveitis_scratch/try_topGO/test_output"
 #code <- "Zanda_uveitis"
 
+print(commandArgs())
 
-option_list <- list(
-    make_option(c('--num.genes'), help='', default=300),
-    make_option(c('--support.frame'), help=''),
-    make_option(c('--output.path'), help=''),
-    make_option(c('--code'), help=''),
-    make_option(c('--iFolder'), help=''),
-    make_option(c('--mart'), help='', default='ensembl'),
-    make_option(c('--db'), help='', default="hsapiens_gene_ensembl"),
-    make_option(c('--pval.thr',)help='', default=0.00104)
-)
+exit(0)
 
-option.parser <- OptionParser(option_list=option_list)
-opt <- parse_args(option.parser)
 
-num.genes <- opt$num.genes
-support.frame <- opt$support.frame
-code <- opt$code
-iFolder <- opt$iFolder
-output.path <- opt$output.path
-mart <- opt$mart
-db <-  opt$db
-pval.thr <- opt$pval.thr
+getArgs <- function() {     
+  myargs.list <- strsplit(grep("=",gsub("--","",commandArgs()),value=TRUE),"=")        
+  myargs <- lapply(myargs.list,function(x) x[2] )      
+  names(myargs) <- lapply(myargs.list,function(x) x[1])        
+  return (myargs)      
+}
+
+parser <- ArgumentParser()
+
+parser$add_argument(c('--num.genes'), help='', default=300),
+parser$add_argument(c('--support.frame'), help=''),
+parser$add_argument(c('--output.path'), help=''),
+parser$add_argument(c('--code'), help=''),
+parser$add_argument(c('--iFolder'), help=''),
+parser$add_argument(c('--mart'), help='', default='ensembl'),
+parser$add_argument(c('--db'), help='', default="hsapiens_gene_ensembl"),
+parser$add_argument(c('--pval.thr',)help='', default=0.00104)
+
+
+# get command line options, if help option encountered print help and exit,
+# otherwise if options not found on command line then set defaults,
+args <- parser$parse_args()
+
+num.genes <- args$num.genes
+support.frame <- args$support.frame
+code <- args$code
+iFolder <- args$iFolder
+output.path <- args$output.path
+mart <- args$mart
+db <-  args$db
+pval.thr <- args$pval.thr
+
+print(args)
+
+exit(0)
 
 ###check input files and data frame
 message('Now reading ', support.frame)
