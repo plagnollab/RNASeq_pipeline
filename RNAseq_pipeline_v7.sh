@@ -890,9 +890,8 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     if [[ "$prepareCounts" == "yes" ]]; then
 
 	echo "
-
-${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${annotationFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --iFolder=${oFolder} ${countPrepareR} ${clusterFolder}/R/count_prepare.out
-
+# ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${annotationFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --iFolder=${oFolder} ${countPrepareR} ${clusterFolder}/R/count_prepare.out
+${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
 " >> $mainscript
 	
     fi
@@ -907,7 +906,8 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${an
 	
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
+# ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
+${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${dataframe} --keep.dups ${keepDups} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/deseq_${stem}.out 
 " >> $mainscript
 
     fi
@@ -920,8 +920,8 @@ ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=$
 	done
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
-
+# ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
+${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/dexseq_${stem}.out
 " >> $mainscript
     fi
 
@@ -934,7 +934,8 @@ ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} 
 	done
 
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${pathwayGOAnalysisR} ${clusterFolder}/R/pathwayGO_${stem}.out 
+# ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${pathwayGOAnalysisR} ${clusterFolder}/R/pathwayGO_${stem}.out 
+${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/pathwayGO_${stem}.out 
 " >> $mainscript
 
     fi
@@ -948,7 +949,8 @@ ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${c
 	done
 	
 	echo "
-${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${topGOAnalysisR} ${clusterFolder}/R/topGO_${stem}.out 
+# ${Rbin} CMD BATCH --no-save --no-restore --support.frame=${dataframe} --code=${code} --mart=${mart} --db=${db} --iFolder=${oFolder} ${topGOAnalysisR} ${clusterFolder}/R/topGO_${stem}.out 
+${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/topGO_${stem}.out 
 " >> $mainscript
 
     fi
