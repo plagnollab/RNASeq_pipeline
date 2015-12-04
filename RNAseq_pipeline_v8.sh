@@ -378,7 +378,7 @@ SCRATCH_DIR=/scratch0/RNASeq
 JAVA_DIR=${SCRATCH_DIR}/javastar
 
 # alignment
-function starSubmissionStep1a(){
+function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
     echo "
 #$ -S /bin/bash
@@ -457,7 +457,7 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 
 
 # sorting and duplication removal
-function starSubmissionStep1b() {
+function starSubmissionStep1b {
 # per sample
   starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
   tail -n +2  $dataframe | while read sample f1 f2 condition
@@ -503,7 +503,7 @@ sh \$script
 }
 
 # dexseqCount
-function starSubmissionStep2() {
+function starSubmissionStep2 {
 # per sample
     starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
     echo "scripts" > $starMasterTableStep2
@@ -608,7 +608,7 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
     ls -ltrh $starSubmissionStep3
     if [[ "$submit" == "yes" ]]
     then
-        qsub $hold $starSubmissionStep3
+        echo qsub $hold $starSubmissionStep3
     fi
 }
 
@@ -617,9 +617,9 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
 
 if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
 then
-    starSubmissionStep1a()
-    starSubmissionStep1b()
-    starSubmissionStep2()
+    starSubmissionStep1a
+    starSubmissionStep1b
+    starSubmissionStep2
     ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
     if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
     then
