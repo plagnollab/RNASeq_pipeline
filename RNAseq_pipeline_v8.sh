@@ -604,37 +604,41 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
 
 
 
-if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
+if [[ "$starStep1a" == "yes" ]]
 then
-    if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
-    then
-       echo step1a: align
-       starSubmissionStep1a
-       file_exists $starSubmissionStep1a 
+   echo step1a: align
+   starSubmissionStep1a
+   file_exists $starSubmissionStep1a 
+   if [[ "$submit" == "yes" ]]
+   then
        qsub $hold $starSubmissionStep1a
        if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
-    fi
-    if [[ "$starStep1b" == "yes" ]]
-    then
-       echo step1b: sorting and duplication removal
-       starSubmissionStep1b
-       file_exists $starSubmissionStep1b
-       qsub $hold $starSubmissionStep1b
-       if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
-    fi
-    if [[ "$starStep2" == "yes" ]]
-    then
-       echo step2: dexseq count
-       starSubmissionStep2
-       file_exists $starSubmissionStep2
-       if [[ "$submit" == "yes" ]]
-       then
-       qsub $hold $starSubmissionStep2
-       if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
-       fi
-    fi
+   fi
 fi
 
+if [[ "$starStep1b" == "yes" ]]
+then
+   echo step1b: sorting and duplication removal
+   starSubmissionStep1b
+   file_exists $starSubmissionStep1b
+   if [[ "$submit" == "yes" ]]
+   then
+       qsub $hold $starSubmissionStep1b
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
+   fi
+fi
+
+if [[ "$starStep2" == "yes" ]]
+then
+   echo step2: dexseq count
+   starSubmissionStep2
+   file_exists $starSubmissionStep2
+   if [[ "$submit" == "yes" ]]
+   then
+       qsub $hold $starSubmissionStep2
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
+   fi
+fi
 
 if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" ]]
 then
@@ -646,8 +650,5 @@ then
         qsub $hold $starSubmissionStep3
     fi
 fi
-
-
-
 
 
