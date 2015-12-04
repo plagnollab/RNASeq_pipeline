@@ -269,9 +269,9 @@ case "$species" in
         gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
         gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
         STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR 
-	annotationFile=${bigFilesBundleFolder}/human_hg38/biomart/biomart_annotations_human.tab
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/biomart_annotations_human.tab
         #annotationFile=/scratch2/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
-        ;;
+	;;
     humanmuscle)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Homo_sapiens/NCBI/build37.2
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
@@ -455,6 +455,7 @@ function starSubmissionStep1b {
   starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
   tail -n +2  $dataframe | while read sample f1 f2 condition
   do
+	finalOFolder=${oFolder}/${sample}
    echo "
 # sort reads
 $novosort -f -t /scratch0/ -0 -c 1 -m 6G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
@@ -502,7 +503,8 @@ function starSubmissionStep2 {
     echo "scripts" > $starMasterTableStep2
     tail -n +2  $dataframe | while read sample f1 f2 condition
     do
-        echo "
+    finalOFolder=${oFolder}/${sample}
+    echo "
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
 $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
 " > ${oFolder}/cluster/submission/star_step2_${sample}.sh
@@ -608,7 +610,7 @@ if [[ "$starStep1a" == "yes" ]]
 then
    echo step1a: align
    starSubmissionStep1a
-   file_exists $starSubmissionStep1a 
+   files_exist $starSubmissionStep1a 
    if [[ "$submit" == "yes" ]]
    then
        qsub $hold $starSubmissionStep1a
@@ -620,7 +622,7 @@ if [[ "$starStep1b" == "yes" ]]
 then
    echo step1b: sorting and duplication removal
    starSubmissionStep1b
-   file_exists $starSubmissionStep1b
+   files_exist $starSubmissionStep1b
    if [[ "$submit" == "yes" ]]
    then
        qsub $hold $starSubmissionStep1b
@@ -632,7 +634,7 @@ if [[ "$starStep2" == "yes" ]]
 then
    echo step2: dexseq count
    starSubmissionStep2
-   file_exists $starSubmissionStep2
+   files_exist $starSubmissionStep2
    if [[ "$submit" == "yes" ]]
    then
        qsub $hold $starSubmissionStep2
