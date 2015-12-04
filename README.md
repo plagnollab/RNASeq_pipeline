@@ -3,6 +3,8 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Requirements
 
+[![Join the chat at https://gitter.im/plagnollab/RNASeq_pipeline](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plagnollab/RNASeq_pipeline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 R packages and software:
 
 - R = 3.2.2
