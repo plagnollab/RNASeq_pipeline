@@ -12,7 +12,7 @@ set -x
 function error() { >&2 echo -e "\033[31m$*\033[0m"; }
 function stop() { error "$*"; exit 1; }
 try() { "$@" || stop "cannot $*"; }
-function files_exist() { for file in $*; do if [ ! -e $file ]; then stop "File $file does not exist" exit; fi; done }
+function files_exist() { for file in $*; do if [ ! -e $file ]; then stop "File $file does not exist" ; fi; done }
 
 #computer=vanHeel
 computer=
@@ -39,7 +39,7 @@ else
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
     if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
-    dexseqCount=/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py    
+    dexseqCount="/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py"
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
     if [ ! -e $bigFilesBundleFolder ]
     then
@@ -100,10 +100,8 @@ RpathwayGO=no
 RtopGO=no
 oFolder=temp ##default output
 
-for folder in $oFolder
-do
-    if [ ! -e $folder ]; then mkdir $folder; fi
-done
+#mkdir -p creates folders only if they do not already exist
+mkdir -p $oFolder
 
 submit=no
 # If QC is wanted, the pipeline will send each fastq or pair of fastqs through FastQC. If adapters are present then the offending fastq files will be trimmed with Trim Galore! and these trimmmed fastqs will be the ones aligned with STAR. 
@@ -361,7 +359,7 @@ case "$species" in
         stop "unknown species $species"
 esac
 
-files_exist $gtfFile $gffFile $STARdir
+files_exist $gtfFile $annotationFile $gffFile $STARdir
 
 ############### checking the input dataframe
 h1=`awk '{if (NR == 1) print $1}'  $dataframe` 
@@ -398,8 +396,7 @@ mkdir -p $JAVA_DIR
         echo "Sample $sample"
         finalOFolder=${oFolder}/${sample}
         dexseqfolder=${oFolder}/${sample}/dexseq
-        mkdir -p ${finalOFolder}
-        mkdir -p ${dexseqfolder}
+        mkdir -p ${finalOFolder} ${dexseqfolder}
         # go no further
         if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
         then
@@ -550,9 +547,10 @@ function starSubmissionStep3 {
     mem=0
     if [[ "$prepareCounts" == "yes" ]]; then mem=13.9; ((nminutes=nminutes+50)); fi
     if [[ "$Rdeseq" == "yes" ]]; then ((nhours=nhours+3)); mem=13.9; fi
+#scale with the number of samples
     if [[ "$Rdexseq" == "yes" ]]; then ((nhours=nhours+18)); ncores=4;mem=5.9; fi
-    if [[ "$RpathwayGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
-    if [[ "$RtopGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
+    #if [[ "$RpathwayGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
+    #if [[ "$RtopGO" == "yes" ]]; then ((nhours=nhours+3)); mem=6; fi
     echo "
 #!/bin/bash
 #$ -S /bin/bash
@@ -605,11 +603,6 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
     " >> $starSubmissionStep3
     fi
     #############
-    ls -ltrh $starSubmissionStep3
-    if [[ "$submit" == "yes" ]]
-    then
-        qsub $hold $starSubmissionStep3
-    fi
 }
 
 
@@ -622,23 +615,22 @@ then
     if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep1a
-       if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
-       hold="-hold_jid step1a_${code}"
        qsub $hold $starSubmissionStep1a
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
     fi
     echo step1b: sorting and duplication removal
     if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep1b
-       if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
        qsub $hold $starSubmissionStep1b
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
     fi
     echo step2: dexseq count
     if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]
     then
        starSubmissionStep2
-       if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
        qsub $hold $starSubmissionStep2
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
     fi
 fi
 
@@ -647,6 +639,11 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
 then
     echo "Taking all samples together"
     starSubmissionStep3
+    ls -ltrh $starSubmissionStep3
+    if [[ "$submit" == "yes" ]]
+    then
+        qsub $hold $starSubmissionStep3
+    fi
 fi
 
 
