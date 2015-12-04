@@ -247,6 +247,7 @@ files_exist $dataframe
 
 cp "$dataframe" "${oFolder}/"
 
+
 case "$species" in
     zebrafish)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Danio_rerio/NCBI/Zv9
@@ -391,7 +392,6 @@ mkdir -p $JAVA_DIR
         if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
         echo "Sample $sample"
         finalOFolder=${oFolder}/${sample}
-        dexseqfolder=${oFolder}/${sample}/dexseq
         mkdir -p ${finalOFolder} ${dexseqfolder}
         # go no further
         if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
@@ -501,14 +501,23 @@ function starSubmissionStep2 {
 # per sample
     starMasterTableStep2=${oFolder}/cluster/submission/starMasterTableStep2.tab
     echo "scripts" > $starMasterTableStep2
-    tail -n +2  $dataframe | while read sample f1 f2 condition
-    do
-    finalOFolder=${oFolder}/${sample}
-    echo "
+
+    #echo $PWD/${dataframe}; exit
+    #echo ${oFolder}/${dataframe}; exit
+    
+    ##echo $dataframe; exit
+    tail -n +2  $dataframe | while read sample f1 f2 condition; do
+        if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;	
+        dexseqfolder=${oFolder}/${sample}/dexseq
+
+	finalOFolder=${oFolder}/${sample}
+	echo "
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
 $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
 " > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+
         echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
+
     done
     #((nscripts=nscripts+1))
     njobs2=`wc -l $starMasterTableStep2 | awk '{print $1}'`
