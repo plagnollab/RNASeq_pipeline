@@ -119,7 +119,6 @@ dataframe=none
 iFolder=""
 misoindex=NA
 oFolder=RNAseq_processed
-mainscript=combined.sh
 stem=""
 
 until [ -z "$1" ]
@@ -179,9 +178,6 @@ do
 	--RtopGO)
 	    shift
 	    RtopGO=$1;;
-	--mainscript)
-        shift
-        mainscript=$1;;
 	--iFolder)
 	    shift
 	    iFolder=$1;;
@@ -567,7 +563,7 @@ function starSubmissionStep3 {
     then
         files_exist ${annotationFile} ${dataframe} ${oFolder} ${countPrepareR}
     echo "
-${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
+${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} > ${clusterFolder}/R/count_prepare.out
     " >> $starSubmissionStep3
     fi
     ##############
