@@ -541,7 +541,7 @@ sh \$script
 
 ################################################# Now the scripts that take all samples together    
 
-function starSubmissionStep3() {
+function starSubmissionStep3 {
 # analyse all samples together
     starSubmissionStep3=${oFolder}/cluster/submission/starSubmissionStep3.sh    
     ncores=1
@@ -608,7 +608,7 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
     ls -ltrh $starSubmissionStep3
     if [[ "$submit" == "yes" ]]
     then
-        echo qsub $hold $starSubmissionStep3
+        qsub $hold $starSubmissionStep3
     fi
 }
 
@@ -617,23 +617,28 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
 
 if [[ "$starStep1a" == "yes" || "$starStep1b" == "yes" || "$starStep2" == "yes" ]]
 then
-    starSubmissionStep1a
-    starSubmissionStep1b
-    starSubmissionStep2
     ls -ltrh $starSubmissionStep1a $starSubmissionStep1b $starSubmissionStep2
+    echo step1a: align
     if [[ "$starStep1a" == "yes" && "$submit" == "yes" ]]
     then
-        echo qsub $hold $starSubmissionStep1a
-        if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
-            hold="-hold_jid step1a_${code}"
-        fi
-        if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]; then
-        echo qsub $hold $starSubmissionStep1b
-        if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
-        fi
-        if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]; then
-        echo qsub $hold $starSubmissionStep2
-        if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
+       starSubmissionStep1a
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step1a_${code}"; else hold="$hold,step1b_${code}"; fi
+       hold="-hold_jid step1a_${code}"
+       qsub $hold $starSubmissionStep1a
+    fi
+    echo step1b: sorting and duplication removal
+    if [[ "$starStep1b" == "yes" && "$submit" == "yes" ]]
+    then
+       starSubmissionStep1b
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step1b_${code}"; else hold="$hold,step1b_${code}"; fi
+       qsub $hold $starSubmissionStep1b
+    fi
+    echo step2: dexseq count
+    if [[ "$starStep2" == "yes" && "$submit" == "yes" ]]
+    then
+       starSubmissionStep2
+       if [[ "$hold" == "" ]]; then hold="-hold_jid step2_${code}"; else hold="$hold,step2_${code}"; fi
+       qsub $hold $starSubmissionStep2
     fi
 fi
 
