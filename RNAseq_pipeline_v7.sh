@@ -9,6 +9,7 @@ if [[ "$computer" == "CS" ]]; then
     if [ ! -e $pythonbin ]; then pythonbin=/share/apps/python-2.7.8/bin/python2.7; fi
     ##Rbin=/cluster/project8/vyp/vincent/Software/R-3.1.2/bin/R
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
+    Rscript=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/Rscript
 
     misoRunEvents=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_events_analysis.py
     runMiso=/cluster/project8/vyp/vincent/Software/misopy-0.4.9/misopy/run_miso.py
@@ -25,19 +26,6 @@ if [[ "$computer" == "CS" ]]; then
 fi
 
 
-
-
-if [[ "$computer" == "vanHeel" ]]; then
-    software=/data_n2/vplagnol/Software
-    pythonbin=/software/additional/epd-7.3.1/bin/python
-    Rbin=/data_n2/vplagnol/Software/R-3.0.2/bin/R
-    
-    dexseqCount=/data_n2/vplagnol/Rlibs/installed/DEXSeq/python_scripts/dexseq_count.py
-
-    javaTemp2="/data_n1/vanheel_singlecellgenomics/tmp"
-    javaTemp="TMP_DIR=${javaTemp2}"
-
-fi
 
 
 echo "Base of RNA-Seq pipeline is located here: $RNASEQPIPBASE"
@@ -890,8 +878,7 @@ if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || 
     if [[ "$prepareCounts" == "yes" ]]; then
 
 	echo "
-# ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --annotation.file=${annotationFile} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --iFolder=${oFolder} ${countPrepareR} ${clusterFolder}/R/count_prepare.out
-${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} ${countPrepareR} > ${clusterFolder}/R/count_prepare.out
+${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder}  > ${clusterFolder}/R/count_prepare.out
 " >> $mainscript
 	
     fi
@@ -906,7 +893,6 @@ ${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile}
 	
 
 	echo "
-# ${Rbin} CMD BATCH --no-save --no-restore --keep.sex=${keepSex} --support.frame=${dataframe} --keep.dups=${keepDups} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${deseqFinalProcessR} ${clusterFolder}/R/deseq_${stem}.out 
 ${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${dataframe} --keep.dups ${keepDups} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/deseq_${stem}.out 
 " >> $mainscript
 
@@ -920,7 +906,6 @@ ${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${datafra
 	done
 
 	echo "
-# ${Rbin} CMD BATCH --no-save --no-restore --gff=${gffFile} --keep.sex=${keepSex} --keep.dups=${keepDups} --support.frame=${dataframe} --code=${code} --annotation.file=${annotationFile} --iFolder=${oFolder} ${dexseqFinalProcessR} ${clusterFolder}/R/dexseq_${stem}.out
 ${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/dexseq_${stem}.out
 " >> $mainscript
     fi
