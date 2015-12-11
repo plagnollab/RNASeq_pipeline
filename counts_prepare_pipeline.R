@@ -7,12 +7,12 @@ library(optparse)
 ########################## read arguments
 
 option_list <- list(
-    make_option(c('--support.frame'), help='', default='data/RNASeq_AD_Tc1J20.tab'),
-    make_option(c('--code'), help=''),
-    make_option(c('--gff'), help='', default="/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/chicken/GTF/Gallus_gallus.Galgal4.78.gff"),
-    make_option(c('--iFolder'), help='', default="/scratch2/vyp-scratch2/Daudet_RNASeq/processed"),
-    make_option(c('--annotation.file'), help=''),
-    make_option(c('--keep.dups'), help='', default=FALSE)
+    make_option(c('--support.frame'), help='', default='support/combined_support.tab'),
+    make_option(c('--code'), help='', default = "TB"),
+    make_option(c('--gff'), help='', default="/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/GTF/human_iGenomes_NCBI37_with_ensembl.gff"),
+    make_option(c('--iFolder'), help='', default="/cluster/project8/vyp/Nejentsev_TB_RNASeq/processed_combined_all_batches/"),
+    make_option(c('--annotation.file'), help='', default = "/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle/human/biomart/biomart_annotations_human.tab"),
+    make_option(c('--keep.dups'), help='', default=TRUE)
 )
 
 option.parser <- OptionParser(option_list=option_list)

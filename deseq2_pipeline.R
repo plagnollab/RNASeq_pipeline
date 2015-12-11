@@ -90,6 +90,7 @@ if(remove.hb) {
 
 
 ### Loop over all proposed conditions
+print(list.conditions)
 for (condition in list.conditions) {
   num.cond <- FALSE 
   message("Processing for ", condition) 
@@ -173,44 +174,52 @@ for (condition in list.conditions) {
         output.pca <- paste(deseq2.figs, '/', loc.code, '_pca.pdf', sep = '')
      } 
 
-     rld <- rlog(CDS)
-     pdf(output.pca)
-     plotPCA(rld, intgroup = condition) 
-     dev.off() 
 
-## Visualise the counts versus condition for the genes with best p-values 
-     if (keep.dups) { 
-        output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes_keepdups.pdf", sep = '') 
-     } else { 
-        output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes.pdf", sep = '') 
+     if (nrow(design.deseq) < 50) {
+       rld <- rlog(CDS)
+       pdf(output.pca)
+       plotPCA(rld, intgroup = condition) 
+       dev.off() 
+       
+       ## Visualise the counts versus condition for the genes with best p-values 
+       if (keep.dups) { 
+         output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes_keepdups.pdf", sep = '') 
+       } else { 
+         output.sig.genes <- paste(deseq2.figs, '/', loc.code, "_siggenes.pdf", sep = '') 
+       }
+       
+       if (!num.cond) { 
+         pdf(output.sig.genes) 
+         sig.genes <- which(deseq.res.df$padj < 0.1) 
+         for (i in sig.genes) { 
+           plotCounts(CDS, gene = deseq.res.df$Ensembl[i], intgroup = condition, 
+                      transform = TRUE, main = deseq.res.df$external_gene_id[i])
+           mtext(paste("pval: ", deseq.res.df$padj[i], sep = ""), 3)  
+         } 
+         dev.off() 
+       } 
+
+       if (keep.dups) { 
+         disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp_keepdups.pdf", sep = '') 
+       } else { 
+         disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp.pdf", sep = '') 
+       } 
+       
+       pdf(disp.plot) 
+       plotDispEsts(CDS)  
+       dev.off() 
      }
+   } # End of extra plots  
 
-     if (!num.cond) { 
-     pdf(output.sig.genes) 
-     sig.genes <- which(deseq.res.df$padj < 0.1) 
-     for (i in sig.genes) { 
-        plotCounts(CDS, gene = deseq.res.df$Ensembl[i], intgroup = condition, 
-                   transform = TRUE, main = deseq.res.df$external_gene_id[i])
-        mtext(paste("pval: ", deseq.res.df$padj[i], sep = ""), 3)  
-     } 
-     dev.off() 
-     } 
 
-     if (keep.dups) { 
-        disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp_keepdups.pdf", sep = '') 
-     } else { 
-        disp.plot <- paste(deseq2.figs, '/', loc.code, "_disp.pdf", sep = '') 
-     } 
-
-     pdf(disp.plot) 
-     plotDispEsts(CDS)  
-     dev.off() 
-     
-  } # End of extra plots  
-
+  rm (list = c("genes.counts.loc", "CDS"))
+  gc()
+  
 } # End looping over conditions 
 
-warnings()
+print(warnings())
 
 
-sessionInfo()
+print(sessionInfo())
+
+message("Done")
