@@ -2,8 +2,8 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Description of pipeline
 
-After adapter trimming with trim_galore, the fastq files are aligned using the STAR aligner.
-Differential exon and transcript expression using the aligned reads is assessed using dexSEQ and deSEQ respectively.
+After adapter trimming with trim_galore, the fastq files are aligned using STAR on build xx.
+Differential exon and transcript expression of the aligned reads is assessed using dexSEQ and deSEQ respectively.
 
 
 
