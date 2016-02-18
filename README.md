@@ -2,8 +2,8 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Description of pipeline
 
-After adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to build 38 ().
-The aligned reads overlapping the exons were counted using the dexseq_count.py  Python script, included as part of DEXSeq.
+After adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
+The aligned reads overlapping the exons were counted using the dexseq_count.py Python script, included as part of DEXSeq (package).
 Differential exon and transcript expression between the two conditions, was assessed using DEXSeq (1.14.2) and DESeq2 (1.8.2) Biocondutor packages respectively running on R (3.1.1).
 
 
