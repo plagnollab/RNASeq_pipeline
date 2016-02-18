@@ -2,7 +2,8 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Description of pipeline
 
-After adapter trimming with Trim Galore, the fastq reads are aligned using STAR on build 37.
+After adapter trimming with Trim Galore! (0.4.1), the fastq reads are aligned using STAR (2.5.0a_alpha) on build 38.
+The reads were counted using ```dexseq_count.py```
 Differential exon and transcript expression of the aligned reads between the two conditions, is assessed using DEXSeq (1.14.2) and DESeq2 (1.8.2) respectively.
 
 
