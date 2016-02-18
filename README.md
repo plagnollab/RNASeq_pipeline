@@ -4,7 +4,7 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 After adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to build 38 ().
 The reads were counted using the Python script, dexseq_count.py, included in DEXSeq.
-Differential exon and transcript expression between the two conditions, was assessed using DEXSeq (1.14.2) and DESeq2 (1.8.2) respectively.
+Differential exon and transcript expression between the two conditions, was assessed using DEXSeq (1.14.2) and DESeq2 (1.8.2) respectively on R (3.1.1).
 
 
 
