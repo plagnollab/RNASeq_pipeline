@@ -2,10 +2,11 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Description of pipeline
 
-After optional adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to the human build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
-The GRCh38 GTF transcript file was flattened to create a GFF file, a set of "union exons", using the dexseq_prepare_annotation.py Python script included with the DEXSeq package.
-The aligned reads overlapping the union exons were counted using the dexseq_count.py Python script, included as part of DEXSeq package.
-Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
+* After optional adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to the human build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
+* The resulting BAM file was sorted using NovoSort(1.00.01) and duplicate reads were flagged using Picard MarkDuplicates(1.100).
+* The GRCh38 GTF transcript file was flattened to create a GFF file, a set of union exons, using the dexseq_prepare_annotation.py Python script included with the DEXSeq package.
+* The aligned reads overlapping the union exons were counted using HTSeq. This is wrapped in the dexseq_count.py Python script, included with the DEXSeq package.
+* Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
 
 
 # Requirements
