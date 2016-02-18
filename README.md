@@ -1,5 +1,12 @@
 Set of scripts for RNA-Seq data processing, in particular differential expression analysis
 
+# Description of pipeline
+
+After adapter trimming with trim_galore, the fastq files are aligned using the STAR aligner.
+Differential exon and transcript expression using the aligned reads is assessed using dexSEQ and deSEQ respectively.
+
+
+
 
 # Requirements
 
@@ -36,3 +43,5 @@ sample f1 f2 condition
 Assuming that condition is what you want to run the differential expression analysis on.
 You also need to specify the input folder, so that the fastq can be found at ${iFolder}/${f1} and ${iFolder}/${f2}.
 Note that f1 and f2 can specify subfolders themselves. Also a species parameter and and output folder.
+
+
