@@ -2,9 +2,10 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 
 # Description of pipeline
 
-After adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to the human build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
-The aligned reads overlapping the exons, according to GRCh38 v82 GFF and GTF files, were counted using the dexseq_count.py Python script, included as part of DEXSeq package.
-Differential exon and transcript expression between the two conditions, was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Biocondutor packages respectively running on R (3.1.1).
+After optional adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.5.0a_alpha) to the human build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
+The GRCh38 GTF transcript file was flattened to create a GFF file, a set of "union exons", using the dexseq_prepare_annotation.py Python script included with the DEXSeq package.
+The aligned reads overlapping the union exons were counted using the dexseq_count.py Python script, included as part of DEXSeq package.
+Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
 
 
 # Requirements
@@ -41,6 +42,7 @@ sample f1 f2 condition
 ```
 Assuming that condition is what you want to run the differential expression analysis on.
 You also need to specify the input folder, so that the fastq can be found at ${iFolder}/${f1} and ${iFolder}/${f2}.
-Note that f1 and f2 can specify subfolders themselves. Also a species parameter and and output folder.
+Note that f1 and f2 can specify subfolders themselves. If the data is single stranded then the f2 column should be present but have the value of NA for each sample. 
+Also a species parameter and and output folder.
 
 
