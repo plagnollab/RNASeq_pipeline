@@ -74,7 +74,7 @@ cutadapt=/share/apps/python-2.7.8/bin/cutadapt
 #for the old cluster
 if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
-starexec=/cluster/project8/vyp/vincent/Software/STAR/bin/Linux_x86_64_static/STAR
+starexec=/cluster/project8/vyp/vincent/Software/STAR-STAR_2.4.2a/bin/Linux_x86_64_static/STAR
 samtools=${software}/samtools-1.2/samtools
 rseqQCscripts=${software}/RSeQC-2.3.3/scripts
 
