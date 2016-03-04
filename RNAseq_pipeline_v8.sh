@@ -392,7 +392,8 @@ mkdir -p $JAVA_DIR
         if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
         echo "Sample $sample"
         finalOFolder=${oFolder}/${sample}
-        mkdir -p ${finalOFolder} ${dexseqfolder}
+        dexseqfolder=${oFolder}/${sample}/dexseq
+	mkdir -p ${finalOFolder} ${dexseqfolder}
         # go no further
         if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
         then
@@ -400,16 +401,21 @@ mkdir -p $JAVA_DIR
             return 0
         fi
         files_exist ${iFolder}/$f1
-        echo Aligning with star
-        if [[ paired == "yes" ]]
+        echo Aligning with STAR
+        if [[ $paired == "yes" ]]
         then
             files_exist ${iFolder}/$f2
             #QC paireend
-            if [[ "$QC" == "yes" ]]
-            then
-                echo "
+            if [[ "$QC" == "yes" ]];then
+# use the currently redundant flag $summary in case the fastqs are trimmed but the alignment had failed etc.
+	    	echo $summary		
+		if [[ ! "$summary" == "trimmed_exist" ]];then
+                	echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
-                " >>  $starSubmissionStep1a
+"
+		 >>  $starSubmissionStep1a
+		fi
+
 			#the trimmed files have a slightly different output
 ## For some stupid reason Trim_Galore in paired end mode appends file names differently than in single end mode. Who'd have thought? 		
 # some fastqs have the naming scheme sample.a1.fastq.gz so I need to specifically split off the .fastq.gz.
@@ -430,12 +436,14 @@ ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat 
 " >> $starSubmissionStep1a
         #if single ended
         else
-            if [[ "$QC" == "yes" ]]
-            then
+            if [[ "$QC" == "yes" ]];then
+		echo $summary           
+                if [[ ! "$summary" == "trimmed_exist" ]];then
                 echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 " >> $starSubmissionStep1a
-                #the trimmed files have a slightly different output
+                fi
+		#the trimmed files have a slightly different output
                 f1=`echo $f1 | sed 's/.fastq.gz/_trimmed.fq.gz/g'`
                 #check that the trimming has happened. If not then exit
                 echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
@@ -459,7 +467,9 @@ ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 # sorting and duplication removal
 function starSubmissionStep1b {
 # per sample
+# if the master table has been made before then remove it. Otherwise every time the submission script is run then more lines are appended to it.
   starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
+  if [ -e $starMasterTableStep1b ]; then rm $starMasterTableStep1b;fi
   tail -n +2  $dataframe | while read sample f1 f2 condition
   do
 	finalOFolder=${oFolder}/${sample}
