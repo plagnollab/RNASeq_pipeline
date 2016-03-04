@@ -385,6 +385,7 @@ function starSubmissionStep1a {
 #$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
 #$ -wd ${oFolder}
+echo \$HOSTNAME >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
     tail -n +2  $dataframe | while read sample f1 f2 condition
@@ -508,6 +509,7 @@ then
 #$ -wd ${oFolder}
 #$ -t 2-${njobs1b}
 #$ -tc 20
+echo \$HOSTNAME >&2
 script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep1b\`
 sh \$script
 " > $starSubmissionStep1b
@@ -552,6 +554,7 @@ $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCoun
 #$ -wd ${oFolder}
 #$ -t 2-${njobs2}
 #$ -tc 20
+echo \$HOSTNAME >&2
 script=\`awk '{if (NR == '\$SGE_TASK_ID') print}' $starMasterTableStep2\`
 sh \$script
 " > $starSubmissionStep2
@@ -586,6 +589,7 @@ function starSubmissionStep3 {
 #$ -V
 #$ -R y
 #$ -l h_rt=${nhours}:${nminutes}:00
+echo \$HOSTNAME >&2
 " > $starSubmissionStep3
     if [[ "$prepareCounts" == "yes" ]]
     then
