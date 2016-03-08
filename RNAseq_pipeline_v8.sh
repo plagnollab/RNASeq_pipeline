@@ -369,9 +369,9 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 
 hold=""
-SCRATCH_DIR=/scratch0/RNASeq
+SCRATCH_DIR=/scratch0/RNASeq_${code}
 JAVA_DIR=${SCRATCH_DIR}/javastar
-
+ 
 # alignment
 function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
@@ -452,7 +452,11 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
 	echo "
-${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted
+
+# sort reads
+$novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
 " >> $starSubmissionStep1a
         fi
     done
@@ -461,6 +465,9 @@ rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
     echo "
 ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
+
+rm -rf ${SCRATCH_DIR}
+
 " >> $starSubmissionStep1a
 }
 
@@ -475,8 +482,7 @@ function starSubmissionStep1b {
   do
 	finalOFolder=${oFolder}/${sample}
    echo "
-# sort reads
-$novosort -f -t /scratch0/ -0 -c 1 -m 6G ${finalOFolder}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
 # remove duplicates
 $java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
