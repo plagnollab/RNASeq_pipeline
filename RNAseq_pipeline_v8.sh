@@ -433,7 +433,11 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
             fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
-${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${finalOFolder}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+
+# sort reads
+$novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
 " >> $starSubmissionStep1a
         #if single ended
         else
@@ -452,7 +456,7 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
 	echo "
-${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
 $novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
