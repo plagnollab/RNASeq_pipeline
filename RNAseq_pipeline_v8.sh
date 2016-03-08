@@ -436,7 +436,7 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
-$novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -0 -c 4 -m 40G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
 " >> $starSubmissionStep1a
         #if single ended
