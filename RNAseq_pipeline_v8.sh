@@ -105,7 +105,7 @@ mkdir -p $oFolder
 
 submit=no
 # If QC is wanted, the pipeline will send each fastq or pair of fastqs through FastQC. If adapters are present then the offending fastq files will be trimmed with Trim Galore! and these trimmmed fastqs will be the ones aligned with STAR. 
-QC=yes
+QC=no
 starStep1a=no
 starStep1b=no
 starStep2=no
@@ -436,7 +436,9 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
-$novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -0 -c 4 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
+rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
         #if single ended
@@ -459,7 +461,9 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
-$novosort -f -t /scratch0/ -0 -c 4 -m 15G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -0 -c 4 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+
+rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
         fi
