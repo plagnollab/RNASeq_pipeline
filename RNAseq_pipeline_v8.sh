@@ -378,7 +378,7 @@ function starSubmissionStep1a {
     echo "
 #$ -S /bin/bash
 #$ -l h_vmem=12.5G,tmem=12.5G
-#$ -l h_rt=24:00:00
+#$ -l h_rt=48:00:00
 #$ -pe smp 4
 #$ -R y
 #$ -o ${oFolder}/cluster/out
@@ -516,7 +516,7 @@ then
 #$ -S /bin/bash
 #$ -l h_vmem=9.5G
 #$ -l tmem=9.5G
-#$ -l h_rt=12:00:00
+#$ -l h_rt=24:00:00
 #$ -pe smp 1
 #$ -R y
 #$ -o ${oFolder}/cluster/out
