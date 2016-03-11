@@ -436,8 +436,9 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
-$novosort -f -t /scratch0/ -0 -c 4 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -6 -c 4 -m 40G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
+mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
@@ -461,8 +462,9 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
 # sort reads
-$novosort -f -t /scratch0/ -0 -c 4 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+$novosort -f -t /scratch0/ -6 -c 4 -m 40G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
 
+mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
@@ -501,7 +503,7 @@ then
   let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
   if [ \$filesize -gt 1000 ]
      then
-        rm ${finalOFolder}/${sample}.bam ${finalOFolder}/${sample}Aligned.out.bam
+        rm ${finalOFolder}/${sample}.bam
      fi
   fi
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
