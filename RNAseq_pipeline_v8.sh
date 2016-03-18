@@ -378,7 +378,7 @@ function starSubmissionStep1a {
     echo "
 #$ -S /bin/bash
 #$ -l h_vmem=12.5G,tmem=12.5G
-#$ -l h_rt=48:00:00
+#$ -l h_rt=72:00:00
 #$ -pe smp 4
 #$ -R y
 #$ -o ${oFolder}/cluster/out
@@ -461,8 +461,8 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 	echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 
-# sort reads
-$novosort -f -t /scratch0/ -6 -c 4 -m 40G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
+# sort reads and mark duplicates
+$novosort -f -t /scratch0/ -6 -c 4 -m 40G -markDuplicates ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
@@ -493,19 +493,19 @@ function starSubmissionStep1b {
 	finalOFolder=${oFolder}/${sample}
    echo "
 
-# remove duplicates
-$java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
+# remove duplicates - no longer. now just index and prepare summary read stats. STAR gives most of these anyway.
+#$java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
 #make sure that the sorted unique file exists and is at least 10MB before removing the original bams
-if [ -e ${finalOFolder}/${sample}_unique.bam ]
-then
-  let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
-  if [ \$filesize -gt 1000 ]
-     then
-        rm ${finalOFolder}/${sample}.bam
-     fi
-  fi
+#if [ -e ${finalOFolder}/${sample}_unique.bam ]
+#then
+#  let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
+#  if [ \$filesize -gt 1000 ]
+#     then
+#        rm ${finalOFolder}/${sample}.bam
+#     fi
+#  fi
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
       echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
   done
