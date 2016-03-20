@@ -386,6 +386,7 @@ function starSubmissionStep1a {
 #$ -N step1a_${code}
 #$ -wd ${oFolder}
 echo \$HOSTNAME >&2
+date >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
     tail -n +2  $dataframe | while read sample f1 f2 condition
@@ -434,10 +435,10 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
-
+date >&2
 # sort reads
-$novosort -f -t /scratch0/ -6 -c 4 -m 40G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}.bam
-
+$novosort -f -t /scratch0/ -6 -c 4 -m 40G -markDuplicates ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
@@ -460,10 +461,10 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
         # STAR    
 	echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
-
+date >&2
 # sort reads and mark duplicates
 $novosort -f -t /scratch0/ -6 -c 4 -m 40G -markDuplicates ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
-
+date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
