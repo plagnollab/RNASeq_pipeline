@@ -68,7 +68,7 @@ dexseqFinalProcessR=${RNASEQPIPBASE}/dexseq_pipeline_v2.R
 deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
 pathwayGOAnalysisR=${RNASEQPIPBASE}/pathwayGO_pipeline.R
 topGOAnalysisR=${RNASEQPIPBASE}/topGO_pipeline.R
-novosort=${software}/novocraft/novosort
+novosort=${software}/novocraft3/novosort
 trim_galore=${software}/trim_galore/trim_galore
 cutadapt=/share/apps/python-2.7.8/bin/cutadapt
 #for the old cluster
@@ -436,8 +436,8 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
             echo "
 ${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
-# sort reads
-$novosort -markDuplicates -f -t /scratch0/ -6 -c 4 -m 50G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+# sort reads and mark duplicates all in one step
+$novosort --md -f -t /scratch0/ -6 -c 4 -m 50G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
@@ -463,7 +463,7 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 ${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # sort reads and mark duplicates
-$novosort -markDuplicates -f -t /scratch0/ -6 -c 4 -m 50G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md -f -t /scratch0/ -6 -c 4 -m 50G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
@@ -493,20 +493,8 @@ function starSubmissionStep1b {
   do
 	finalOFolder=${oFolder}/${sample}
    echo "
-
-# remove duplicates - no longer. now just index and prepare summary read stats. STAR gives most of these anyway.
-#$java -Xmx6g -jar ${picardDup} TMP_DIR=/scratch0/ ASSUME_SORTED=true REMOVE_DUPLICATES=FALSE INPUT=${finalOFolder}/${sample}.bam OUTPUT=${finalOFolder}/${sample}_unique.bam METRICS_FILE=${finalOFolder}/metrics_${sample}_unique.tab
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
-#make sure that the sorted unique file exists and is at least 10MB before removing the original bams
-#if [ -e ${finalOFolder}/${sample}_unique.bam ]
-#then
-#  let filesize=\`du ${finalOFolder}/${sample}_unique.bam | cut -f1\`
-#  if [ \$filesize -gt 1000 ]
-#     then
-#        rm ${finalOFolder}/${sample}.bam
-#     fi
-#  fi
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
       echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
   done
