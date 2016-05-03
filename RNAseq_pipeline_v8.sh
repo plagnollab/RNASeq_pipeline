@@ -52,9 +52,9 @@ else
     # $Rbin CMD install optparse_1.3.2.tar.gz
     Rbin=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/R
     Rscript=/cluster/project8/vyp/vincent/Software/R-3.2.2/bin/Rscript
-    # data.table cannot be installed with this version of R
-    #Rbin=/share/apps/R/bin/R
-    #Rscript=/share/apps/R/bin/Rscript
+    # data.table cannot be installed with this version of R  # Jack: this one works for me! The above does not.
+    Rbin=/share/apps/R/bin/R
+    Rscript=/share/apps/R/bin/Rscript
 fi
 
 
