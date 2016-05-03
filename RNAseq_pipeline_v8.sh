@@ -440,6 +440,7 @@ date >&2
 $novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
+mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
