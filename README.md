@@ -1,9 +1,9 @@
 Set of scripts for RNA-Seq data processing, in particular differential expression analysis
 
-# Description of pipeline
+# Description of pipeline (RNA-Seq pipeline version 8)
 
 * After optional adapter trimming with Trim Galore! (0.4.1), the fastq reads were aligned using STAR (2.4.2a) to the human build 38 (GCA_000001405.15_GRCh38_no_alt_analysis_set).
-* The resulting BAM file was sorted using NovoSort(1.00.01) and duplicate reads were flagged using Picard MarkDuplicates(1.100).
+* The resulting BAM file was sorted and duplicate reads were flagged using NovoSort(1.03.09).
 * The GRCh38 GTF transcript file was flattened to create a GFF file, a set of union exons, using the dexseq_prepare_annotation.py Python script included with the DEXSeq package.
 * The aligned reads overlapping the union exons were counted using HTSeq. This is wrapped in the dexseq_count.py Python script, included with the DEXSeq package.
 * Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
@@ -12,7 +12,10 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 # Requirements
 
 [![Join the chat at https://gitter.im/plagnollab/RNASeq_pipeline](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/plagnollab/RNASeq_pipeline?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
+  
+- STAR (>= 2.4.2a)
+- NovoSort(>= 1.03.09)
+  
 R packages and software:
 
 - R = 3.2.2
@@ -35,15 +38,42 @@ scl enable devtoolset-1.1 'bash'
 ```
 and then run R
 
-# Input format
+# Input 1: Sample Table
 
-The key input is a table in plain text format that contains one row per sample, with the header line:
+The key input is a table in **tab delimited** plain text format that contains one row per sample, with the header line:
 ```
-sample f1 f2 condition
+sample  f1  f2  condition  (type)
 ```
-Assuming that condition is what you want to run the differential expression analysis on.
-You also need to specify the input folder, so that the fastq can be found at ${iFolder}/${f1} and ${iFolder}/${f2}.
-Note that f1 and f2 can specify subfolders themselves. If the data is single stranded then the f2 column should be present but have the value of NA for each sample. 
-Also a species parameter and and output folder.
 
+* `sample` must be a unique sample name.
+* `f1` and `f2` specify the input fastqs, which can be gzipped. If the data are single stranded then f2 must be set as **NA**.
+* `condition` is what you want to run the differential expression analysis on. You can include multiple condition columns
+* `type` is an optional covariate column which will be included in the differential expression model.
 
+The input folder is specified in the submission form. However if the fastq files are in separate subfolders then these subfolders should be present in the sample table, ie `/subfolder/sample1.fastq` .
+
+# Input 2: Submission Form
+The second input file is a list of variables that will be used by the pipeline script. An example is included in the repository and should be filled in by the user. Each variable is named and explained below:
+* `pipeline`: path to where the repository is downloaded
+* `oFolder`: where the processed data will go. Conventionally `samples/processed`.
+* `iFolder`: where the input fastq files are. If in separate subfolders then include the subfolder in the sample table.
+* `dataframe`: the path to the sample table
+* `code`: the name of the project, used as the job name when submitting each step.
+* `species`: the species genome used for alignment. `human` specifies hg19 whereas `human_hg38` specifies hg38.
+* `submit=(yes|no)`: whether the pipeline should automatically submit jobs to the cluster.
+* `QC=(yes|no)`: should the fastq files be trimmed before alignment?
+* `starStep1=(yes|no)`: the initial alignment step with STAR, followed by sorting and duplicate marking.
+* `starStep1b=(yes|no)`: indexing of the resulting bam file and computing of summary statistics.
+* `starStep2=(yes|no)`: counting the reads in each sample with HTSeq.
+* `prepareCounts=(yes|no)`: preparation of read counts for DESeq and DEXSeq; creation of per-sample FPKMs.
+* `Rdeseq=(yes|no)`: differential gene expression with the DESeq2 package.
+* `Rdexseq=(yes|no)`: differential exon usage with the DEXSeq package.
+
+## Advanced usage
+Two flags in the submission script, `summary` and `force` are now deprecated. They have now been repurposed for non-standard use cases.
+#### Only outputting lists of splice junctions from STAR
+* Set `starStep1a` to `yes` and `force` to `SJsOnly`.
+
+#### Realign files that have already been trimmed with FastQC.
+  Useful if pipeline has crashed downstream of trimming.
+* Set `QC` to `yes` and `summary` to `trimmed_exist`.
