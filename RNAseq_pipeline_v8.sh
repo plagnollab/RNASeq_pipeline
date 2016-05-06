@@ -375,6 +375,10 @@ JAVA_DIR=${SCRATCH_DIR}/javastar
 # alignment
 function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
+    STARoutput="BAM Unsorted"
+    if [[ "$force" == "SJsOnly" ]];then
+	STARoutput="None"
+    fi
     echo "
 #$ -S /bin/bash
 #$ -l h_vmem=15G,tmem=15G
@@ -411,11 +415,10 @@ mkdir -p $JAVA_DIR
             if [[ "$QC" == "yes" ]];then
 # use the currently redundant flag $summary in case the fastqs are trimmed but the alignment had failed etc.
 	    	echo $summary		
-		if [[ ! "$summary" == "trimmed_exist" ]];then
+		if [[ "$summary" != "trimmed_exist" ]];then
                 	echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
-"
-		 >>  $starSubmissionStep1a
+"  >>  $starSubmissionStep1a
 		fi
 
 			#the trimmed files have a slightly different output
@@ -434,21 +437,27 @@ if [ ! -e ${iFolder}/$f1 ]; then exit;fi
             fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
-${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+# move the SJ.tab file straight away
+mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
+	" >> $starSubmissionStep1a
+	# if you only want Splice Junction files then the sorting and duplicate marking is not needed.
+	if [[ "$force" != "SJsOnly" ]]; then
+	echo "
 # sort reads and mark duplicates all in one step
 $novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
-mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
-" >> $starSubmissionStep1a
-        #if single ended
+	" >> $starSubmissionStep1a
+        fi
+	#if single ended
         else
             if [[ "$QC" == "yes" ]];then
 		echo $summary           
-                if [[ ! "$summary" == "trimmed_exist" ]];then
+                if [[ "$summary" != "trimmed_exist" ]];then
                 echo "
 $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
 " >> $starSubmissionStep1a
@@ -461,8 +470,12 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
 	echo "
-${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype BAM Unsorted --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
+" >> $starSubmissionStep1a
+	if [[ "$force" == "SJsOnly" ]];then
+	echo " 
 # sort reads and mark duplicates
 $novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
@@ -470,7 +483,8 @@ mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
-        fi
+       fi 
+    fi
     done
     echo "
 rm -rf $JAVA_DIR
