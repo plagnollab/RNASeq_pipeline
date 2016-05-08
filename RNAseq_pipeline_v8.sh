@@ -464,8 +464,8 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
                 fi
 		#the trimmed files have a slightly different output
                 f1=`echo $f1 | sed 's/.fastq.gz/_trimmed.fq.gz/g'`
-                #check that the trimming has happened. If not then exit
-                echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
+                #does not work if the support table has subfolders! #check that the trimming has happened. If not then exit
+                #echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
             fi
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
