@@ -431,9 +431,8 @@ $trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}
 			f2=`echo $f2 | sed 's/.fastq.gz/_val_2.fq.gz/g'`
 		fi
                 #check that the trimming has happened. If not then exit
-                echo "
-if [ ! -e ${iFolder}/$f1 ]; then exit;fi
-                " >> $starSubmissionStep1a
+                #echo "
+#if [ ! -e ${iFolder}/$f1 ]; then exit;fi" >> $starSubmissionStep1a
             fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
             echo "
