@@ -69,8 +69,9 @@ deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
 pathwayGOAnalysisR=${RNASEQPIPBASE}/pathwayGO_pipeline.R
 topGOAnalysisR=${RNASEQPIPBASE}/topGO_pipeline.R
 novosort=${software}/novocraft3/novosort
-trim_galore=${software}/trim_galore/trim_galore
+trimgalore=${software}/trim_galore/trim_galore
 cutadapt=/share/apps/python-2.7.8/bin/cutadapt
+fastqc=/share/apps/genomics/fastqc-0.11.2/fastqc
 #for the old cluster
 if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
@@ -199,9 +200,12 @@ do
 	--keepDups)
 	    shift
 	    keepDups=TRUE;;
-	--QC)
+	--step0_QC)
 	    shift
-	    QC=$1;;
+	    step0_QC=$1;;
+	--trim_galore)
+	    shift
+	    trim_galore=$1;;
 	-* )
 	    stop "Unrecognized option: $1"
     esac
@@ -370,8 +374,55 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 hold=""
 SCRATCH_DIR=/scratch0/RNASeq_${code}
-JAVA_DIR=${SCRATCH_DIR}/javastar
- 
+JAVA_DIR=${SCRATCH_DIR}/javastar 
+# fastQC
+function step0_QC {
+   step0=${oFolder}/cluster/submission/step0.sh
+	echo "
+#$ -S /bin/bash
+#$ -l h_vmem=4G,tmem=4G
+#$ -l h_rt=72:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${oFolder}/cluster/out
+#$ -e ${oFolder}/cluster/error
+#$ -N step0_${code}
+#$ -wd ${oFolder}
+echo \$HOSTNAME >&2
+date >&2
+" > $step0
+
+	# create FASTQC output folder
+	fastqcFolder=${oFolder}/fastqc/
+	mkdir -p $fastqcFolder
+	# read each row of the support table		
+	tail -n +2  $dataframe | 
+	while read sample f1 f2 condition;do
+		# f1 
+		f1array=(`echo $f1 | tr "," " "`)	# create bash array
+        	f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
+
+        	for i in `seq 0 ${f1_array_length}`;do
+                	f1array[i]=${iFolder}/${f1array[i]} # append full path to each element of the array
+                	files_exist ${f1array[i]} # check for existence
+        		echo "
+$fastqc -o $fastqcFolder ${f1array[i]} 
+			" >> $step0
+		done
+		#f2
+		if [[ "$f2" != "NA" ]];then
+			f2array=(`echo $f2 | tr "," " "`)
+			for i in `seq 0 ${f1_array_length}`;do
+                		f2array[i]=${iFolder}/${f2array[i]} # append full path to each element of the array
+                		files_exist ${f2array[i]} # check for existence
+                	echo "
+$fastqc -o $fastqcFolder ${f2array[i]} 
+                	" >> $step0
+        		done
+		fi
+	done
+}
+
 # alignment
 function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
@@ -420,15 +471,15 @@ if [[ $paired == "yes" ]];then
                 f2array[i]=${iFolder}/${f2array[i]} #append full path 
 		files_exist ${f2array[i]} #check for existence
 	done
-            #QC paireend
-	if [[ "$QC" == "yes" ]];then
+            #Trim Galore paireend
+	if [[ "$trim_galore" == "yes" ]];then
 # use the currently redundant flag $summary in case the fastqs are trimmed but the alignment had failed etc.
 	    	echo $summary		
 		if [[ "$summary" != "trimmed_exist" ]];then
 # trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
 			for i in `seq 0 $f1_array_length `;do # i in length(array) - bash arrays are 0 based
 				echo "
-$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${f1array[i]} ${f2array[i]} 
+$trimgalore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${f1array[i]} ${f2array[i]} 
 "  >>  $starSubmissionStep1a
 			done
 		fi
@@ -472,12 +523,12 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
         fi
 	#if single ended
         else
-            if [[ "$QC" == "yes" ]];then
+            if [[ "$trim_galore" == "yes" ]];then
 		echo $summary           
                 if [[ "$summary" != "trimmed_exist" ]];then
                 	for i in `seq 0 $f1_array_length `;do # trim each fastq separately
 				echo "
-$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${f1array[i]}
+$trimgalore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${f1array[i]}
 " >> $starSubmissionStep1a
 			done
                 fi
@@ -675,7 +726,14 @@ ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart 
     fi
     #############
 }
-
+if [[ "$step0_QC" == "yes" ]];then
+    echo step0: fastQC
+    step0_QC
+    files_exist $step0
+    if [[ "$submit" == "yes" ]];then
+	qsub $step0
+    fi	
+fi
 
 
 
