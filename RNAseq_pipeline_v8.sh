@@ -393,50 +393,68 @@ echo \$HOSTNAME >&2
 date >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
-    tail -n +2  $dataframe | while read sample f1 f2 condition
-    do
+    tail -n +2  $dataframe | while read sample f1 f2 condition;do
         if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
         echo "Sample $sample"
         finalOFolder=${oFolder}/${sample}
         dexseqfolder=${oFolder}/${sample}/dexseq
 	mkdir -p ${finalOFolder} ${dexseqfolder}
         # go no further
-        if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
-        then
-            echo ${finalOFolder}/${sample}_unique.bam.bai exists will not align again
-            return 0
-        fi
-        files_exist ${iFolder}/$f1
+        #if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
+        #then
+        #    echo ${finalOFolder}/${sample}_unique.bam.bai exists will not align again
+        #    return 0
+        #fi
+	f1array=(`echo $f1 | tr "," " "`)
+	f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
+	for i in `seq 0 ${f1_array_length}`;do
+		f1array[i]=${iFolder}/${f1array[i]} # append full path
+		files_exist ${f1array[i]} # check for existence
+	done
+
         echo Aligning with STAR
-        if [[ $paired == "yes" ]]
-        then
-            files_exist ${iFolder}/$f2
+# Paired end        
+if [[ $paired == "yes" ]];then
+        f2array=(`echo $f2 | tr "," " "`) # create bash array
+	for i in `seq 0 ${f1_array_length}`;do
+                f2array[i]=${iFolder}/${f2array[i]} #append full path 
+		files_exist ${f2array[i]} #check for existence
+	done
             #QC paireend
-            if [[ "$QC" == "yes" ]];then
+	if [[ "$QC" == "yes" ]];then
 # use the currently redundant flag $summary in case the fastqs are trimmed but the alignment had failed etc.
 	    	echo $summary		
 		if [[ "$summary" != "trimmed_exist" ]];then
-                	echo "
-$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${iFolder}/$f1 ${iFolder}/$f2
+# trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
+			for i in `seq 0 $f1_array_length `;do # i in length(array) - bash arrays are 0 based
+				echo "
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt --paired ${f1array[i]} ${f2array[i]} 
 "  >>  $starSubmissionStep1a
+			done
 		fi
-
 			#the trimmed files have a slightly different output
-## For some stupid reason Trim_Galore in paired end mode appends file names differently than in single end mode. Who'd have thought? 		
-# some fastqs have the naming scheme sample.a1.fastq.gz so I need to specifically split off the .fastq.gz.
-		if [[ "$f2" == "NA" ]]; then
-			f1=`echo $f1 | sed 's/.fastq.gz/_trimmed.fq.gz/g'`
-		elif [[ ! "$f2" == "NA" ]]; then 
-			f1=`echo $f1 | sed 's/.fastq.gz/_val_1.fq.gz/g'`
-			f2=`echo $f2 | sed 's/.fastq.gz/_val_2.fq.gz/g'`
-		fi
+			## For some stupid reason Trim_Galore in paired end mode appends file names differently than in single end mode. Who'd have thought? 		
+			# some fastqs have the naming scheme sample.a1.fastq.gz so I need to specifically split off the .fastq.gz. 
+		for i in `seq 0 $f1_array_length`;do
+				f1array[i]=`echo ${f1array[i]} | sed 's/.fastq/_val_1.fq/g'`
+		done	
+		for i in `seq 0 $f1_array_length`;do
+				f2array[i]=`echo ${f2array[i]} | sed 's/.fastq/_val_2.fq/g'`
+		done
+		echo ${f1array[@]}
+		echo ${f2array[@]}
                 #check that the trimming has happened. If not then exit
                 #echo "
 #if [ ! -e ${iFolder}/$f1 ]; then exit;fi" >> $starSubmissionStep1a
-            fi
             #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
-            echo "
-${starexec} --readFilesIn ${iFolder}/$f1 ${iFolder}/$f2 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+	fi
+
+	# if the fastq files come in pieces, STAR takes them as A_R1.fastq,B_R1.fastq A_R2.fastq,B_R2.fastq
+	f1_total=`echo ${f1array[@]} | tr ' ' ',' `
+	f2_total=`echo ${f2array[@]} | tr ' ' ',' `
+		    
+	echo "
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the SJ.tab file straight away
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
@@ -457,24 +475,29 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
             if [[ "$QC" == "yes" ]];then
 		echo $summary           
                 if [[ "$summary" != "trimmed_exist" ]];then
-                echo "
-$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${iFolder}/$f1
+                	for i in `seq 0 $f1_array_length `;do # trim each fastq separately
+				echo "
+$trim_galore --gzip -o $iFolder --path_to_cutadapt $cutadapt ${f1array[i]}
 " >> $starSubmissionStep1a
+			done
                 fi
 		#the trimmed files have a slightly different output
-                f1=`echo $f1 | sed 's/.fastq.gz/_trimmed.fq.gz/g'`
+		for i in `seq 0 $f1_array_length`;do
+			f1array[i]=`echo ${f1array[i]} | sed 's/.fastq/_trimmed.fq/g'`
+                done
                 #does not work if the support table has subfolders! #check that the trimming has happened. If not then exit
                 #echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
             fi
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
+	f1_total=`echo ${f1array[@]} | tr ' ' ',' `
 	echo "
-${starexec} --readFilesIn ${iFolder}/$f1 --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 " >> $starSubmissionStep1a
-	if [[ "$force" == "SJsOnly" ]];then
-	echo " 
+	if [[ "$force" != "SJsOnly" ]];then
+		echo " 
 # sort reads and mark duplicates
 $novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
@@ -482,9 +505,10 @@ mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 " >> $starSubmissionStep1a
-       fi 
+	fi 
     fi
     done
+
     echo "
 rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
