@@ -47,10 +47,10 @@ sample  f1  f2  condition  (type)
 
 * `sample` must be a unique sample name.
 * `f1` and `f2` specify the input fastqs, which can be gzipped. If the data are single stranded then f2 must be set as **NA**.
+* If the fastq files are in pieces then fastq files of the same direction should be comma separated.
 * `condition` is what you want to run the differential expression analysis on. You can include multiple condition columns
 * `type` is an optional covariate column which will be included in the differential expression model.
-
-The input folder is specified in the submission form. However if the fastq files are in separate subfolders then these subfolders should be present in the sample table, ie `/subfolder/sample1.fastq` .
+* The input folder is specified in the submission form. However if the fastq files are in separate subfolders then these subfolders should be present in the sample table, ie `/subfolder/sample1.fastq`.
 
 # Input 2: Submission Form
 The second input file is a list of variables that will be used by the pipeline script. An example is included in the repository and should be filled in by the user. Each variable is named and explained below:
@@ -61,7 +61,8 @@ The second input file is a list of variables that will be used by the pipeline s
 * `code`: the name of the project, used as the job name when submitting each step.
 * `species`: the species genome used for alignment. `human` specifies hg19 whereas `human_hg38` specifies hg38.
 * `submit=(yes|no)`: whether the pipeline should automatically submit jobs to the cluster.
-* `QC=(yes|no)`: should the fastq files be trimmed before alignment?
+* `step0_QC=(yes|no)`: each fastqc is checked with FastQC. This step should ideally be completed before the rest of the pipeline is run.
+* `trim_galore=(yes|no)`: should the fastq files be trimmed before alignment?
 * `starStep1=(yes|no)`: the initial alignment step with STAR, followed by sorting and duplicate marking.
 * `starStep1b=(yes|no)`: indexing of the resulting bam file and computing of summary statistics.
 * `starStep2=(yes|no)`: counting the reads in each sample with HTSeq.
