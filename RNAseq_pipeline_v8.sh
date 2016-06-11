@@ -461,7 +461,7 @@ mkdir -p $JAVA_DIR
 	f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
 	for i in `seq 0 ${f1_array_length}`;do
 	#	f1array[i]=${iFolder}/${f1array[i]} # append full path
-		files_exist ${f1array[i]} # check for existence
+		files_exist ${iFolder}/${f1array[i]} # check for existence
 	done
 
         echo Aligning with STAR
@@ -470,7 +470,7 @@ if [[ $paired == "yes" ]];then
         f2array=(`echo $f2 | tr "," " "`) # create bash array
 	for i in `seq 0 ${f1_array_length}`;do
         #       f2array[i]=${iFolder}/${f2array[i]} #append full path 
-		files_exist ${f2array[i]} #check for existence
+		files_exist ${iFolder}/${f2array[i]} #check for existence
 	done
             #Trim Galore paireend
 	if [[ "$trim_galore" == "yes" ]];then
@@ -484,7 +484,7 @@ if [[ $paired == "yes" ]];then
 			for i in `seq 0 $f1_array_length `;do # i in length(array) - bash arrays are 0 based
 				echo "
 # trim paired end with Trim Galore. Trim adapters and low quality (phred below 20)
-$trimgalore --gzip -o ${iFolder}/trimmed --path_to_cutadapt $cutadapt --paired -q 20 ${iFolder}/${f1array[i]} ${iFolder}/${f2array[i]} 
+$trimgalore --gzip -o ${iFolder}/trimmed --quality 20 --path_to_cutadapt $cutadapt --paired ${iFolder}/${f1array[i]} ${iFolder}/${f2array[i]} 
 "  >>  $starSubmissionStep1a
 			done
 		fi
@@ -549,7 +549,7 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
                 	for i in `seq 0 $f1_array_length `;do # trim each fastq separately
 				echo "
 # trim single end with Trim Galore. Trim adapters and low quality (phred below 20)
-$trimgalore --gzip -o ${trimmedFolder} --path_to_cutadapt -q 20 $cutadapt ${iFolder}/${f1array[i]}
+$trimgalore --gzip -o ${trimmedFolder} --quality 20 --path_to_cutadapt $cutadapt ${iFolder}/${f1array[i]}
 " >> $starSubmissionStep1a
 			done
                 fi
@@ -716,6 +716,7 @@ function starSubmissionStep3 {
 #$ -pe smp $ncores
 #$ -l tmem=${mem}G,h_vmem=${mem}G
 #$ -V
+#$ -N step3_${code}
 #$ -R y
 #$ -l h_rt=${nhours}:${nminutes}:00
 echo \$HOSTNAME >&2
