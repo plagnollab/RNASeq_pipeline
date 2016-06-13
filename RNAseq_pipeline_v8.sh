@@ -445,6 +445,11 @@ echo \$HOSTNAME >&2
 date >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
+if [ "$trim_galore" == "yes" ];then
+	echo "
+mkdir ${SCRATCH_DIR}/trimmed # make a scratch0 trimmed folder
+" >> $starSubmissionStep1a
+fi    
     tail -n +2  $dataframe | while read sample f1 f2 condition;do
         if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
         echo "Sample $sample"
@@ -474,17 +479,14 @@ if [[ $paired == "yes" ]];then
 	done
             #Trim Galore paireend
 	if [[ "$trim_galore" == "yes" ]];then
-		#trimmedFolder=${iFolder}/trimmed      # should really move trimmed files to a separate folder
-		#if [ ! -e $trimmedFolder ]; then mkdir $trimmedFolder; fi
-# use the currently redundant flag $summary in case the fastqs are trimmed but the alignment had failed etc.
 	    	echo $summary
 		if [[ "$summary" != "trimmed_exist" ]];then
 # trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
 			if [ ! -e ${iFolder}/trimmed ];then mkdir ${iFolder}/trimmed;fi # make trimmed folder
 			for i in `seq 0 $f1_array_length `;do # i in length(array) - bash arrays are 0 based
 				echo "
-# trim paired end with Trim Galore. Trim adapters and low quality (phred below 20)
-$trimgalore --gzip -o ${iFolder}/trimmed --quality 20 --path_to_cutadapt $cutadapt --paired ${iFolder}/${f1array[i]} ${iFolder}/${f2array[i]} 
+# trim paired end with Trim Galore. Trim adapters and low quality (phred below 20). output to scratch0
+$trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cutadapt --paired ${iFolder}/${f1array[i]} ${iFolder}/${f2array[i]} 
 "  >>  $starSubmissionStep1a
 			done
 		fi
@@ -515,14 +517,22 @@ $trimgalore --gzip -o ${iFolder}/trimmed --quality 20 --path_to_cutadapt $cutada
 	fi
 
 	# if the fastq files come in pieces, STAR takes them as A_R1.fastq,B_R1.fastq A_R2.fastq,B_R2.fastq. 
-	# append iFolder and separate by comma
-	f1_total=`echo ${f1array[@]} | awk -v i=$iFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
-	f2_total=`echo ${f2array[@]} | awk -v i=$iFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
+	# if files have just been trimmed, append scratch0. If files already trimmed or not trimmed then append iFolder. 
+	# Separate by comma
+	if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
+		fastqFolder=${SCRATCH_DIR}
+	else
+		fastqFolder=${iFolder}
+	fi
+	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
+	f2_total=`echo ${f2array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 		    
 	echo "
 # align with STAR. Output = ${STARoutput}
 ${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+# move the trimmed files back to trimmed folder in iFolder
+mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," " " `
 # move the SJ.tab
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	" >> $starSubmissionStep1a
@@ -549,10 +559,15 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
                 	for i in `seq 0 $f1_array_length `;do # trim each fastq separately
 				echo "
 # trim single end with Trim Galore. Trim adapters and low quality (phred below 20)
-$trimgalore --gzip -o ${trimmedFolder} --quality 20 --path_to_cutadapt $cutadapt ${iFolder}/${f1array[i]}
+$trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cutadapt ${iFolder}/${f1array[i]}
 " >> $starSubmissionStep1a
 			done
                 fi
+		if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
+                	fastqFolder=${SCRATCH_DIR}
+        	else
+                	fastqFolder=${iFolder}
+        	fi
 		#the trimmed files have a slightly different output
 		for i in `seq 0 $f1_array_length`;do
 			f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' |  sed 's/.fastq/_trimmed.fq/g'`
@@ -570,11 +585,13 @@ $trimgalore --gzip -o ${trimmedFolder} --quality 20 --path_to_cutadapt $cutadapt
             fi
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
-	f1_total=`echo ${f1array[@]} | awk -v i=$iFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
+	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	echo "
 # align with STAR. Output = ${STARoutput}
 ${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+# move the trimmed files back to trimmed folder in iFolder
+mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " `
 # move splice junction files
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 " >> $starSubmissionStep1a
@@ -598,6 +615,10 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
     echo "
+# move trimming reports if created
+if [ -e ${SCRATCH_DIR}/trimmed/*trimming* ];then
+	mv ${SCRATCH_DIR}/trimmed/*trimming* ${iFolder}/trimmed/
+fi
 # remove genome from memory
 ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 # a clean slate
