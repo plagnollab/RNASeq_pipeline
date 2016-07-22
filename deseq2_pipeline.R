@@ -1,7 +1,7 @@
 
 library(DESeq2)
 library(optparse)
-
+library(data.table)
 option_list <- list(
     make_option(c('--support.frame'), help=''),
     make_option(c('--code'), help=''),
