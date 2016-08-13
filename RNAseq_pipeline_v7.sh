@@ -507,9 +507,9 @@ if [[ "$tophat" == "yes" || "$miso" == "yes" || "$dexseqcounts" == "yes" || "$ru
 #$ -R y
 #$ -l h_rt=${nhours}:00:00
 
-PYTHONPATH=/cluster/project8/vyp/vincent/libraries/python/share/apps/python-2.7.1/lib/python2.7/site-packages:/cluster/project8/vyp/vincent/libraries/python/lib/python:\$PYTHONPATH
+#PYTHONPATH=/cluster/project8/vyp/vincent/libraries/python/share/apps/python-2.7.1/lib/python2.7/site-packages:/cluster/project8/vyp/vincent/libraries/python/lib/python:\$PYTHONPATH
 
-export PYTHONPATH
+#export PYTHONPATH
 
 " > $script
 	
@@ -762,7 +762,7 @@ if [[ "$summary" == "yes" ]]; then
 	ls -ltrh $sFile
 	
 	mappedReads=`awk '{if (NR == 1) {print $1}}' $sFile`
-	dupReads=`awk '{if (NR == 2) {print $1}}' $sFile`
+	dupReads=`grep duplicates $sFile | awk '{print $1}' `
 	unmappedReads=`awk '{if (NR == 1) {print $1}}' $uFile`
 	Read1=`awk '{if (NR == 5) {print $1}}' $sFile`
 	Read2=`awk '{if (NR == 6) {print $1}}' $sFile`
