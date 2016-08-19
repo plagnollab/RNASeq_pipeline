@@ -165,6 +165,9 @@ for (condition in list.conditions) {
 #################### now write the output to a file 
   write.table(deseq.res.df, file = output.file, quote = FALSE, row.names = FALSE, sep = "\t" ) 
   save(list = c("CDS"), file = paste0(loc.deseq2.folder, "/deseq2_object.RData")) 
+
+############# save entire session 
+  save.image(file = paste0(loc.deseq2.folder, "/deseq2_session.RData"))
   
 ######### Now add a PCA for the subset of individuals being considered
   if(extra.plots) { 
@@ -178,7 +181,8 @@ for (condition in list.conditions) {
      if (nrow(design.deseq) < 50) {
        rld <- rlog(CDS)
        pdf(output.pca)
-       plotPCA(rld, intgroup = condition) 
+       pca.plot <- plotPCA(rld, intgroup = condition) 
+       print(pca.plot)
        dev.off() 
        
        ## Visualise the counts versus condition for the genes with best p-values 

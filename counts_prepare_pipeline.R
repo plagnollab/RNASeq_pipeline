@@ -3,7 +3,7 @@
 library(DEXSeq)
 library(DESeq2) 
 library(optparse)
-
+options(echo=T)
 ########################## read arguments
 
 option_list <- list(

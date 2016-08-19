@@ -3,7 +3,7 @@
 library(DEXSeq)
 library(BiocParallel)
 library(optparse)
-
+options(echo=T)
 
 option_list <- list(
     make_option(c('--support.frame'), help=''),
