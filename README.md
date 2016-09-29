@@ -8,6 +8,9 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 * The aligned reads overlapping the union exons were counted using HTSeq. This is wrapped in the dexseq_count.py Python script, included with the DEXSeq package.
 * Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
 
+<p align="center">
+  <img src="https://github.com/plagnollab/RNASeq_pipeline/blob/master/schematic.png">
+</p>
 
 # Requirements
 
@@ -60,6 +63,7 @@ The second input file is a list of variables that will be used by the pipeline s
 * `dataframe`: the path to the sample table
 * `code`: the name of the project, used as the job name when submitting each step.
 * `species`: the species genome used for alignment. `human` specifies hg19 whereas `human_hg38` specifies hg38.
+* `stranded=(unstranded/fr-firststrand/fr-secondstrand)`: whether the RNA-seq library is stranded. 
 * `submit=(yes|no)`: whether the pipeline should automatically submit jobs to the cluster.
 * `step0_QC=(yes|no)`: each fastqc is checked with FastQC. This step should ideally be completed before the rest of the pipeline is run.
 * `trim_galore=(yes|no)`: should the fastq files be trimmed before alignment?
@@ -70,6 +74,11 @@ The second input file is a list of variables that will be used by the pipeline s
 * `Rdeseq=(yes|no)`: differential gene expression with the DESeq2 package.
 * `Rdexseq=(yes|no)`: differential exon usage with the DEXSeq package.
 
+## A note on stranding
+Strand-specific library preparations are now commonplace, which improves the accuracy of feature quantification. However, there are two possible ways of stranding a paired RNAseq library:
+* fr-firststrand, where the first read of the pair maps to the same orientation of the gene.
+* fr-secondstrand, where the first read of the pair maps to the opposite orientation of the gene.
+If you're unsure whether the library is forward or reverse stranded, set stranded=unstranded and run step 1a to align your reads. Then run infer_experiment.py from the RSeQC package (http://rseqc.sourceforge.net/#infer-experiment-py).
 ## Advanced usage
 Two flags in the submission script, `summary` and `force` are now deprecated. They have now been repurposed for non-standard use cases.
 #### Only outputting lists of splice junctions from STAR
