@@ -39,7 +39,6 @@ else
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
     if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
-    dexseqCount="/cluster/project8/vyp/vincent/libraries/R/installed/DEXSeq/python_scripts/dexseq_count.py"
     bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
     if [ ! -e $bigFilesBundleFolder ]
     then
@@ -62,6 +61,8 @@ fi
 #RNASEQPIPBASE=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline
 
 echo "Base of RNA-Seq pipeline is located here: $RNASEQPIPBASE"
+
+dexseqCount=${RNASEQPIPBASE}/dexseq_count.py
 countPrepareR=${RNASEQPIPBASE}/counts_prepare_pipeline.R
 files_exist $countPrepareR
 dexseqFinalProcessR=${RNASEQPIPBASE}/dexseq_pipeline_v2.R
@@ -529,7 +530,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 		    
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," " " `
@@ -588,7 +589,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " `
