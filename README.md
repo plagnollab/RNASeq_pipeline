@@ -79,6 +79,7 @@ Strand-specific library preparations are now commonplace, which improves the acc
 * fr-firststrand, where the first read of the pair maps to the same orientation of the gene.
 * fr-secondstrand, where the first read of the pair maps to the opposite orientation of the gene.
 If you're unsure whether the library is forward or reverse stranded, set stranded=unstranded and run step 1a to align your reads. Then run infer_experiment.py from the RSeQC package (http://rseqc.sourceforge.net/#infer-experiment-py).
+
 ## Advanced usage
 Two flags in the submission script, `summary` and `force` are now deprecated. They have now been repurposed for non-standard use cases.
 #### Only outputting lists of splice junctions from STAR
