@@ -541,7 +541,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]]; then
 	echo "
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 60G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
@@ -599,7 +599,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]];then
 		echo " 
 # sort reads and mark duplicates with NovoSort
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 50G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 60G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
