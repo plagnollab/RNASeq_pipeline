@@ -85,6 +85,6 @@ Two flags in the submission script, `summary` and `force` are now deprecated. Th
 #### Only outputting lists of splice junctions from STAR
 * Set `starStep1a` to `yes` and `force` to `SJsOnly`.
 
-#### Realign files that have already been trimmed with FastQC.
+#### Realign files that have already been trimmed
   Useful if pipeline has crashed downstream of trimming.
 * Set `QC` to `yes` and `summary` to `trimmed_exist`.
