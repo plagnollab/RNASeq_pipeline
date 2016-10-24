@@ -345,7 +345,12 @@ case "$species" in
         annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
         gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
         gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
-        ;;
+        
+	if [[ "$summary" == "refseq" ]];then
+		gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/mm10_refseq_genes_fixed.gff
+		gtfFile=/SAN/vyplab/HuRNASeq/reference_datasets/mm10_refseq_genes_fixed.gtf
+	fi
+	;;
     tc1_mouse)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/Zanda_AD_Tc1J20_RNASeq/Zanda_Tc1_reference/build1 
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome
