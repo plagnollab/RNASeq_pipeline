@@ -640,6 +640,7 @@ function starSubmissionStep1b {
 # if the master table has been made before then remove it. Otherwise every time the submission script is run then more lines are appended to it.
   starMasterTableStep1b=${oFolder}/cluster/submission/starMasterTableStep1b.tab
   if [ -e $starMasterTableStep1b ]; then rm $starMasterTableStep1b;fi
+  echo "scripts" > $starMasterTableStep1b
   tail -n +2  $dataframe | while read sample f1 f2 condition
   do
 	finalOFolder=${oFolder}/${sample}
@@ -649,7 +650,10 @@ ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sa
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
       echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
   done
-  njobs1b=`wc -l $starMasterTableStep1b | awk '{print $1}'`
+  # the job array will start the SGE_TASK_ID at 2 and iterate through. 
+  # Therefore the first 1b script will run at SGE_TASK_ID=2 
+  # and the last will run at SGE_TASK_ID=(total number of scripts + 1)
+  njobs1b=`wc -l $starMasterTableStep1b | awk '{print $1 + 1}'`
 # submission script
   starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
   echo "
