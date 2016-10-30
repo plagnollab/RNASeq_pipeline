@@ -270,6 +270,13 @@ case "$species" in
         fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/human_b37_with_spikes
         ;;
+    human_hg19_UCSC)
+	fasta=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.fa
+	gtfFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
+	annotationFile=NA
+	gffFile=NA
+	STARdir=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/STAR
+	;;
     human_hg38)
         fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
         gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
