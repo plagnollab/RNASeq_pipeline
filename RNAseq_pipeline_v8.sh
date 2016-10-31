@@ -273,8 +273,8 @@ case "$species" in
     human_hg19_UCSC)
 	fasta=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.fa
 	gtfFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
-	annotationFile=NA
-	gffFile=NA
+	annotationFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
+	gffFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
 	STARdir=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/STAR
 	;;
     human_hg38)
@@ -548,7 +548,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]]; then
 	echo "
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 60G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 25G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
