@@ -159,6 +159,16 @@ for (condition in list.conditions) {
   print(head(deseq.res.df)) 
   deseq.res.df$EnsemblID <- row.names( deseq.res.df)
   deseq.res.df <- merge(deseq.res.df, annotation, by = 'EnsemblID', all.x = TRUE)
+  row.names(deseq.res.df) <- deseq.res.df$EnsemblID
+ ################# fix problematic gene names - don't bother with positions
+  problematic <- subset(deseq.res.df, is.na(external_gene_id))
+  problematic$external_gene_id <- sapply(as.character(row.names(problematic)),
+                                          FUN = function(x) {paste(
+                                            subset(annotation, EnsemblID %in% strsplit(x, split = '\\+')[[1]], external_gene_id, drop = TRUE), collapse = '+')})  
+  problematic$external_gene_id <- as.character(problematic$external_gene_id)
+  deseq.res.df$external_gene_id <- as.character(deseq.res.df$external_gene_id)   
+  deseq.res.df[ row.names(problematic), 'external_gene_id' ] <- problematic$external_gene_id 
+  
   deseq.res.df <- deseq.res.df[order(deseq.res.df$pvalue),]
   print(head(deseq.res.df)) 
 
