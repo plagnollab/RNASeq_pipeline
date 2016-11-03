@@ -342,9 +342,12 @@ case "$species" in
         ;;
     mouse)
         STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
-        annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
-        gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
-        gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
+        annotationFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/biomart_annotations_mouse.tab
+	#${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+        gffFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gff
+	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
+        gtfFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gtf
+	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
         
 	if [[ "$summary" == "refseq" ]];then
 		gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/mm10_refseq_genes_fixed.gff
@@ -557,38 +560,36 @@ rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
         fi
 	#if single ended
         else
-            if [[ "${trim_galore}" == "yes" ]];then
-		echo $summary           
-                trimmedFolder=${iFolder}/trimmed/
-		if [ ! -e $trimmedFolder ]; then mkdir ${trimmedFolder};fi
-		if [[ "$summary" != "trimmed_exist" ]];then
-                	for i in `seq 0 $f1_array_length `;do # trim each fastq separately
-				echo "
+	fastqFolder=${iFolder}
+		if [[ "${trim_galore}" == "yes" ]];then
+			echo $summary           
+                	fastqFolder=${SCRATCH_DIR}
+			trimmedFolder=`dirname ${oFolder} | awk '{print $1"/trimmed/"}' `
+			if [ ! -e $trimmedFolder ]; then mkdir ${trimmedFolder};fi
+			if [[ "$summary" != "trimmed_exist" ]];then
+                		for i in `seq 0 $f1_array_length `;do # trim each fastq separately
+					echo "
 # trim single end with Trim Galore. Trim adapters and low quality (phred below 20)
 $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cutadapt ${iFolder}/${f1array[i]}
 " >> $starSubmissionStep1a
-			done
-                fi
-		if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
-                	fastqFolder=${SCRATCH_DIR}
-        	else
-                	fastqFolder=${iFolder}
-        	fi
+				done
+                	fi
 		#the trimmed files have a slightly different output
-		for i in `seq 0 $f1_array_length`;do
-			f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' |  sed 's/.fastq/_trimmed.fq/g'`
-                done
-                if [[ "$summary" == "trimmed_exist" ]];then     
-                        echo "
+			for i in `seq 0 $f1_array_length`;do
+				f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' |  sed 's/.fastq/_trimmed.fq/g'`
+        		done
+        		if [[ "$summary" == "trimmed_exist" ]];then     
+                		fastqFolder=${iFolder}
+				echo "
 # trimmed_exist selected. Files have already been trimmed and exist in ${iFolder}/trimmed
 " >> $starSubmissionStep1a      
-                        for i in `seq 0 $f1_array_length`;do
-                                files_exist ${iFolder}/${f1array[i]}
-                        done
-                fi
+         			for i in `seq 0 $f1_array_length`;do
+         				files_exist ${iFolder}/${f1array[i]}
+         			done
+			fi
+         	fi
 		#does not work if the support table has subfolders! #check that the trimming has happened. If not then exit
                 #echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
-            fi
             #if trimming has occurred then the trimmed fastq will be aligned
         # STAR    
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
