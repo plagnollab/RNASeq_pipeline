@@ -87,4 +87,4 @@ Two flags in the submission script, `summary` and `force` are now deprecated. Th
 
 #### Realign files that have already been trimmed
   Useful if pipeline has crashed downstream of trimming.
-* Set `QC` to `yes` and `summary` to `trimmed_exist`.
+* Set `trim_galore` to `yes` and `summary` to `trimmed_exist`.
