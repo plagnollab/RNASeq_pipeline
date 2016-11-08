@@ -69,6 +69,7 @@ dexseqFinalProcessR=${RNASEQPIPBASE}/dexseq_pipeline_v2.R
 deseqFinalProcessR=${RNASEQPIPBASE}/deseq2_pipeline.R
 pathwayGOAnalysisR=${RNASEQPIPBASE}/pathwayGO_pipeline.R
 topGOAnalysisR=${RNASEQPIPBASE}/topGO_pipeline.R
+goseqR=${RNASEQPIPBASE}/goseq_script.R
 novosort=${software}/novocraft3/novosort
 trimgalore=${software}/trim_galore/trim_galore
 cutadapt=/share/apps/python-2.7.8/bin/cutadapt
@@ -207,6 +208,9 @@ do
 	--trim_galore)
 	    shift
 	    trim_galore=$1;;
+	--goseq)
+		shift
+		goseq=$1;;
 	-* )
 	    stop "Unrecognized option: $1"
     esac
@@ -792,8 +796,18 @@ ${Rscript} ${pathwayGOAnalysisR} --support.frame ${dataframe} --code ${code} --m
 ${Rscript} ${topGOAnalysisR} --support.frame ${dataframe} --code ${code} --mart ${mart} --db ${db} --iFolder ${oFolder} > ${clusterFolder}/R/topGO_${stem}.out 
     " >> $starSubmissionStep3
     fi
-    #############
+    ############# new GO analysis with GOSeq - very fast
+    if [[ "$goseq" == "yes" ]];then
+	files_exist $goseqR $dataframe
+	echo "
+${Rscript} ${goseqR} --species ${species} --oFolder ${oFolder} --mode DESeq
+	" >> $starSubmissionStep3
+	fi
 }
+
+
+### SUBMITTING TIME
+
 if [[ "$step0_QC" == "yes" ]];then
     echo step0: fastQC
     step0_QC
@@ -841,7 +855,7 @@ then
    fi
 fi
 
-if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" ]]
+if [[ "$prepareCounts" == "yes" || "$Rdeseq" == "yes" || "$Rdexseq" == "yes" || "$RpathwayGO" == "yes" || "$RtopGO" == "yes" || "$goseq" == "yes" ]]
 then
     echo "Taking all samples together"
     starSubmissionStep3
