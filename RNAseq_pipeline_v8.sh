@@ -448,6 +448,7 @@ function starSubmissionStep1a {
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
+#$ -l tscratch=60G 
 #$ -wd ${oFolder}
 echo \$HOSTNAME >&2
 date >&2
