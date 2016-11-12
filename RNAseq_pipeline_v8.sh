@@ -274,6 +274,13 @@ case "$species" in
         fasta=${refFolder}/Sequence/WholeGenomeFasta/genome.fa
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/human_b37_with_spikes
         ;;
+    human_hg19_UCSC)
+	fasta=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.fa
+	gtfFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
+	annotationFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
+	gffFile=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/hg19_UCSC.gtf
+	STARdir=/SAN/biomed/biomed14/vyp-scratch/temp_reference/hg19_UCSC/STAR
+	;;
     human_hg38)
         fasta=${bigFilesBundleFolder}/human_reference_sequence/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
         gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
@@ -453,6 +460,7 @@ function starSubmissionStep1a {
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
+#$ -l tscratch=60G 
 #$ -wd ${oFolder}
 echo \$HOSTNAME >&2
 date >&2
@@ -553,7 +561,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]]; then
 	echo "
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 60G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 55G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
