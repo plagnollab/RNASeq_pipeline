@@ -1,46 +1,45 @@
-
-
 ########## first the high level parameters about where the scripts and the bundle are located
-RNASEQPIPBASE=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline  ##this probably needs to be updated
+RNASEQPIPBASE=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/ 
 RNASEQBUNDLE=/cluster/project8/vyp/vincent/Software/RNASeq_pipeline/bundle  ##this probably should stay
-
-
 
 export RNASEQPIPBASE=$RNASEQPIPBASE
 export RNASEQBUNDLE=$RNASEQBUNDLE
-pipeline=${RNASEQPIPBASE}/RNAseq_pipeline_v7.sh
+pipeline=${RNASEQPIPBASE}/RNAseq_pipeline_v8.sh
 
-echo "Main pipeline script is hereL $pipeline"
-
-###################
-##All the parameters to run the pipeline are below
-
+#############
+species=human_hg38
 submit=yes
 force=no
+step0_QC=no
 
-tophat=no
-sampleQC=no
-dexseqcounts=no
-runCufflinks=no
-miso=no
+trim_galore=no
+starStep1a=no
+starStep1b=no
+starStep2=yes
 
-prepareCounts=no
-Rdeseq=no
+summary=no
+prepareCounts=yes
+Rdeseq=yes
 Rdexseq=yes
+goseq=yes
 
-RpathwayGO=no
-RtopGO=no
+stranded=fr-secondstrand
 
-code=Zanda_AD_Tc1J20  ###identifier for the run
+oFolder=/SAN/vyplab/HuRNASeq/ENCODE/SFPQ/K562_ENCSR535YPK/processed
+iFolder=/SAN/vyplab/HuRNASeq/ENCODE/
+dataframe=/SAN/vyplab/HuRNASeq/ENCODE/SFPQ/K562_ENCSR535YPK/K562_ENCSR535YPK_support.tab
+code=SFPQ_K562_ENCSR535YPK
 
-iFolder=/SAN/biomed/biomed14/vyp-scratch/Zanda_AD_Tc1J20_RNASeq/fastq/  ##input folder that contains the fastq files
-oFolder=/scratch2/vyp-scratch2/IoN_RNASeq/Frances/processed  ### output folder that will contain the output data
+sh -x $pipeline --goseq ${goseq}  --step0_QC $step0_QC --trim_galore $trim_galore --iFolder ${iFolder} --oFolder ${oFolder} --dataframe ${dataframe} --code ${code} --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq}  --summary ${summary} --starStep1a ${starStep1a} --starStep1b ${starStep1b} --starStep2 ${starStep2} --species ${species} --submit ${submit} --force ${force}
 
-species=tc1_mouse ## choice of species used
 
-mainscript="cluster/submission/de_$code.sh"  ##main script, we will apply qsub to this
-dataframe=data/RNASeq_AD_Tc1J20.tab  ##main and only support file, describing conditions and covariates
 
-bash $pipeline --tophat ${tophat} --dexseqcounts ${dexseqcounts} --runCufflinks ${runCufflinks} --sampleQC ${sampleQC} --mainscript $mainscript --iFolder ${iFolder} --oFolder ${oFolder} --dataframe $dataframe --code $code --prepareCounts ${prepareCounts} --Rdexseq ${Rdexseq} --Rdeseq ${Rdeseq} --RpathwayGO ${RpathwayGO} --RtopGO ${RtopGO} --submit ${submit} --species $species --force $force 
 
 echo $mainscript
+
+
+
+
+
+
+
