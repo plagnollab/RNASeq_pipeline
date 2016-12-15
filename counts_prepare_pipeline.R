@@ -208,19 +208,19 @@ write.csv( x = gff.table.exons, file = dexseq.exonTable, row.names = FALSE)
 
 
 if (file.exists(feature.length.file)) {  ##if a RPKM file has been created
-  
-
-######################## basic PCA analysis
+  ######################## basic PCA analysis
   my.conditions <- names(support)[grepl(names(support), pattern = '^condition.*')]  ##which condition should we use?
   if (length(my.conditions) > 0) {
     my.legend <- TRUE
-    if (length(my.conditions) == 1) {my.cond <- my.conditions;} else {
+    if (length(my.conditions) == 1) {my.cond <- my.conditions;} 
+    else {
       message('Multiple conditions, I need to select one for the plot')
       my.numb <- sapply(X = support[, my.conditions], FUN = function(x) {sum(!is.na(x))})
       my.cond <- names(sort(my.numb, decreasing = TRUE)[1])
       message('My condition for PCA analysis: ', my.cond)
     }
-  } else {
+  } 
+  else {
     my.legend <- FALSE ##no legend in this case
   }
   
@@ -229,8 +229,9 @@ if (file.exists(feature.length.file)) {  ##if a RPKM file has been created
   my.sd <- apply(rpkms.num, MAR = 1, FUN = sd)
   mat.for.pca <- t(rpkms.num[my.sd > median(my.sd), ])
   pca.data <- prcomp(mat.for.pca, scale = TRUE)
-  
-  output.pca <- paste(fig.folder, '/', code, '_pca.pdf', sep = '')
+ 
+
+  output.pca <- paste(fig.folder, '/', code, '_rpkm_pca.pdf', sep = '')
   pdf(output.pca)
   
 

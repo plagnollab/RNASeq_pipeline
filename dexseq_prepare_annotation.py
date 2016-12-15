@@ -19,6 +19,13 @@ optParser.add_option( "-r", "--aggregate", type="choice", dest="aggregate",
    choices = ( "no", "yes" ), default = "yes",
    help = "'yes' or 'no'. Indicates whether two or more genes sharing an exon should be merged into an 'aggregate gene'. If 'no', the exons that can not be assiged to a single gene are ignored." )
 
+optParser.add_option( "-s", "--source", type="choice", dest="source",
+   choices = ( "ensembl", "refseq" ), default = "ensembl",
+   help = "specifies whether the GTF file is from Ensembl or RefSeq. If Ensembl then proceeds as normal. If Refseq then a slight tweak is made to create unique gene ids.")
+
+
+
+
 (opts, args) = optParser.parse_args()
 
 if len( args ) != 2:
@@ -38,11 +45,11 @@ except ImportError:
 
 
 
-
 gtf_file = args[0]
 out_file = args[1]
 
 aggregateGenes = opts.aggregate == "yes"
+source = opts.source
 
 # Step 1: Store all exons with their gene and transcript ID 
 # in a GenomicArrayOfSets
@@ -51,7 +58,10 @@ exons = HTSeq.GenomicArrayOfSets( "auto", stranded=True )
 for f in HTSeq.GFF_Reader( gtf_file ):
    if f.type != "exon":
       continue
-   f.attr['gene_id'] = f.attr['gene_id'].replace( ":", "_" )
+   if source == "ensembl":
+   	f.attr['gene_id'] = f.attr['gene_id'].replace( ":", "_" ) 
+   if source == "refseq":
+	f.attr['gene_id'] = f.iv.chrom + '_' + f.attr['gene_id'].replace( ":", "_" ) + f.iv.strand
    exons[f.iv] += ( f.attr['gene_id'], f.attr['transcript_id'] )
 
 
