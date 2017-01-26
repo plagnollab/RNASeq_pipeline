@@ -353,12 +353,9 @@ case "$species" in
         ;;
     mouse)
         STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
-        annotationFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/biomart_annotations_mouse.tab
-	#${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
-        gffFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gff
-	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
-        gtfFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gtf
-	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
+        annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
         
 	if [[ "$summary" == "refseq" ]];then
 		gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/mm10_refseq_genes_fixed.gff
