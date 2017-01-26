@@ -74,6 +74,8 @@ novosort=${software}/novocraft3/novosort
 trimgalore=${software}/trim_galore/trim_galore
 cutadapt=/share/apps/python-2.7.8/bin/cutadapt
 fastqc=/share/apps/genomics/fastqc-0.11.2/fastqc
+RfeatureCounts=${RNASEQPIPBASE}/featureCounts_script.R
+deseqFeatureCounts=${RNASEQPIPBASE}/deseq2_featureCounts.R
 #for the old cluster
 if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
@@ -460,9 +462,12 @@ function starSubmissionStep1a {
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
-#$ -l tscratch=60G 
+#$ -l tscr=60G 
 #$ -wd ${oFolder}
 echo \$HOSTNAME >&2
+du -sh /scratch0/ >&2
+du -sh /scratch0/* >&2
+ls -lhtr /scratch0/ >&2
 date >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
@@ -485,6 +490,7 @@ fi
         #fi
 	f1array=(`echo $f1 | tr "," " "`)
 	f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
+	files_exist ${iFolder} 
 	for i in `seq 0 ${f1_array_length}`;do
 	#	f1array[i]=${iFolder}/${f1array[i]} # append full path
 		files_exist ${iFolder}/${f1array[i]} # check for existence
@@ -552,8 +558,14 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 # align with STAR. Output = ${STARoutput}
 ${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+	" >> $starSubmissionStep1a
+	if [[ "${trim_galore}" == "yes" ]];then
+		echo "
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," " " `
+		" >> $starSubmissionStep1a
+	fi
+	echo "
 # move the SJ.tab
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	" >> $starSubmissionStep1a
@@ -561,7 +573,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]]; then
 	echo "
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 55G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t ${SCRATCH_DIR} -6 -c 3 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
@@ -617,7 +629,7 @@ mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 	if [[ "$force" != "SJsOnly" ]];then
 		echo " 
 # sort reads and mark duplicates with NovoSort
-$novosort --md --xs -f -t /scratch0/ -6 -c 4 -m 60G  ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t ${SCRATCH_DIR} -6 -c 3 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
@@ -703,11 +715,18 @@ function starSubmissionStep2 {
         dexseqfolder=${oFolder}/${sample}/dexseq
 
 	finalOFolder=${oFolder}/${sample}
+	if [[ "$summary" == "featureCounts" ]];then
 	echo "
+#deseq counts
+Rscript $RfeatureCounts --bamFile ${finalOFolder}/${sample}_unique.bam --paired ${paired} --countStrand ${countStrand} --GTF ${gtfFile} --outFile ${dexseqfolder}/${sample}_deseq_counts.txt
+" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
+	elif [[ "$summary" != "featureCounts" ]];then
+	echo "
+#dexseq counts
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
 $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
 " > ${oFolder}/cluster/submission/star_step2_${sample}.sh
-
+	fi
         echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
 
     done
@@ -775,10 +794,16 @@ ${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile}
     ##############
     if [[ "$Rdeseq" == "yes" ]]
     then
-        files_exist $deseqFinalProcessR $dataframe
-    echo "
+        files_exist $deseqFinalProcessR $dataframe $deseqFeatureCounts
+    	if [[ "$summary" == "featureCounts" ]];then
+		echo "
+${Rscript} ${deseqFeatureCounts} --support.frame ${dataframe} --oFolder ${oFolder} --annotation.file ${annotationFile} --code ${code} > ${clusterFolder}/R/deseq_featureCounts_${stem}.out
+		" >> $starSubmissionStep3 
+    	elif [[ "$summary" != "featureCounts" ]];then 
+		echo "
 ${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${dataframe} --keep.dups ${keepDups} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/deseq_${stem}.out 
-    " >> $starSubmissionStep3
+    		" >> $starSubmissionStep3
+    	fi
     fi
     ##############
     if [[ "$Rdexseq" == "yes" ]]
