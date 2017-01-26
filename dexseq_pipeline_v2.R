@@ -213,7 +213,7 @@ for (condition in list.conditions) {
               row.names = FALSE)
     
     message('Saving results in ', dexseq.data)
-    save(list = c('res.clean', 'DexSeqExons.loc'), file = dexseq.data)
+    save(list = c('res.clean','res', 'DexSeqExons.loc'), file = dexseq.data)
   } else {
     load(dexseq.data)
   }
@@ -229,8 +229,12 @@ for (condition in list.conditions) {
 
 
   genes.to.plot <- unique(res.cleanSigs$EnsemblID)
-  pretty.gene.names <- as.character(annotation$external_gene_id[ match(genes.to.plot, table = annotation$EnsemblID) ])
   
+  #pretty.gene.names <- as.character(annotation$external_gene_id[ match(genes.to.plot, table = annotation$EnsemblID) ])
+  # should be able to use fixed gene names now
+  # unique as there are sometimes multiple significant exons from the same gene
+  pretty.gene.names <- unique( as.character( res.cleanSigs$external_gene_id) )
+
   for (i in 1:length(genes.to.plot)) {
     gene <- as.character(genes.to.plot[i])
 
