@@ -193,6 +193,18 @@ for (condition in list.conditions) {
     res.clean$external_gene_id <- annotation$external_gene_id[ match(res.clean$EnsemblID, table = annotation$EnsemblID) ]
     res.clean <- res.clean[, c('external_gene_id', "EnsemblID", "exonID", "meanBase", "log2FoldChange", "dispersion", "stat", "pvalue", "FDR", "chromosome", "exon.start", "exon.end")]  ### reorder the names nicely
 
+ ################# fix problematic gene names - don't bother with positions
+    problematic <- subset(res.clean, is.na(external_gene_id))
+    problematic$external_gene_id <- sapply( as.character( problematic$EnsemblID ), FUN = function(x) { paste(
+            subset(annotation, EnsemblID %in% strsplit(x, split = '\\+')[[1]], external_gene_id, drop = TRUE), collapse = '+')
+      }
+    )
+    problematic$external_gene_id <- as.character(problematic$external_gene_id)
+    res.clean$external_gene_id <- as.character(res.clean$external_gene_id)
+    res.clean[ row.names(problematic), 'external_gene_id' ] <- problematic$external_gene_id
+
+
+
     if ('strand' %in% names(annotation)) res.clean$strand <- annotation$strand[ match(res.clean$EnsemblID, table = annotation$EnsemblID) ] ## add strand if available
     res.clean <- res.clean[ order(res.clean$pvalue),]  ##reorder the rows
     
