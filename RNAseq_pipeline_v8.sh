@@ -54,6 +54,8 @@ else
     # data.table cannot be installed with this version of R  # Jack: this one works for me! The above does not.
     Rbin=/share/apps/R/bin/R
     Rscript=/share/apps/R/bin/Rscript
+    # should fix Rsamtools problem for using DEXSeq
+    export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH 
 fi
 
 
@@ -782,6 +784,7 @@ ${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${datafra
     then
         files_exist $dexseqFinalProcessR $dataframe
     echo "
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 ${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/dexseq_${stem}.out
     " >> $starSubmissionStep3
     fi
