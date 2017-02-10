@@ -690,6 +690,10 @@ function starSubmissionStep1b {
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
 $novosort --md --xs -f -t /scratch0/ -6 -c 1 -m 8G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
 
+# if sorting is successful then remove the unsorted bam file
+if [ -e ${finalOFolder}/${sample}_unique.bam ];then
+    rm ${finalOFolder}/${sample}_unsorted.bam
+fi
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
 
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
