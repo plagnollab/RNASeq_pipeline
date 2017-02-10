@@ -562,10 +562,19 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 	fi
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	f2_total=`echo ${f2array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
-	# align with STAR	    
+	# two-pass mode - currently a hidden feature
+    if [[ "$summary" == "twopass" ]]; then
+        twopass="--twopassMode Basic"
+    	memorymode="NoSharedMemory"
+    else
+        twopass=""
+	memorymode="LoadAndKeep"
+    fi
+
+    # align with STAR	    
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
