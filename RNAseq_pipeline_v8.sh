@@ -650,7 +650,7 @@ date >&2
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 
 # remove old bam file
-rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
+#rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
     " >> $starSubmissionStep1a
 	fi 
@@ -665,12 +665,17 @@ echo "
 if [ -e ${SCRATCH_DIR}/trimmed/*trimming* ];then
 	mv ${SCRATCH_DIR}/trimmed/*trimming* ${iFolder}/trimmed/
 fi
+
+rm -rf ${SCRATCH_DIR}
+" >> $starSubmissionStep1a
+
+if [[ "$summary" == "twopass" ]];then
+	echo "
 # remove genome from memory
 ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
-# a clean slate
-rm -rf ${SCRATCH_DIR}
 
 " >> $starSubmissionStep1a
+fi
 }
 
 ########################################
@@ -688,7 +693,7 @@ function starSubmissionStep1b {
 	finalOFolder=${oFolder}/${sample}
     echo "
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t /scratch0/ -6 -c 1 -m 8G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t ${finalOFolder} -6 -c 2 -m 14G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
 
 # if sorting is successful then remove the unsorted bam file
 if [ -e ${finalOFolder}/${sample}_unique.bam ];then
@@ -708,10 +713,10 @@ ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sa
   starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
   echo "
 #$ -S /bin/bash
-#$ -l h_vmem=9.5G
-#$ -l tmem=9.5G
+#$ -l h_vmem=7.75G
+#$ -l tmem=7.75G
 #$ -l h_rt=24:00:00
-#$ -pe smp 1
+#$ -pe smp 2
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
