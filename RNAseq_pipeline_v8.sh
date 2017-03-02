@@ -499,9 +499,10 @@ while read sample f1 f2 condition;do
 	  files_exist ${iFolder}/${f1array[i]} # check for existence
    done
 
-   echo Aligning with STAR
+   echo Step1a: Aligning with STAR
+   echo "paired = $paired"
 # If sample is paired end        
-    if [[ $paired == "yes" ]];then
+    if [[ "$paired" == "yes" ]];then
         # create bash array of samples
         f2array=(`echo $f2 | tr "," " "`) 
         for i in `seq 0 ${f1_array_length}`;do
@@ -592,17 +593,20 @@ mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 	" >> $starSubmissionStep1a
-    
-#IF SINGLE ENDED
-    elif [[ $"paired" == "no" ]]; then
+#################### 
+# IF SINGLE ENDED
+####################
+    elif [[ "$paired" == "no" ]]; then
 	   fastqFolder=${iFolder}
        # if Trimming is desired, do it single ended
-		if [[ "${trim_galore}" == "yes" ]];then
+		
+        if [[ "${trim_galore}" == "yes" ]];then
 			echo $summary           
             fastqFolder=${SCRATCH_DIR}
 			trimmedFolder=`dirname ${oFolder} | awk '{print $1"/trimmed/"}' `
 			if [ ! -e $trimmedFolder ]; then mkdir ${trimmedFolder};fi
-			if [[ "$summary" != "trimmed_exist" ]];then
+			
+            if [[ "$summary" != "trimmed_exist" ]];then
                 #trim each fastq separately
                 for i in `seq 0 $f1_array_length `;do
 					echo "
@@ -625,14 +629,24 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
          		done
             fi
          fi
+
     # get fastq pieces in right format   
 	f1_total=`echo ${f1array[@]} | 
     awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | 
     sed 's/,$//g'  `
-	# STAR alignment
+	# twopass mode
+    if [[ "$summary" == "twopass" ]]; then
+        twopass="--twopassMode Basic"
+        memorymode="NoSharedMemory"
+    else
+        twopass=""
+    memorymode="LoadAndKeep"
+    fi
+
+    # STAR alignment
     echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 
 # move the trimmed files back to trimmed folder in iFolder
