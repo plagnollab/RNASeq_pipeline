@@ -709,7 +709,7 @@ function starSubmissionStep1b {
     echo "
 mkdir -p ${SCRATCH_1b}
 # sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t ${SCRATCH_1b} -6 -c 2 -m 14G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
+$novosort --md --xs -f -t ${SCRATCH_1b} -6 -c 2 -m 12G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
 
 # if sorting is successful then remove the unsorted bam file
 if [ -e ${finalOFolder}/${sample}_unique.bam ];then
@@ -737,7 +737,8 @@ ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sa
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1b_${code}
-#$ -l tscratch=10G 
+#$ -l scr=20G
+#$ -l tscratch=20G 
 #$ -wd ${oFolder}
 #$ -t 2-${njobs1b}
 #$ -tc 20
