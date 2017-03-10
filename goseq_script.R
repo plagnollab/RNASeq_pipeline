@@ -33,7 +33,7 @@ mode <- opt$mode
 
 
 resultsFolder <- paste0(oFolder,"/gene_ontology")
-#if( !dir.exists(resultsFolder) ){ dir.create(resultsFolder) }
+if( !dir.exists(resultsFolder) ){ dir.create(resultsFolder) }
 #how to get hold of the deseq results files just from the outFolder? it's predictable though right?
 # for each folder present, test if there is a file with the deseq_
 dirs <- list.dirs(paste0(oFolder))
@@ -64,7 +64,10 @@ GOSeq <- function(deseq.res, species, DE.Pvalue.threshold = 0.005, GO.FDR.thresh
 	if(length(results) > 1){
 		outFolder <- paste0(resultsFolder,"/",basename(dirname(deseq.res)) )
 	}
-	if(!dir.exists(outFolder){ dir.create(outFolder, recursive=T) }
+	if(!dir.exists(outFolder) ){ 
+		dir.create(outFolder, recursive=T) 
+	}
+
 
 	# read in the data as a dataframe. fread() is from the data.table package and speeds things up a bit
 	d <- as.data.frame(fread(deseq.res))
