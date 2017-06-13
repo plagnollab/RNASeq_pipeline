@@ -52,6 +52,11 @@ support <- read.table(support.frame, header = TRUE, stringsAsFactors = FALSE)
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 list.covars <- grep(names(support), pattern = '^covar.*', value  = TRUE)
 
+print(names(support) )
+
+message("where are the covariates?")
+
+print(list.covars)
 
 annotation <- read.table(annotation.file, header = TRUE, sep = '\t', na.string = c('', 'NA'), quote = "" )
 names(annotation) <- ifelse (names(annotation) == "external_gene_name", "external_gene_id", names(annotation)) # trying to agree on the column names

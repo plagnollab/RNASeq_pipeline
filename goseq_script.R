@@ -60,10 +60,11 @@ GOSeq <- function(deseq.res, species, DE.Pvalue.threshold = 0.005, GO.FDR.thresh
 		genome <- "hg38"
 	}
 	# the output folder is taken to be the same folder that contains the DESeq results file
-	outFolder <- resultsFolder
-	if(length(results) > 1){
+	#outFolder <- resultsFolder
+	#if(length(results) > 1){
 		outFolder <- paste0(resultsFolder,"/",basename(dirname(deseq.res)) )
-	}
+	outFolder <- dirname( deseq.res )
+	#
 	if(!dir.exists(outFolder) ){ 
 		dir.create(outFolder, recursive=T) 
 	}
@@ -109,6 +110,7 @@ GOSeq <- function(deseq.res, species, DE.Pvalue.threshold = 0.005, GO.FDR.thresh
 	GO.wall <- goseq(pwf,genome,"ensGene", use_genes_without_cat=FALSE)
 	# adjust the p values with Benjamini-Hochberg
 	enriched.GO <- GO.wall[p.adjust(GO.wall$over_represented_pvalue, method="BH")<GO.FDR.threshold,]
+	
 	# write out the results plus an explanation of each significant GO term.
 	GO.res <- paste0(outFolder,"/enriched_GO_report.txt")
 	GO.exp <- paste0(outFolder,"/enriched_GO_terms_explanation.txt")
@@ -118,7 +120,7 @@ GOSeq <- function(deseq.res, species, DE.Pvalue.threshold = 0.005, GO.FDR.thresh
 		null.statement <- paste("no significant GO terms")
 		print(null.statement)
 		write.table(null.statement, GO.res, row.names=F,quote=F,sep="\t")
-		break
+		return()
 	}
 
 	# get the GO annotations for each DE gene

@@ -55,7 +55,8 @@ for (sample in samples) {
    message(sample) 
    if (!exists("all.counts")) { 
        all.counts <- as.data.frame(counts)  
-       names(all.counts)[length(all.counts)] <- sample 
+       names(all.counts)[length(all.counts)] <- sample
+	# need to fix - dexseq doesn't like colons in rownames 
        row.names(all.counts) <- paste0(beddata[,7], ":", beddata[,1], ":", beddata[,2], "-", beddata[,3]) 
    } else {
        all.counts <- cbind(all.counts, as.data.frame(counts) ) 
