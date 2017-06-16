@@ -1,202 +1,204 @@
-# Script to process quantseq data 
-PIPEBASE=/SAN/vyplab/HuRNASeq/RNASeq_pipeline
 #!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
 
-inputDir=/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/ko/
-support=/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/ko/ko_support.tab 
+# Pipeline to process quantseq data 
+# PIPEBASE=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/polyA
 
+# # for testing
+# iFolder=/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/ko/
+# #support=/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/ko/ko_support.tab 
+# support=/SAN/vyplab/IoN_RNAseq/Nicol/ko/test_support.tab
+# outFolder=/SAN/vyplab/IoN_RNAseq/Nicol/ko/
+# code="FUS_ko"
+# species=mouse
+# submit=no
+
+# case statement to get variables
+
+until [ -z "$1" ]
+do
+    # use a case statement to test vars. we always test $1 and shift at the end of the for block.
+    case $1 in
+   --species)
+       shift
+       species=$1;;
+   --support)
+       shift
+       support=$1;;
+   --iFolder)
+       shift
+       iFolder=$1;;
+   --outFolder)
+       shift
+       outFolder=$1;;
+   --code)
+       shift
+       code=$1;;
+   --submit)
+       shift
+       submit=$1;;
+   --PIPEBASE)
+       shift
+       PIPEBASE=$1;;
+   -* )
+       stop "Unrecognized option: $1"
+    esac
+    shift
+    if [ "$#" = "0" ]; then break; fi
+    echo $1
+done
+
+
+#languages
+R=/share/apps/R-3.3.2/bin/R
+python=/share/apps/python-2.7.8/bin/python
+export PYTHONPATH=/SAN/vyplab/HuRNASeq:/SAN/vyplab/HuRNASeq/python-2.7.8/lib/python2.7/site-packages
+
+# scripts
+extractPolyAClusters=${PIPEBASE}/extractPolyAClusters.sh
+mergeClusters=${PIPEBASE}/mergeClusters.sh
 randomPrimingScript=${PIPEBASE}/polyA_random_priming.py
 thinningScript=${PIPEBASE}/polyA_remove_weakest.py
+countClusters=${PIPEBASE}/countClusters.sh
+polyA_dexseq=${PIPEBASE}/polyA_dexseq.R
 
-outFolder=/SAN/vyplab/IoN_RNAseq/Nicol/ko/
-clusterList=${outFolder}/cluster_list.tab
-
-report=${outFolder}/ko_quantseq_report.tab
-species=mouse
-
-
-
+# variables
 minReads=5 # minimum number of supporting reads a cluster can have in one sample
 mapQual=10 # for  Samtools - what is the probability of the alignment not being the best possible p_wrong= 10^(-mapq/10). Therefore mapQ=10 is 10% chance
 minSamples=2 # minimum number of samples a cluster can be found in to be kept
 downstreamFlank=1000 # number of nt downstream of each gene region to add for annotation
 minProportion=0.05 # minimum contribution a cluster can make to the total
-
-if [ ! -e $outFolder ];then
-   mkdir $outFolder
-fi
+nCores=4 # number of cores for DEXSeq
+fail=0
 
 if [ "$species" == "mouse" ];then
    genome=/SAN/vyplab/HuRNASeq/reference_datasets/mm10.fa
+   annotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed_genes_only.gtf
+   biomartAnnotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab
+elif [ "$species" == "human" ];then
+   genome="test"
+   annotation="test"
+   biomartAnnotation="test"
+else
+   echo $species is not a valid species
+   fail=1
 fi
 
-# overwrite if exists
-# > $clusterList
+# make folders
+for folder in ${outFolder}/cluster/submission ${outFolder}/cluster/out ${outFolder}/cluster/error;do
+   if [ ! -e $folder ];then
+      mkdir -p $folder
+   fi
+done
+
+# check everything exists
+
+for file in $extractPolyAClusters $mergeClusters $randomPrimingScript $thinningScript $countClusters $outFolder $genome $annotation;do
+   if [ ! -e ${file} ]; then
+      echo $file not found!
+      fail=1
+   fi
+done
+
+# check bam files exist
+bamFiles=`awk -v iFolder=${iFolder} 'NR>1{print iFolder"/"$1"/"$1"_unique.bam"}' $support` 
+for bam in $bamFiles; do
+   if [ ! -e $bam ]; then
+      echo ${bam} cannot be found
+      fail=1
+   else
+      echo ${bam} found
+   fi
+done
+
+if [ $fail == 1 ];then
+   exit 0
+fi
 
 
 
-# echo "QuantSeq pipeline" > $report
+
+jobScript=${outFolder}/cluster/submission/polyA_submission.sh
+
+
+
+clusterList=${outFolder}/${code}_cluster_list.tab
+# overwrite if exists; if not create empty file
+ > $clusterList
+
+mergedOut=${outFolder}/${code}_all_samples
+
+echo "
+#$ -S /bin/bash
+#$ -l h_vmem=4G,tmem=4G
+#$ -l h_rt=72:00:00
+#$ -pe smp 1
+#$ -R y
+#$ -o ${outFolder}/cluster/out
+#$ -e ${outFolder}/cluster/error
+#$ -N polyA_pipeline_${code}
+#$ -wd ${outFolder}
+echo \$HOSTNAME >&2
+
+
+sh $extractPolyAClusters --support ${support} \\
+                         --outFolder ${outFolder} \\
+                         --iFolder ${iFolder} \\
+                         --code ${code} \\
+                         --clusterList ${clusterList} \\
+                         --minReads ${minReads} \\
+                         --mapQual ${mapQual} 
 
 # # Convert bam file into bed and filter out multimapped reads 
 
-# i=0
-# while read line ; 
-# do 
-#    set $line 
-#    sample=$1 
-#    if [ $sample == "sample" ]; then 
-#        continue 
-#    fi 
-   
-#    bamfile=${inputDir}/${sample}/${sample}_unique.bam  
-   
-#    outDir=${outFolder}/${sample}
-#    if [ ! -e $outDir ];then
-#       mkdir $outDir
-#    fi
 
-#    bedfile=${outDir}/${sample}_clusters.bed
-#    tmpfile=${outDir}/${sample}_clean.bam
+sh $mergeClusters --outFolder ${outFolder} \\
+                  --code ${code} \\
+                  --clusterList ${clusterList} \\
+                  --minSamples ${minSamples} \\
+                  --annotation ${annotation} \\
+                  --downstreamFlank ${downstreamFlank} \\
+                  --mergedOut ${mergedOut}
 
-#    echo `date` >> $report
-#    echo $sample >> $report
-#    echo "========" >> $report
-#    echo "Total reads:" `samtools view -c $bamfile` >> $report
-   
-#    bedfiles[$i]=$bedfile 
-#    i=`expr $i + 1`
-#    echo $bamfile 
-#    echo $bedfile  
-#    # q10 is samtools command for a certain quality that includes multimapping - double check this!
-#    samtools view -h -q $mapQual $bamfile | 
-# 	  awk '$6 !~ /N/ || $1 ~ /^@/ || $1 ~ /^ID/' | 
-# 	  sed 's/^ID/@ID/' | 
-# 	  samtools view -bh - > $tmpfile
+# remove clusters that probably result from random priming
+
+$python $randomPrimingScript ${mergedOut}.bed \\
+                             $genome \\
+                             ${mergedOut}_artifacts_removed.bed
+
+echo \"After removal of random priming artifacts: \" \`wc -l ${mergedOut}_artifacts_removed.bed | awk '{print \$1}'\` 
 
 
-#    echo "Uniquely mapped:" `samtools view -c $tmpfile` >> $report 
-   	
-# 	# make bed and count occurences - filter out anything with fewer than 5 reads - possible to change
-# 	bedtools bamtobed -i $tmpfile | 
-#       bedtools merge -s -c 4,3,6 -o count,count_distinct,distinct | 
-#       awk -v minReads=$minReads '$4 >= minReads { print $0 }' -  > $bedfile
+$python $thinningScript \\
+   ${mergedOut}_artifacts_removed.bed \\
+   $minProportion \\
+   ${mergedOut}_artifacts_removed_thinned.bed
 
-#    echo $bedfile >> $clusterList
-
-#    echo "Bed clusters:\t" `wc -l $bedfile | awk '{print $1}'` >> $report
-
-#    	#rm $tmpfile
-# done < $support
-
-# FEATURES TO ADD
-# 	remove random priming artifacts (high A content 10nt downstream but not canonical polyA sequence)
-#	remove polyAs that contribute <5% of total counts in a gene
-
-# how many polyAs are within or close to annotated UTRs? check 
-
-
-# Combine all the individual bed files into one merged bed
-
-# bedlist=$(printf " %s" "${bedfiles[@]}")
-# # collapse bash array
-# bedlist=${bedlist:1}
-
-# echo $bedlist 
-allBed=${outFolder}/all_samples.bed
-allBedAnno=${outFolder}/all_samples_annotated.bed
-# # check if in at least 2 samples
-cat $clusterList | 
-   xargs cat |
-#cat $bedlist | 
-   bedtools sort | 
-   bedtools merge -s -c 4,3,6 -o sum,count,distinct | 
-   awk -v minSamples=$minSamples '$5 >= minSamples' > ${allBed}
-
-echo "total merged clusters: " `wc -l ${allBed} | awk '{print $1}' ` #>> $report
-
-
-
-echo "annotating the bed file" 
-
-# maybe just use the gene coordinates?
-#annotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
-annotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed_genes_only.gtf
-
-# # TODO: flank every gene coord downstream to catch unannotated polyAs
-# bedtools intersect  -wb -a $annotation -b $allBed > ${allBedAnno}
-# echo "clusters that intersect a gene body: " `wc -l $allBedAnno | awk '{print $1}' ` >> $report
-
-# bedtools intersect -S -wb -a $annotation -b $allBed > ${allBedAnno}_stranded
-# echo "clusters that intersect a gene body of the correct strand: " `wc -l ${allBedAnno}_stranded | awk '{print $1}' ` >> $report
-
-
- # instead intersect with a 1000bp window downstream of the gene body
-bedtools window -sw -l 0 -r $downstreamFlank -Sm -a $annotation -b $allBed > ${allBedAnno}_stranded_${downstreamFlank}_window 
-echo "clusters that intersect a gene body of the correct strand with ${downstreamFlank} bp downstream window: " `wc -l ${allBedAnno}_stranded_${downstreamFlank}_window | awk '{print $1}' ` #>> $report
-
-# find ensembl gene name from gtf intersect
-awk -F'"' '{print $2}' $allBedAnno > tmp.tab
-# sort and remove duplicate rows 
-cut -f10-15 ${allBedAnno}_stranded_${downstreamFlank}_window | 
-   paste - tmp.tab | 
-   sort -k1,1 -k2,2n -u - |
-   awk 'NF == 7'  > tmp2.bed # sanity check 
-
-#bedtools sort -i tmp2.bed  > tmp3.bed 
-mv tmp2.bed ${allBedAnno}_stranded_${downstreamFlank}_window.bed
-rm tmp.tab 
-
-
-#exit
-
-echo "removing random priming artifacts" 
-
- cleanBed=${allBedAnno}_stranded_${downstreamFlank}_window_clean_new_method.bed
-
-python $randomPrimingScript \
-   ${allBedAnno}_stranded_${downstreamFlank}_window.bed \
-   $genome \
-   $cleanBed
-
-echo "After removal of random priming artifacts: " `wc -l $cleanBed | awk '{print $1}'` #>> $report
-
-
-#exit
-
-echo "thinning out weakest clusters"
-
-python $thinningScript \
-   $cleanBed \
-   $minProportion \
-   ${cleanBed}_thinned
-
-echo "After removal of weakest clusters (min proportion >=" $minProportion "):" `wc -l ${cleanBed}_thinned | awk '{print $1}'`
+echo \"After removal of weakest clusters (min proportion >=\" $minProportion \"):\" \`wc -l ${mergedOut}_artifacts_removed_thinned.bed | awk '{print \$1}'\`
 
 # Note: the resulting annotated bed files will have more lines than the original clusters bed file 
 # Each cluster location can be annotated as more than one gene 
 
 # each sample has a tmp.bam - keep for the next step
-exit
 
-# Now use the merge bed file to count 
-while read line ; 
-do 
-   set $line 
-   sample=$1 
-   if [ $sample == "sample" ]; then 
-       continue 
-   fi 
-   
-   bamfile=${inputDir}/${sample}/${sample}_unique.bam  
-   #bedfile=${inputDir}/${sample}/${sample}_clusters.bed
-   obedfile=${outFolder}/${sample}/${sample}_clusters_counts.bed 
-   tmpfile=${outFolder}/${sample}/${sample}_clean.bam 
-   echo $obedfile  
-   #echo $bedfile 
-   echo $allBed
-   #samtools view -h -q10 $bamfile | awk '$6 !~ /N/ || $1 ~ /^@/ || $1 ~ /^ID/' | sed 's/^ID/@ID/' | samtools view -bh - > $tmpfile 
-   bedtools intersect -c -wa -a $cleanBed -b $tmpfile -c > $obedfile 
-   #rm $tmpfile 
-done < $support 
+sh $countClusters --support ${support} \\
+                  --outFolder ${outFolder} \\
+                  --iFolder ${iFolder} \\
+                  --masterList ${mergedOut}_artifacts_removed_thinned.bed
+
+# run dexseq 
+
+${R}script ${polyA_dexseq} --support.tab $support \\
+                           --code $code \\
+                           --output.dir $outFolder \\
+                           --input.dir $iFolder \\
+                           --biomartAnnotation $biomartAnnotation \\
+                           --nCores $nCores
+
+" > $jobScript
+
+if [ "$submit" == "yes" ];then
+   qsub $jobScript
+fi
+

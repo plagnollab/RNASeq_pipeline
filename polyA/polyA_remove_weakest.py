@@ -3,7 +3,7 @@
 
 from pybedtools import BedTool
 #import csv
-import os
+#import os
 import argparse
 parser = argparse.ArgumentParser()
 
@@ -33,6 +33,7 @@ for feature in clusters:
 		genes[gene].append( feature )
 
 
+clustersPerGene=[]
 # go through and remove any that contribute less than 5% of the total counts
 with open(outFile, "w") as out:
 	for gene in genes:
@@ -43,8 +44,7 @@ with open(outFile, "w") as out:
 			#total+=cluster.score
 			total += int(cluster.name)
 		#print(total)
-
-		# now go back and remove any 
+		## now go back and remove any that have fewer counts than the threshold
 		threshold = int(minProportion * total)
 		#print "threshold:", threshold
 		#print "length:", len(genes[gene])
@@ -56,6 +56,11 @@ with open(outFile, "w") as out:
 			else:
 				out.write("\t".join(cluster) + "\n")
 		#print "new length:", len(genes[gene])
+		clustersPerGene.append(len(genes[gene]))
 
-# write out to file
+result = float(sum(clustersPerGene))/len(clustersPerGene)
+
+print "clusters per gene: ", round(result, 3)
+
+
 

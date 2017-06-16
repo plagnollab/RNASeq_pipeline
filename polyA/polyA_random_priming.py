@@ -110,7 +110,7 @@ out = open(outFile, "w")
 i = 0
 with open(fasta.seqfn, "r") as sequences, open(clusterFile, "r") as clusters:
 	for fasta, clu in izip(sequences,clusters):
-		if i % 1000 == 0:
+		if i % 10000 == 0:
 				print str(i) + " lines processed" 
 		seq = fasta.strip().upper().split("\t")[1]
 		if seq == "":

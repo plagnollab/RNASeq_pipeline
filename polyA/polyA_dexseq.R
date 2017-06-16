@@ -6,14 +6,15 @@ library(dplyr)
 library(BiocParallel)
 library(optparse)
 
-options(echo=T)
+options(echo=TRUE)
 
 option_list <- list(
     make_option(c('--support.tab'), help='', default = ""),
     make_option(c('--code'), help='', default = ""),
     make_option(c('--output.dir'), help='', default = ""),
     make_option(c('--input.dir'), help='', default = ""),
-    make_option(c('--species'), help='', default = "mouse")
+    make_option(c('--biomartAnnotation'), help='', default = "mouse"),
+    make_option(c('--nCores'), help='', default = 4)
 )
 
 
@@ -24,7 +25,8 @@ support.tab <- opt$support.tab
 code <- opt$code
 output.dir <- opt$output.dir
 input.dir <- opt$input.dir 
-species <- opt$species 
+biomartAnnotation <- opt$biomartAnnotation
+nCores <- opt$nCores
 
 #support.tab="/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/d14/d14_hom_wt_support.tab"
 #code <- "threeprime_d14_hom_wt" 
@@ -38,17 +40,17 @@ BPPARAM = MulticoreParam(workers=8)
 support <- read.table(support.tab, sep ='\t', stringsAsFactors=FALSE, header = TRUE, comment.char = "") 
 samples <- support$sample 
 
-if(species == "mouse") { 
-annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab" 
-} else if (species == "human") { 
-annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab" 
-} 
+# if(species == "mouse") { 
+# annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab" 
+# } else if (species == "human") { 
+# annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab" 
+# } 
 
-annotations <- read.table(annotations.tab, sep = "\t", header = TRUE) 
+annotations <- read.table(biomartAnnotation, sep = "\t", header = TRUE) 
 
 # Read in each counts file and make a matrix 
 for (sample in samples) { 
-   bedfile = paste0(input.dir, "/", sample, "/", sample, "_clusters_counts.bed") 
+   bedfile = paste0(output.dir, "/", sample, "/", sample, "_clusters_counts.bed") 
    beddata <- read.table(bedfile, sep = "\t", header = FALSE) 
    counts <- beddata[,8]
    genes <- beddata[,7] 
