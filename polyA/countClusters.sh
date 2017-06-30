@@ -20,6 +20,9 @@ do
    --iFolder)
 		shift
 		iFolder=$1;;
+   --mode)
+    shift
+    mode=$1;;
    -* )
        stop "Unrecognized option: $1"
     esac
@@ -63,7 +66,8 @@ do
    
    bamfile=${iFolder}/${sample}/${sample}_unique.bam  
    #bedfile=${iFolder}/${sample}/${sample}_clusters.bed
-   obedfile=${outFolder}/${sample}/${sample}_clusters_counts.bed 
+   obedfile=${outFolder}/${sample}/${sample}_clusters_counts_${mode}.bed 
+   
    tmpfile=${outFolder}/${sample}/${sample}_clean.bam 
    #echo $obedfile  
    #echo $bedfile 
