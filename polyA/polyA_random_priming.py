@@ -9,15 +9,15 @@ parser.add_argument("reference", help = "A bed file of iCLIP clusters")
 parser.add_argument("outFile", help = "The output file")
 args = parser.parse_args()
 
-clusterFile = "/SAN/vyplab/IoN_RNAseq/Nicol/ko/test.bed"
-reference = "/SAN/vyplab/HuRNASeq/reference_datasets/mm10.fa"
-outFile = "/SAN/vyplab/IoN_RNAseq/Nicol/ko/clean_cluster.bed"
+# clusterFile = "/SAN/vyplab/IoN_RNAseq/Nicol/ko/test.bed"
+# reference = "/SAN/vyplab/HuRNASeq/reference_datasets/mm10.fa"
+# outFile = "/SAN/vyplab/IoN_RNAseq/Nicol/ko/clean_cluster.bed"
 
 clusterFile = args.clusterFile
 reference = args.reference
 outFile = args.outFile
 
-for file in [ clusterFile, reference, outFile ]:
+for file in [ clusterFile, reference  ]:
 	if not os.path.exists(file):
 		print str(file) + " does not exist!"
 		exit

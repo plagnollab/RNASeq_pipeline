@@ -14,7 +14,8 @@ option_list <- list(
     make_option(c('--output.dir'), help='', default = ""),
     make_option(c('--input.dir'), help='', default = ""),
     make_option(c('--biomartAnnotation'), help='', default = "mouse"),
-    make_option(c('--nCores'), help='', default = 4)
+    make_option(c('--nCores'), help='', default = 4),
+    make_option(c('--mode'), help='')
 )
 
 
@@ -27,6 +28,7 @@ output.dir <- opt$output.dir
 input.dir <- opt$input.dir 
 biomartAnnotation <- opt$biomartAnnotation
 nCores <- opt$nCores
+mode <- opt$mode
 
 #support.tab="/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/d14/d14_hom_wt_support.tab"
 #code <- "threeprime_d14_hom_wt" 
@@ -34,11 +36,14 @@ nCores <- opt$nCores
 #input.dir="/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/d14/"
 #species <- "mouse" 
 
-dir.create(output.dir) 
-BPPARAM = MulticoreParam(workers=8)
+#dir.create(output.dir) 
+BPPARAM = MulticoreParam(workers=nCores)
 
 support <- read.table(support.tab, sep ='\t', stringsAsFactors=FALSE, header = TRUE, comment.char = "") 
 samples <- support$sample 
+conditions <- names(support)[grepl( "condition", names(support))]
+
+print(samples)
 
 # if(species == "mouse") { 
 # annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab" 
@@ -50,7 +55,7 @@ annotations <- read.table(biomartAnnotation, sep = "\t", header = TRUE)
 
 # Read in each counts file and make a matrix 
 for (sample in samples) { 
-   bedfile = paste0(output.dir, "/", sample, "/", sample, "_clusters_counts.bed") 
+   bedfile <- paste0(output.dir, "/", sample, "/", sample, "_clusters_counts_", mode,".bed") 
    beddata <- read.table(bedfile, sep = "\t", header = FALSE) 
    counts <- beddata[,8]
    genes <- beddata[,7] 
@@ -59,7 +64,7 @@ for (sample in samples) {
        all.counts <- as.data.frame(counts)  
        names(all.counts)[length(all.counts)] <- sample
 	# need to fix - dexseq doesn't like colons in rownames 
-       row.names(all.counts) <- paste0(beddata[,7], ":", beddata[,1], ":", beddata[,2], "-", beddata[,3]) 
+       row.names(all.counts) <- paste0(beddata[,7], "_", beddata[,1], "_", beddata[,2], "-", beddata[,3]) 
    } else {
        all.counts <- cbind(all.counts, as.data.frame(counts) ) 
        names(all.counts)[length(all.counts)] <- sample 
@@ -97,6 +102,8 @@ res.clean$ID <- row.names(res.clean)
 
 res.clean$external_gene_name <- annotations$external_gene_name[ match(res.clean$EnsemblID, table = annotations$EnsemblID) ]
 res.clean <- res.clean[, c('external_gene_name', "EnsemblID", "meanBase", logname, "dispersion", "stat", "pvalue", "FDR", "ID")]
+
+res.clean$ID <- gsub("_",":",res.clean$ID)
 
 res.clean <- res.clean[order(res.clean$FDR), ] 
 

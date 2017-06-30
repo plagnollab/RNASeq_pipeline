@@ -69,7 +69,7 @@ mapQual=10 # for  Samtools - what is the probability of the alignment not being 
 minSamples=2 # minimum number of samples a cluster can be found in to be kept
 downstreamFlank=1000 # number of nt downstream of each gene region to add for annotation
 minProportion=0.05 # minimum contribution a cluster can make to the total
-nCores=4 # number of cores for DEXSeq
+nCores=1 # number of cores for DEXSeq
 fail=0
 
 if [ "$species" == "mouse" ];then
@@ -120,7 +120,7 @@ fi
 
 
 jobScript=${outFolder}/cluster/submission/polyA_submission.sh
-
+dexseqScript=${outFolder}/cluster/submission/polyA_dexseq.sh
 
 
 clusterList=${outFolder}/${code}_cluster_list.tab
@@ -131,7 +131,7 @@ mergedOut=${outFolder}/${code}_all_samples
 
 echo "
 #$ -S /bin/bash
-#$ -l h_vmem=4G,tmem=4G
+#$ -l h_vmem=8G,tmem=8G
 #$ -l h_rt=72:00:00
 #$ -pe smp 1
 #$ -R y
@@ -182,23 +182,56 @@ echo \"After removal of weakest clusters (min proportion >=\" $minProportion \")
 
 # each sample has a tmp.bam - keep for the next step
 
+# count with the unthinned and the thinned annotation
+
 sh $countClusters --support ${support} \\
                   --outFolder ${outFolder} \\
                   --iFolder ${iFolder} \\
-                  --masterList ${mergedOut}_artifacts_removed_thinned.bed
+                  --masterList ${mergedOut}_artifacts_removed.bed \\
+                  --mode no_artifacts
 
-# run dexseq 
+sh $countClusters --support ${support} \\
+                  --outFolder ${outFolder} \\
+                  --iFolder ${iFolder} \\
+                  --masterList ${mergedOut}_artifacts_removed_thinned.bed \\
+                  --mode thinned
+" > $jobScript
+
+
+# run dexseq on thinned cluster list
+echo "
+#$ -S /bin/bash
+#$ -l h_vmem=5G,tmem=5G
+#$ -l h_rt=72:00:00
+#$ -pe smp ${nCores}
+#$ -R y
+#$ -o ${outFolder}/cluster/out
+#$ -e ${outFolder}/cluster/error
+#$ -N polyA_dexseq_${code}
+#$ -wd ${outFolder}
+echo \$HOSTNAME >&2
+
 
 ${R}script ${polyA_dexseq} --support.tab $support \\
                            --code $code \\
                            --output.dir $outFolder \\
                            --input.dir $iFolder \\
                            --biomartAnnotation $biomartAnnotation \\
-                           --nCores $nCores
+                           --nCores $nCores \\
+                           --mode no_artifacts
 
-" > $jobScript
+${R}script ${polyA_dexseq} --support.tab $support \\
+                           --code $code \\
+                           --output.dir $outFolder \\
+                           --input.dir $iFolder \\
+                           --biomartAnnotation $biomartAnnotation \\
+                           --nCores $nCores \\
+                           --mode thinned
+
+" > $dexseqScript
 
 if [ "$submit" == "yes" ];then
    qsub $jobScript
+   qsub -hold_jid polyA_pipeline_${code} $dexseqScript
 fi
 
