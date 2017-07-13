@@ -61,15 +61,16 @@ mergeClusters=${PIPEBASE}/mergeClusters.sh
 randomPrimingScript=${PIPEBASE}/polyA_random_priming.py
 thinningScript=${PIPEBASE}/polyA_remove_weakest.py
 countClusters=${PIPEBASE}/countClusters.sh
+createCleanedBams=${PIPEBASE}/createCleanedBams.sh
 polyA_dexseq=${PIPEBASE}/polyA_dexseq.R
-
+analyseClusters=${PIPEBASE}/analyseClusters.R
 # variables
 minReads=5 # minimum number of supporting reads a cluster can have in one sample
 mapQual=10 # for  Samtools - what is the probability of the alignment not being the best possible p_wrong= 10^(-mapq/10). Therefore mapQ=10 is 10% chance
 minSamples=2 # minimum number of samples a cluster can be found in to be kept
 downstreamFlank=1000 # number of nt downstream of each gene region to add for annotation
 minProportion=0.05 # minimum contribution a cluster can make to the total
-nCores=1 # number of cores for DEXSeq
+nCores=8 # number of cores for DEXSeq
 fail=0
 
 if [ "$species" == "mouse" ];then
@@ -122,12 +123,10 @@ fi
 jobScript=${outFolder}/cluster/submission/polyA_submission.sh
 dexseqScript=${outFolder}/cluster/submission/polyA_dexseq.sh
 
-
 clusterList=${outFolder}/${code}_cluster_list.tab
-# overwrite if exists; if not create empty file
- > $clusterList
-
 mergedOut=${outFolder}/${code}_all_samples
+
+echo writing pipeline script to $jobScript
 
 echo "
 #$ -S /bin/bash
@@ -141,6 +140,8 @@ echo "
 #$ -wd ${outFolder}
 echo \$HOSTNAME >&2
 
+# overwrite if exists; if not create empty file
+ > $clusterList
 
 sh $extractPolyAClusters --support ${support} \\
                          --outFolder ${outFolder} \\
@@ -169,6 +170,13 @@ $python $randomPrimingScript ${mergedOut}.bed \\
 
 echo \"After removal of random priming artifacts: \" \`wc -l ${mergedOut}_artifacts_removed.bed | awk '{print \$1}'\` 
 
+# create bam files with random priming removed
+sh $createCleanedBams --support ${support} \\
+                      --outFolder ${outFolder} \\
+                      --iFolder ${iFolder} \\
+                      --code random_priming_only \\
+                      --clusterList ${mergedOut}_artifacts_removed.bed \\
+
 
 $python $thinningScript \\
    ${mergedOut}_artifacts_removed.bed \\
@@ -176,6 +184,14 @@ $python $thinningScript \\
    ${mergedOut}_artifacts_removed_thinned.bed
 
 echo \"After removal of weakest clusters (min proportion >=\" $minProportion \"):\" \`wc -l ${mergedOut}_artifacts_removed_thinned.bed | awk '{print \$1}'\`
+
+# create bam files with random priming removed AND only the most contributing clusters
+sh $createCleanedBams --support ${support} \\
+                      --outFolder ${outFolder} \\
+                      --iFolder ${iFolder} \\
+                      --code most_important_clusters_${minProportion} \\
+                      --clusterList ${mergedOut}_artifacts_removed_thinned.bed \\
+
 
 # Note: the resulting annotated bed files will have more lines than the original clusters bed file 
 # Each cluster location can be annotated as more than one gene 
@@ -197,6 +213,7 @@ sh $countClusters --support ${support} \\
                   --mode thinned
 " > $jobScript
 
+echo writing DEXSeq code to $dexseqScript
 
 # run dexseq on thinned cluster list
 echo "
@@ -214,19 +231,34 @@ echo \$HOSTNAME >&2
 
 ${R}script ${polyA_dexseq} --support.tab $support \\
                            --code $code \\
-                           --output.dir $outFolder \\
+                           --output.dir ${outFolder} \\
                            --input.dir $iFolder \\
                            --biomartAnnotation $biomartAnnotation \\
                            --nCores $nCores \\
                            --mode no_artifacts
 
+
 ${R}script ${polyA_dexseq} --support.tab $support \\
                            --code $code \\
-                           --output.dir $outFolder \\
+                           --output.dir ${outFolder} \\
                            --input.dir $iFolder \\
                            --biomartAnnotation $biomartAnnotation \\
                            --nCores $nCores \\
                            --mode thinned
+
+# do cluster analysis
+
+${R}script ${analyseClusters} --code $code \\
+                              --output.dir ${outFolder}/results \\
+                              --biomartAnnotation $biomartAnnotation \\
+                              --mode no_artifacts \\
+                              --dexseqResults ${outFolder}/results/dexseq_results_${code}_no_artifacts.tab
+
+${R}script ${analyseClusters} --code $code \\
+                              --output.dir ${outFolder}/results \\
+                              --biomartAnnotation $biomartAnnotation \\
+                              --mode thinned \\
+                              --dexseqResults ${outFolder}/results/dexseq_results_${code}_thinned.tab
 
 " > $dexseqScript
 

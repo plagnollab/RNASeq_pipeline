@@ -5,6 +5,7 @@ library(DEXSeq)
 library(dplyr) 
 library(BiocParallel)
 library(optparse)
+library(stringr)
 
 options(echo=TRUE)
 
@@ -29,6 +30,12 @@ input.dir <- opt$input.dir
 biomartAnnotation <- opt$biomartAnnotation
 nCores <- opt$nCores
 mode <- opt$mode
+
+
+results.dir <- paste0(output.dir, "/results/")
+if(!dir.exists(results.dir)){
+  dir.create(results.dir)
+}
 
 #support.tab="/SAN/vyplab/IoN_RNAseq/Kitty/Nicol/threeprimeseq/d14/d14_hom_wt_support.tab"
 #code <- "threeprime_d14_hom_wt" 
@@ -87,7 +94,7 @@ DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, BPPARAM=BPPARAM)
 DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc, BPPARAM=BPPARAM)
 DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc, BPPARAM=BPPARAM)
 
-dexseq.data <- paste0(output.dir, "/", "dexseq.RData") 
+dexseq.data <- paste0(results.dir, "/", "dexseq_",code, "_", mode,".RData") 
 save(DexSeqExons.loc, file = dexseq.data) 
 
 res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
@@ -107,5 +114,26 @@ res.clean$ID <- gsub("_",":",res.clean$ID)
 
 res.clean <- res.clean[order(res.clean$FDR), ] 
 
-write.table(res.clean, row.names = FALSE, quote = FALSE, sep = "\t", file = paste0(output.dir, "/dexseq_res_clean.tab"))  
+write.table(res.clean, row.names = FALSE, quote = FALSE, sep = "\t", file = paste0(results.dir, "/dexseq_results_",code,"_", mode, ".tab"))  
 
+
+
+# write out a bed file of the significant clusters 
+# add a track line so that IGV colors them red
+#track color=220,20,60
+sig <- subset(res.clean, FDR < 0.1)
+
+coords <- str_split_fixed( str_split_fixed(sig$ID, ":", 3)[,3], ":", 2)
+coords <- data.frame(
+  chr = coords[,1],
+  start = str_split_fixed(coords[,2], "-", 2)
+)
+names(coords) <- c("chr","start","end")
+coords$FDR <- signif(sig$FDR, 2)
+
+
+trackColor <- "track color=220,20,60"
+
+sigClusters <- paste0(results.dir, "/",code, "_", mode, "_sigClusters.bed")
+writeLines(trackColor, sigClusters, sep = "\n", )
+write.table(coords, sigClusters, append = TRUE, col.names = FALSE, row.names = FALSE, sep = "\t", quote = FALSE)
