@@ -64,6 +64,7 @@ countClusters=${PIPEBASE}/countClusters.sh
 createCleanedBams=${PIPEBASE}/createCleanedBams.sh
 polyA_dexseq=${PIPEBASE}/polyA_dexseq.R
 analyseClusters=${PIPEBASE}/analyseClusters.R
+
 # variables
 minReads=5 # minimum number of supporting reads a cluster can have in one sample
 mapQual=10 # for  Samtools - what is the probability of the alignment not being the best possible p_wrong= 10^(-mapq/10). Therefore mapQ=10 is 10% chance
@@ -245,6 +246,7 @@ ${R}script ${polyA_dexseq} --support.tab $support \\
                            --biomartAnnotation $biomartAnnotation \\
                            --nCores $nCores \\
                            --mode thinned
+
 
 # do cluster analysis
 

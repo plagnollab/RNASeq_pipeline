@@ -3,7 +3,7 @@ library(stringr)
 library(data.table)
 library(optparse)
 
-options(echo=TRUE)
+options(echo=FALSE)
 
 option_list <- list(
     make_option(c('--code'), help='', default = ""),
@@ -23,20 +23,33 @@ biomartAnnotations <- opt$biomartAnnotation
 dexseq.results <- opt$dexseqResults
 mode <- opt$mode
 
-
+outFile <- paste0(output.dir, "/", code, "_", mode, "_perGeneDirections.txt")
 
 # iFolder <- "/Users/Jack/google_drive/TDP_paper/"
 # biomartAnnotations <- paste0(iFolder, "/differential_splicing/biomart_annotations_mouse.tab")
 biomart <- as.data.frame(fread(biomartAnnotations))
 #dexseq.results <- "/Users/Jack/SAN/IoN_RNAseq/Nicol/polyA/FUS_ko_HOM/results/dexseq_results_FUS_ko_HOM_thinned.tab"
 
+print(paste0("reading in: ", dexseq.results ))
 res <- as.data.frame(fread(dexseq.results))
+
+print( paste0("Number of clusters: ", nrow(res)))
 
 # get the clusters for all genes that have at least one significant cluster
 sigClusters <- filter(res, FDR < 0.1)
+
+print( paste0("Number of significant clusters: ", nrow(sigClusters)))
+
+if(nrow(sigClusters) == 0 ){
+  print( "no significant clusters! :( ")
+  writeLines( "no significant clusters! :( ", outFile)
+  quit()
+}
+
 sigGenes <- unique(sigClusters$external_gene_name, na.rm=TRUE)
 sigGenes <- sigGenes[ !is.na(sigGenes)]
 
+print( paste0( "Number of genes with altered polyAs: ", length(sigGenes)))
 
 allClusters <- filter(res, external_gene_name %in% sigGenes )
 coords <- str_split_fixed( str_split_fixed(allClusters$ID, ":", 3)[,3], ":", 2)
@@ -48,6 +61,11 @@ names(coords) <- c("chr","start","end")
 
 allClusters <- cbind(allClusters,coords)
 allClusters$strand <- biomart$strand[ match(allClusters$EnsemblID, biomart$EnsemblID)]
+
+geneStrands <- biomart$strand[ match(sigGenes, biomart$external_gene_name) ]
+
+# worrying about strand bias
+table(geneStrands)
 
 names(allClusters)[4] <- "log2FoldChange"
 
@@ -97,7 +115,7 @@ clusterDirections <- lapply(1:length(sigGenes), FUN = function(i){
 
 results <- do.call(rbind, clusterDirections)
 
-outFile <- paste0(output.dir, "/", code, "_", mode, "_perGeneDirections.txt")
+
 write.table(results, outFile, sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
   #print(paste( n ,nSig) )
