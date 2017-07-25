@@ -1,7 +1,7 @@
 library(SGSeq) 
 library(optparse)
 options(echo=T)
-
+nCores <- 8
 option_list <- list(
     make_option(c('--support.tab'), help='', default = "/SAN/vyplab/IoN_RNAseq/Kitty/F210I/sgseq/f210i_new_support.tab"),
     make_option(c('--code'), help='', default = "F210I_embryonic_brain_norm"),
@@ -32,7 +32,7 @@ if(species == "mouse") {
 info.file <- paste0(output.dir, "/", code, "_info.RData")
 if(!file.exists(info.file)) { 
 sample.tab <- read.table(support.tab, header = T, stringsAsFactor = F) 
-sample.info <- getBamInfo(sample.tab) 
+sample.info <- getBamInfo(sample.tab, cores = nCores) #, yieldSize = 10000 ) 
 save(sample.info, file = paste0(output.dir, "/", code, "_info.RData") ) 
 } else { 
 load(info.file) 
@@ -44,5 +44,5 @@ print(sgv)
 
 message("getting variant counts") 
 print(sample.info) 
-sgvc <- getSGVariantCounts(sgv, sample_info = sample.info, cores = 4, min_denominator = 10, verbose = TRUE)
+sgvc <- getSGVariantCounts(sgv, sample_info = sample.info, cores = nCores, min_denominator = 10, verbose = TRUE)
 save(sgvc, file = paste0(output.dir, "/", code, "_sgvc.RData")) 

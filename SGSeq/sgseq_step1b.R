@@ -1,7 +1,9 @@
 library(SGSeq) 
 library(optparse)
+library(stringr)
 options(echo=T)
 
+nCores <- 8
 # Finds novel transcripts and obtain the variant counts 
 
 option_list <- list(
@@ -29,7 +31,25 @@ if(file.exists(sample.info.file)) {
 } else { 
    sample.tab <- read.table(support.tab, header = T, stringsAsFactor = F) 
    # this takes forever, give more cores and only look at a subset 
-   sample.info <- getBamInfo(sample.tab, cores = 4, yieldSize = 10000 ) 
+   sample.info <- getBamInfo(sample.tab, cores = nCores , yieldSize = 10000 ) 
+   
+
+   logFiles <- gsub("_unique.bam", "Log.final.out", sample.tab$file_bam )
+
+  getLibSize <- function(logFile){
+    stopifnot(file.exists(logFile))
+    log <- readLines(logFile)
+    unique <- log[ grepl("Uniquely mapped reads number", log)]
+    multi <- log[ grepl("Number of reads mapped to multiple loci", log)]
+
+    num_unique <- str_trim( str_split_fixed( unique, "\\|\t", 2)[,2] )
+    num_multi <- str_trim( str_split_fixed( multi, "\\|\t", 2)[,2] )
+    libSize <- as.numeric(num_unique) + as.numeric(num_multi)
+    return(libSize)
+  }
+  sample.info$lib_size <- sapply(logFiles, FUN = getLibSize)
+
+
    save(sample.info, file = sample.info.file) 
 } 
 
@@ -41,7 +61,7 @@ load(sgseq.anno)
 
 si_cases <- subset(sample.info, condition == case.condition)
 print(si_cases) 
-txf_novel <- predictTxFeatures(si_cases, min_junction_count = 5, verbose = TRUE, cores = 4)
+txf_novel <- predictTxFeatures(si_cases, min_junction_count = 5, verbose = TRUE, cores = nCores)
 
 save(txf_novel, file = paste0(output.dir, "/", code, "_txf_novel.RData")) 
 
@@ -50,5 +70,5 @@ sgf_novel <- convertToSGFeatures(txf_novel)
 sgf_novel <- annotate(sgf_novel, txf)
 sgv_novel <- findSGVariants(sgf_novel, include = "all")
 
-sgvc_novel <- getSGVariantCounts(sgv_novel, sample_info = sample.info, cores = 8, min_denominator = 10, verbose = TRUE)
+sgvc_novel <- getSGVariantCounts(sgv_novel, sample_info = sample.info, cores = nCores, min_denominator = 10, verbose = TRUE)
 save(sgf_novel, sgv_novel, sgvc_novel, file = paste0(output.dir, "/", code, "_sgv_novel.RData")) 

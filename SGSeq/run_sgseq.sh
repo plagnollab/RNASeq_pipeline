@@ -47,6 +47,13 @@ script_step2a=${clusterDir}/submission/sgseq_step2a.sh
 script_step2b=${clusterDir}/submission/sgseq_step2b.sh 
 Rscript=/share/apps/R-3.3.2/bin/Rscript
 
+# make directories
+for dir in $outputDir ${clusterDir}/out ${clusterDir}/error ${clusterDir}/R; do
+	if [ ! -e $dir ];then
+		mkdir -p $dir
+	fi
+done
+
 if [ $step = "step1a" ]; then  
 echo "  
 #$ -S /bin/bash
