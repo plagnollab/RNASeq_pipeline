@@ -60,6 +60,11 @@ varcounts <- counts(sgvc)
 vid <- variantID(sgvc)
 eid <- eventID(sgvc)
 
+# for testing
+varcounts <- varcounts[1:100,]
+vid <- vid[1:100]
+eid <- eid[1:100]
+
 
 
 # remove no count rows
@@ -106,6 +111,7 @@ for (condition in list.conditions) {
   support.loc$condition <- factor(support[, condition])
   
   # subset the samples from the matrix that are to be tested
+ varcounts.loc <- varcounts[, !is.na(support[,condition]) ]
   #loc.countFiles <- countFiles[ !is.na(support.loc$condition) ]
   support.loc <-  support.loc[ !is.na(support.loc$condition), ]
 
@@ -116,8 +122,8 @@ formula1 <-  ~ sample + condition * exon
 
 # run DEXSeq
 if(!file.exists(dexseq.data)) { 
-DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts,
-                                              sampleData = support,
+DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts.loc,
+                                              sampleData = support.loc,
                                               design = formula1,
                                         featureID = as.factor(vid),
                                         groupID = as.factor(eid))
@@ -137,6 +143,9 @@ res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
 res.clean <- as.data.frame(res)
 
 sample.data <- colData(sgvc)
+# remove any not in our condition
+sample.data <- sample.data[!is.na(support[,condition]), ]
+  
 sample.names <- sample.data$sample_name 
 n.samples <- length(sample.names) 
 count.start <- which(names(res.clean) == "countData.1") 
