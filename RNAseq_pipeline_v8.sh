@@ -39,11 +39,8 @@ else
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
     if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
-    bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
-
-    if [ ! -e $bigFilesBundleFolder ];then
-        bigFilesBundleFolder=/SAN/vyplab/HuRNASeq/reference_datasets
-    fi
+    #bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
+    bigFilesBundleFolder=/SAN/vyplab/HuRNASeq/reference_datasets
 
     #which R should we be using?
     #optparse available but just run this to install:
