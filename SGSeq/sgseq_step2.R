@@ -32,18 +32,21 @@ annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mou
 annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab" 
 } 
 
+# read in annotation
+annotation <- read.table(annotations.tab, header = TRUE) 
+row.names(annotation) <- annotation$EnsemblID
 
+
+# read in support
+support  <- read.table(support.tab, header = T, stringsAsFactor = F) 
+list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
+
+# pick which counts file to use
 if (step == "step2a") { 
    sgvc.data <- paste0(output.dir, "/", code, "_sgvc.RData") 
-   dexseq.data <- paste0(output.dir, "/", code, "_dexseq.RData") 
-   res.clean.data <- paste0(output.dir, "/", code, "_res_clean.RData") 
-   res.clean.fname <- paste0(output.dir, "/", code, "_res_clean.tab") 
    load(sgvc.data) 
 } else if (step == "step2b") { 
    sgvc.data <- paste0(output.dir, "/", code, "_sgv_novel.RData") 
-   dexseq.data <- paste0(output.dir, "/", code, "_dexseq_novel.RData") 
-   res.clean.data <- paste0(output.dir, "/", code, "_res_clean_novel.RData") 
-   res.clean.fname <- paste0(output.dir, "/", code, "_res_clean_novel.tab") 
    load(sgvc.data) 
    sgvc <- sgvc_novel 
 } else { 
@@ -57,6 +60,7 @@ eid <- eventID(sgvc)
 
 noreads <- which(rowSums(varcounts) == 0 | rowSums(is.na(varcounts)) > 0)
 
+# remove no count rows
 if(length(noreads) > 0) { 
 varcounts <- varcounts[-noreads,] 
 vid <- vid[-noreads] 
@@ -64,12 +68,48 @@ eid <- eid[-noreads]
 } 
 
 print(dim(varcounts)) 
-support  <- read.table(support.tab, header = T, stringsAsFactor = F) 
 
+for (condition in list.conditions) {
+  
+  # create a string to represent comparison
+  conditions <- support[, condition]
+  # remove NA values and find unique
+  conditions <- unique(conditions[!is.na(conditions)])
+  conditions.name <- paste(conditions, collapse="_")
+   
+  # make condition specific outputs
+  condition.dir <- paste0(output.dir,"/", conditions.name )
+  
+  if( !dir.exists(condition.dir){ dir.create(condition.dir) }
+     
+  if (step == "step2a") {
+   dexseq.data <- paste0(condition.dir, "/", code, "_", conditions.name, "_dexseq.RData") 
+   res.clean.data <- paste0(condition.dir, "/", code, "_", conditions.name,  "_res_clean.RData") 
+   res.clean.fname <- paste0(condition.dir, "/", code, "_", conditions.name, "_res_clean.tab") 
+  } else if (step == "step2b") { 
+   dexseq.data <- paste0(output.dir, "/", code, "_", conditions.name, "_dexseq_novel.RData") 
+   res.clean.data <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.RData") 
+   res.clean.fname <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.tab")  
+  } else { 
+   message("step needs to be either 2a for known variants or 2b for novel variants") 
+  }  
+
+  message('Condition ', condition)
+  support.loc <- support
+
+  ##handle the type variable
+  support.loc$condition <- factor(support[, condition])
+  
+  # subset the samples from the matrix that are to be tested
+  #loc.countFiles <- countFiles[ !is.na(support.loc$condition) ]
+  support.loc <-  support.loc[ !is.na(support.loc$condition), ]
+
+# create formula
 formuladispersion <- ~ sample + (condition + type) * exon
 formula0 <-  ~ sample + condition
 formula1 <-  ~ sample + condition * exon
 
+# run DEXSeq
 if(!file.exists(dexseq.data)) { 
 DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts,
                                               sampleData = support,
@@ -82,8 +122,9 @@ DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc)
 DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc)
 DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
 
+# save data
 save(DexSeqExons.loc, file = dexseq.data) 
-} else { 
+} else { # mainly for testing
 load(dexseq.data) 
 } 
 
@@ -119,9 +160,6 @@ res.clean$to <- sgvc.df$to
 res.clean$type <- sgvc.df$type
 res.clean <- res.clean[order(res.clean$pvalue), ]
 
-annotation <- read.table(annotations.tab, header = TRUE) 
-row.names(annotation) <- annotation$EnsemblID
-
 makePretty <- function(x) { paste(unlist(x), collapse = "+") } 
 
 # Now match the ensembl ID back to more human readable IDs 
@@ -133,5 +171,8 @@ res.clean <- dplyr::mutate(res.clean , geneName=unlist(lapply(geneName, getHugoN
 res.clean <- dplyr::mutate(res.clean , txName=unlist(lapply(txName, makePretty))) 
 res.clean <- dplyr::mutate(res.clean , variantType=unlist(lapply(variantType, makePretty))) 
 
+# save and write
 save(res.clean, file =  res.clean.data) 
 write.table(res.clean, file = res.clean.fname, sep = "\t")
+
+}
