@@ -97,9 +97,9 @@ for (condition in list.conditions) {
    res.clean.data <- paste0(condition.dir, "/", code, "_", conditions.name,  "_res_clean.RData") 
    res.clean.fname <- paste0(condition.dir, "/", code, "_", conditions.name, "_res_clean.tab") 
   } else if (step == "step2b") { 
-       dexseq.data <- paste0(output.dir, "/", code, "_", conditions.name, "_dexseq_novel.RData") 
-       res.clean.data <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.RData") 
-       res.clean.fname <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.tab")  
+       dexseq.data <- paste0(condition.dir, "/", code, "_", conditions.name, "_dexseq_novel.RData") 
+       res.clean.data <- paste0(condition.dir, "/", code, "_", conditions.name,  "_res_clean_novel.RData") 
+       res.clean.fname <- paste0(condition.dir, "/", code, "_", conditions.name,  "_res_clean_novel.tab")  
   } else { 
    message("step needs to be either 2a for known variants or 2b for novel variants") 
   }  
@@ -141,6 +141,10 @@ load(dexseq.data)
 
 res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
 res.clean <- as.data.frame(res)
+
+# just for testing
+}
+quit()
 
 sample.data <- colData(sgvc)
 # remove any not in our condition
