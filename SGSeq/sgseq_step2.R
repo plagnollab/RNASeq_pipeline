@@ -1,5 +1,7 @@
 ## Now take the counts and pretend each event is one gene and each variant is one exon 
 ## and run in dexseq 
+# Kitty Lo wrote this
+# Jack Humphrey tweaked it
 
 library(SGSeq) 
 library(DEXSeq)
@@ -53,14 +55,15 @@ if (step == "step2a") {
    message("step needs to be either 2a for known variants or 2b for novel variants") 
 }  
 
-
+# this is the counts matrix
 varcounts <- counts(sgvc)
 vid <- variantID(sgvc)
 eid <- eventID(sgvc)
 
-noreads <- which(rowSums(varcounts) == 0 | rowSums(is.na(varcounts)) > 0)
+
 
 # remove no count rows
+noreads <- which(rowSums(varcounts) == 0 | rowSums(is.na(varcounts)) > 0)
 if(length(noreads) > 0) { 
 varcounts <- varcounts[-noreads,] 
 vid <- vid[-noreads] 
@@ -80,16 +83,18 @@ for (condition in list.conditions) {
   # make condition specific outputs
   condition.dir <- paste0(output.dir,"/", conditions.name )
   
-  if( !dir.exists(condition.dir){ dir.create(condition.dir) }
+  if( !dir.exists(condition.dir) ){ 
+      dir.create(condition.dir) 
+  }
      
   if (step == "step2a") {
    dexseq.data <- paste0(condition.dir, "/", code, "_", conditions.name, "_dexseq.RData") 
    res.clean.data <- paste0(condition.dir, "/", code, "_", conditions.name,  "_res_clean.RData") 
    res.clean.fname <- paste0(condition.dir, "/", code, "_", conditions.name, "_res_clean.tab") 
   } else if (step == "step2b") { 
-   dexseq.data <- paste0(output.dir, "/", code, "_", conditions.name, "_dexseq_novel.RData") 
-   res.clean.data <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.RData") 
-   res.clean.fname <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.tab")  
+       dexseq.data <- paste0(output.dir, "/", code, "_", conditions.name, "_dexseq_novel.RData") 
+       res.clean.data <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.RData") 
+       res.clean.fname <- paste0(output.dir, "/", code, "_", conditions.name,  "_res_clean_novel.tab")  
   } else { 
    message("step needs to be either 2a for known variants or 2b for novel variants") 
   }  
