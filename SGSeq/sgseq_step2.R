@@ -61,9 +61,9 @@ vid <- variantID(sgvc)
 eid <- eventID(sgvc)
 
 # for testing
-varcounts <- varcounts[1:100,]
-vid <- vid[1:100]
-eid <- eid[1:100]
+##varcounts <- varcounts[1:100,]
+##vid <- vid[1:100]
+##eid <- eid[1:100]
 
 
 
@@ -142,9 +142,9 @@ load(dexseq.data)
 res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
 res.clean <- as.data.frame(res)
 
-# just for testing
-}
-quit()
+## just for testing
+##}
+##quit()
 
 sample.data <- colData(sgvc)
 # remove any not in our condition
