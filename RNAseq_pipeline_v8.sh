@@ -340,12 +340,16 @@ case "$species" in
         gffFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
         annotationFile=${RNASEQBUNDLE}/sheep/biomart/biomart_annotations_sheep.tab
         ;;
-    drosophila)
-        refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
-        IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-        gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
-        gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
-        annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
+    fly)
+    	STARdir=${bigFilesBundleFolder}/RNASeq/Fly/STAR
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Fly/biomart_annotations_fly.tab
+	gffFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gff
+        #refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
+        #IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
+        #gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
+        #gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
+        #annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
         ;;
     dog)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
