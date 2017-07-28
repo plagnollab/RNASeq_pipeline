@@ -348,10 +348,16 @@ case "$species" in
         #gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
         #annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
         ;;
+    mosquito)
+	STARdir=${bigFilesBundleFolder}/RNASeq/Mosquito/STAR
+        #annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
+	;;
     dog)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-        gtfFile=${refFolder}/Annotation/Genes/genes.gtf
+        gtffFile=${refFolder}/Annotation/Genes/genes.gtf
         gffFile=${RNASEQBUNDLE}/dog/GTF/dog_iGenomes_NCBI_3_1_with_ensembl.gff
         annotationFile=${RNASEQBUNDLE}/dog/biomart/biomart_annotations_dog.tab
         ;;
