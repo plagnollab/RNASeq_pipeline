@@ -350,7 +350,7 @@ case "$species" in
         ;;
     mosquito)
 	STARdir=${bigFilesBundleFolder}/RNASeq/Mosquito/STAR
-        #annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
         gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
         gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
 	;;
@@ -523,8 +523,8 @@ while read sample f1 f2 condition;do
             echo $summary
     		if [[ "$summary" != "trimmed_exist" ]];then
     # trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
-    			if [ ! -e ${iFolder}/trimmed ];then 
-                    mkdir ${iFolder}/trimmed
+    			if [ ! -e ${oFolder}/trimmed ];then 
+                    mkdir ${oFolder}/trimmed
                 fi 
                 # make trimmed folder
     			for i in `seq 0 $f1_array_length `;do 
@@ -547,7 +547,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     		echo ${f2array[@]}
     		if [[ "$summary" == "trimmed_exist" ]];then     
                             echo "
-# trimmed_exist selected. Files have already been trimmed and exist in ${iFolder}/trimmed
+# trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
                 for i in `seq 0 $f1_array_length`;do
     				files_exist ${iFolder}/${f1array[i]}
@@ -586,7 +586,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 ${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the trimmed files back to trimmed folder in iFolder
-mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
+mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
 
 # move the SJ.tab
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
@@ -630,7 +630,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
         	if [[ "$summary" == "trimmed_exist" ]];then     
                 fastqFolder=${iFolder}
 				echo "
-# trimmed_exist selected. Files have already been trimmed and exist in ${iFolder}/trimmed
+# trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
          		for i in `seq 0 $f1_array_length`;do
          			files_exist ${iFolder}/${f1array[i]}
@@ -658,7 +658,7 @@ ${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memo
 date >&2
 
 # move the trimmed files back to trimmed folder in iFolder
-mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " `
+mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " `
 
 # move splice junction files
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
@@ -685,7 +685,7 @@ rm -rf $JAVA_DIR
 echo "
 # move trimming reports if created
 if [ -e ${SCRATCH_DIR}/trimmed/*trimming* ];then
-	mv ${SCRATCH_DIR}/trimmed/*trimming* ${iFolder}/trimmed/
+	mv ${SCRATCH_DIR}/trimmed/*trimming* ${oFolder}/trimmed/
 fi
 
 rm -rf ${SCRATCH_DIR}
