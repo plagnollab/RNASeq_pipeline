@@ -338,7 +338,7 @@ case "$species" in
         annotationFile=${RNASEQBUNDLE}/sheep/biomart/biomart_annotations_sheep.tab
         ;;
     fly)
-    	STARdir=${bigFilesBundleFolder}/RNASeq/Fly/STAR
+    	STARdir=${bigFilesBundleFolder}/STAR/Fly 
 	annotationFile=${bigFilesBundleFolder}/RNASeq/Fly/biomart_annotations_fly.tab
 	gffFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
 	gtfFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gff
@@ -349,11 +349,16 @@ case "$species" in
         #annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
         ;;
     mosquito)
-	STARdir=${bigFilesBundleFolder}/RNASeq/Mosquito/STAR
+	STARdir=${bigFilesBundleFolder}/STAR/Mosquito
 	annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
         gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
         gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
 	;;
+    worm)
+	STARdir=${bigFilesBundleFolder}/STAR/Worm
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Worm/biomart_annotations_worm.tab
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Worm/reference_datasets/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
+	gffFile=${bigFilesBundleFolder}/RNASeq/Worm/reference_datasets/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gff
     dog)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
@@ -362,7 +367,7 @@ case "$species" in
         annotationFile=${RNASEQBUNDLE}/dog/biomart/biomart_annotations_dog.tab
         ;;
     mouse)
-        STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
+        STARdir=${bigFilesBundleFolder}/STAR/Mouse
         annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
         gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
         gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
