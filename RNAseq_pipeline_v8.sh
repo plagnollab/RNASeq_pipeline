@@ -357,9 +357,10 @@ case "$species" in
     worm)
 	STARdir=${bigFilesBundleFolder}/STAR/Worm
 	annotationFile=${bigFilesBundleFolder}/RNASeq/Worm/biomart_annotations_worm.tab
-	gtfFile=${bigFilesBundleFolder}/RNASeq/Worm/reference_datasets/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
-	gffFile=${bigFilesBundleFolder}/RNASeq/Worm/reference_datasets/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gff
-    dog)
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
+	gffFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gff
+        ;;
+     dog)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
         gtffFile=${refFolder}/Annotation/Genes/genes.gtf
