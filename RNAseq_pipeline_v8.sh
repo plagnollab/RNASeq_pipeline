@@ -530,8 +530,8 @@ while read sample f1 f2 condition;do
     		if [[ "$summary" != "trimmed_exist" ]];then
     # trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
     			if [ ! -e ${oFolder}/trimmed ];then 
-                    mkdir ${oFolder}/trimmed
-                fi 
+                    		mkdir ${oFolder}/trimmed
+                	fi 
                 # make trimmed folder
     			for i in `seq 0 $f1_array_length `;do 
                 # i in length(array) - bash arrays are 0 based
@@ -556,8 +556,8 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 # trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
                 for i in `seq 0 $f1_array_length`;do
-    				files_exist ${iFolder}/${f1array[i]}
-    				files_exist ${iFolder}/${f2array[i]}
+    				files_exist ${oFolder}/${f1array[i]}
+    				files_exist ${oFolder}/${f2array[i]}
     			done
     		fi
 
@@ -573,7 +573,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 	if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
 		fastqFolder=${SCRATCH_DIR}
 	else
-		fastqFolder=${iFolder}
+		fastqFolder=${oFolder}
 	fi
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	f2_total=`echo ${f2array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
