@@ -39,7 +39,7 @@ keep.sex <- opt$keep.sex
 cryptic <-  opt$cryptic
 
 dexseq.compute <- TRUE 
-BPPARAM = MulticoreParam(workers=12)
+BPPARAM = MulticoreParam(workers=4)
 
 ###check input files and data frame
 message('gff file is ', gff)
