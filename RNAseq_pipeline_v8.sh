@@ -340,8 +340,8 @@ case "$species" in
     fly)
     	STARdir=${bigFilesBundleFolder}/STAR/Fly 
 	annotationFile=${bigFilesBundleFolder}/RNASeq/Fly/biomart_annotations_fly.tab
-	gffFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
-	gtfFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gff
+	gffFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gff
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
         #refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
         #IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
         #gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
@@ -351,8 +351,8 @@ case "$species" in
     mosquito)
 	STARdir=${bigFilesBundleFolder}/STAR/Mosquito
 	annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
-        gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
-        gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
 	;;
     worm)
 	STARdir=${bigFilesBundleFolder}/STAR/Worm
