@@ -21,22 +21,55 @@ sgseq.anno <- opt$sgseq.anno
 output.dir <- opt$output.dir 
 species <- opt$species 
 
-if(species == "mouse") { 
-   sgseq.anno = "/SAN/vyplab/IoN_RNAseq/Kitty/Reference/Mus_musculus.GRCm38.82_sgseq_anno.RData"
-} else if (species == "human") { 
-   sgseq.anno = "/SAN/vyplab/IoN_RNAseq/Kitty/Reference/Homo_sapiens.GRCh38_sgseq_anno.RData"
-} else { 
-   exit("need to put in species") 
-} 
+# No longer needed as sgseq.anno is now a required item
+# if(species == "mouse") { 
+#    sgseq.anno = "/SAN/vyplab/IoN_RNAseq/Kitty/Reference/Mus_musculus.GRCm38.82_sgseq_anno.RData"
+# } else if (species == "human") { 
+#    sgseq.anno = "/SAN/vyplab/IoN_RNAseq/Kitty/Reference/Homo_sapiens.GRCh38_sgseq_anno.RData"
+# } else { 
+#    exit("need to put in species") 
+# } 
  
-info.file <- paste0(output.dir, "/", code, "_info.RData")
-if(!file.exists(info.file)) { 
-sample.tab <- read.table(support.tab, header = T, stringsAsFactor = F) 
-sample.info <- getBamInfo(sample.tab, cores = nCores) #, yieldSize = 10000 ) 
-save(sample.info, file = paste0(output.dir, "/", code, "_info.RData") ) 
+# info.file <- paste0(output.dir, "/", code, "_info.RData")
+# if(!file.exists(info.file)) { 
+# sample.tab <- read.table(support.tab, header = T, stringsAsFactor = F) 
+# sample.info <- getBamInfo(sample.tab, cores = nCores) #, yieldSize = 10000 ) 
+# save(sample.info, file = paste0(output.dir, "/", code, "_info.RData") ) 
+# } else { 
+# load(info.file) 
+# } 
+
+sample.info.file <- paste0(output.dir, "/", code, "_info.RData")
+
+if(file.exists(sample.info.file)) { 
+   load(sample.info.file) 
 } else { 
-load(info.file) 
+   sample.tab <- read.table(support.tab, header = T, stringsAsFactor = F) 
+   # this takes forever, give more cores and only look at a subset 
+   sample.info <- getBamInfo(sample.tab, cores = nCores , yieldSize = 10000 ) 
+   
+
+   logFiles <- gsub("_unique.bam", "Log.final.out", sample.tab$file_bam )
+
+  getLibSize <- function(logFile){
+    stopifnot(file.exists(logFile))
+    log <- readLines(logFile)
+    unique <- log[ grepl("Uniquely mapped reads number", log)]
+    multi <- log[ grepl("Number of reads mapped to multiple loci", log)]
+
+    num_unique <- str_trim( str_split_fixed( unique, "\\|\t", 2)[,2] )
+    num_multi <- str_trim( str_split_fixed( multi, "\\|\t", 2)[,2] )
+    libSize <- as.numeric(num_unique) + as.numeric(num_multi)
+    return(libSize)
+  }
+  sample.info$lib_size <- sapply(logFiles, FUN = getLibSize)
+
+
+   save(sample.info, file = sample.info.file) 
 } 
+
+
+
 
 message("loading annotation")
 load(sgseq.anno)

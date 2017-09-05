@@ -9,7 +9,7 @@ nCores <- 8
 option_list <- list(
     make_option(c('--support.tab'), help='', default = "/SAN/vyplab/IoN_RNAseq/Kitty/F210I/sgseq/f210i_new_support.tab"),
     make_option(c('--code'), help='', default = "F210I_embryonic_brain_norm"),
-    make_option(c('--case.condition'), help='', default = "HOM"),
+    #make_option(c('--case.condition'), help='', default = "HOM"), # now deprecated
     make_option(c('--sgseq.anno'), help='', default="/SAN/vyplab/IoN_RNAseq/Kitty/Reference/Mus_musculus.GRCm38.82_sgseq_anno.RData"),
     make_option(c('--gtf'), help='', default="/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf"),
     make_option(c('--output.dir'), help='', default="")
@@ -59,9 +59,11 @@ if(file.exists(sample.info.file)) {
 message("loading annotation")
 load(sgseq.anno)
 
-si_cases <- subset(sample.info, condition == case.condition)
-print(si_cases) 
-txf_novel <- predictTxFeatures(si_cases, min_junction_count = 5, verbose = TRUE, cores = nCores)
+#si_cases <- subset(sample.info, condition == case.condition)
+#print(si_cases) 
+#txf_novel <- predictTxFeatures(si_cases, min_junction_count = 5, verbose = TRUE, cores = nCores)
+# originally just did this for the cases and not the controls - not sure about this.
+txf_novel <- predictTxFeatures(sample.info, min_junction_count = 5, verbose = TRUE, cores = nCores)
 
 save(txf_novel, file = paste0(output.dir, "/", code, "_txf_novel.RData")) 
 
