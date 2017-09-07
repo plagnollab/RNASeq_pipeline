@@ -1,5 +1,5 @@
 #!/bin/bash 
-memPerCore=1.9G # recommended by Tristan
+memPerCore=2.8G # not recommended by Tristan
 
 
 until [ -z "$1" ]
@@ -129,7 +129,7 @@ echo "
 #$ -cwd 
 }
 
-$Rscript --vanilla ${step1a} --support.tab ${support} --code ${code} --output.dir ${outputDir} --species ${species} --gtf ${gtf} --sgseq.anno ${sgseqAnno}
+$Rscript --vanilla ${step1a} --support.tab ${support} --code ${code} --output.dir ${outputDir} --gtf ${gtf} --sgseq.anno ${sgseqAnno}
 " > $script_step1a
 
     echo "step1a - find all annotated splicing events"
@@ -150,7 +150,7 @@ function step1b {
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 
-$Rscript --vanilla ${step1b} --support.tab $support --code ${code} --output.dir ${outputDir} --species ${species} --gtf ${gtf} --sgseq.anno ${sgseqAnno} 
+$Rscript --vanilla ${step1b} --support.tab $support --code ${code} --output.dir ${outputDir} --gtf ${gtf} --sgseq.anno ${sgseqAnno} 
 " > $script_step1b
     echo "step1b - find all annotated AND novel splicing events"
     echo $script_step1b
