@@ -39,11 +39,9 @@ else
     javaTemp="TMP_DIR=${javaTemp2}"
     java=/share/apps/jdk1.7.0_45/bin/java
     if [ ! -e $java ]; then java=/share/apps/jdk1.8.0_25/bin/java; fi
-    bigFilesBundleFolder=/scratch2/vyp-scratch2/reference_datasets
-    if [ ! -e $bigFilesBundleFolder ]
-    then
-        bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
-    fi
+    #bigFilesBundleFolder=/cluster/scratch3/vyp-scratch2/reference_datasets
+    bigFilesBundleFolder=/SAN/vyplab/HuRNASeq/reference_datasets
+
     #which R should we be using?
     #optparse available but just run this to install:
     # > install.packages('getopt')
@@ -54,6 +52,8 @@ else
     # data.table cannot be installed with this version of R  # Jack: this one works for me! The above does not.
     Rbin=/share/apps/R/bin/R
     Rscript=/share/apps/R/bin/Rscript
+    # should fix Rsamtools problem for using DEXSeq
+    export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH 
 fi
 
 
@@ -74,8 +74,6 @@ novosort=${software}/novocraft3/novosort
 trimgalore=${software}/trim_galore/trim_galore
 cutadapt=/share/apps/python-2.7.8/bin/cutadapt
 fastqc=/share/apps/genomics/fastqc-0.11.2/fastqc
-RfeatureCounts=${RNASEQPIPBASE}/featureCounts_script.R
-deseqFeatureCounts=${RNASEQPIPBASE}/deseq2_featureCounts.R
 #for the old cluster
 if [ ! -e $cutadapt ];then cutadapt=/share/apps/python-2.7.6/bin/cutadapt;fi
 
@@ -339,28 +337,47 @@ case "$species" in
         gffFile=${bigFilesBundleFolder}/RNASeq/Sheep/Ovis_aries.Oar_v3.1.80.gff
         annotationFile=${RNASEQBUNDLE}/sheep/biomart/biomart_annotations_sheep.tab
         ;;
-    drosophila)
-        refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
-        IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-        gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
-        gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
-        annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
+    fly)
+    	STARdir=${bigFilesBundleFolder}/STAR/Fly 
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Fly/biomart_annotations_fly.tab
+	gffFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gff
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
+        #refFolder=${bigFilesBundleFolder}/RNASeq/Drosophila/Drosophila_melanogaster/NCBI/build5.41
+        #IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
+        #gtfFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gtf
+        #gffFile=${RNASEQBUNDLE}/drosophila/GTF/Drosophila_melanogaster.BDGP5.75.gff
+        #annotationFile=${RNASEQBUNDLE}/drosophila/biomart/biomart_annotations_drosophila.tab
         ;;
+    mosquito)
+	STARdir=${bigFilesBundleFolder}/STAR/Mosquito
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Mosquito/biomart_annotations_mosquito.tab
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gff
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mosquito/Anopheles_gambiae.AgamP4.36.chr.gtf
+	;;
+    worm)
+	STARdir=${bigFilesBundleFolder}/STAR/Worm
+	annotationFile=${bigFilesBundleFolder}/RNASeq/Worm/biomart_annotations_worm.tab
+	gtfFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
+	gffFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gff
+        ;;
+    worm_no_aggregate)
+	STARdir=${bigFilesBundleFolder}/STAR/Worm
+        annotationFile=${bigFilesBundleFolder}/RNASeq/Worm/biomart_annotations_worm.tab
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
+	gffFile=${bigFilesBundleFolder}/RNASeq/Worm/Caenorhabditis_elegans.WBcel235.89_noaggreg_flattned.gff
+   	;;  
     dog)
         refFolder=/SAN/biomed/biomed14/vyp-scratch/vincent/tophat_reference/Canis_familiaris/NCBI/build3.1
         IndexBowtie2=${refFolder}/Sequence/Bowtie2Index/genome	
-        gtfFile=${refFolder}/Annotation/Genes/genes.gtf
+        gtffFile=${refFolder}/Annotation/Genes/genes.gtf
         gffFile=${RNASEQBUNDLE}/dog/GTF/dog_iGenomes_NCBI_3_1_with_ensembl.gff
         annotationFile=${RNASEQBUNDLE}/dog/biomart/biomart_annotations_dog.tab
         ;;
     mouse)
-        STARdir=${bigFilesBundleFolder}/RNASeq/Mouse/STAR
-        annotationFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/biomart_annotations_mouse.tab
-	#${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
-        gffFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gff
-	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
-        gtfFile=/SAN/vyplab/HuRNASeq/RNASeq_pipeline/mm10_GRCm38.82_fixed_mito.gtf
-	#${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
+        STARdir=${bigFilesBundleFolder}/STAR/Mouse
+        annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
         
 	if [[ "$summary" == "refseq" ]];then
 		gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/mm10_refseq_genes_fixed.gff
@@ -395,7 +412,7 @@ if [[ "$h3" != "f2" ]]; then echo "header 3 must be f2 for fastq2"; exit; fi
 
 
 hold=""
-SCRATCH_DIR=/scratch0/RNASeq_${code}
+SCRATCH_DIR=/scratch0/${USER}/RNASeq_${code}
 JAVA_DIR=${SCRATCH_DIR}/javastar 
 # fastQC
 function step0_QC {
@@ -446,7 +463,9 @@ $fastqc -o $fastqcFolder ${f2array[i]}
 	done
 }
 
-# alignment
+####################
+# STEP1A: alignment
+####################
 function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
     STARoutput="BAM Unsorted"
@@ -455,93 +474,104 @@ function starSubmissionStep1a {
     fi
     echo "
 #$ -S /bin/bash
-#$ -l h_vmem=15G,tmem=15G
+#$ -l h_vmem=10G,tmem=10G
 #$ -l h_rt=72:00:00
 #$ -pe smp 4
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1a_${code}
-#$ -l tscr=60G 
+#$ -l tscratch=10G  
 #$ -wd ${oFolder}
 echo \$HOSTNAME >&2
-du -sh /scratch0/ >&2
-du -sh /scratch0/* >&2
-ls -lhtr /scratch0/ >&2
 date >&2
 mkdir -p $JAVA_DIR
 " > $starSubmissionStep1a
+
+# is trimming required?
 if [ "$trim_galore" == "yes" ];then
 	echo "
 mkdir ${SCRATCH_DIR}/trimmed # make a scratch0 trimmed folder
 " >> $starSubmissionStep1a
 fi    
-    tail -n +2  $dataframe | while read sample f1 f2 condition;do
-        if [[ "$f2" == "NA" ]]; then paired=no;  else paired=yes; fi;
-        echo "Sample $sample"
-        finalOFolder=${oFolder}/${sample}
-        dexseqfolder=${oFolder}/${sample}/dexseq
-	mkdir -p ${finalOFolder} ${dexseqfolder}
-        # go no further
-        #if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
-        #then
-        #    echo ${finalOFolder}/${sample}_unique.bam.bai exists will not align again
-        #    return 0
-        #fi
-	f1array=(`echo $f1 | tr "," " "`)
-	f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
-	files_exist ${iFolder} 
-	for i in `seq 0 ${f1_array_length}`;do
-	#	f1array[i]=${iFolder}/${f1array[i]} # append full path
-		files_exist ${iFolder}/${f1array[i]} # check for existence
-	done
 
-        echo Aligning with STAR
-# Paired end        
-if [[ $paired == "yes" ]];then
-        f2array=(`echo $f2 | tr "," " "`) # create bash array
-	for i in `seq 0 ${f1_array_length}`;do
-        #       f2array[i]=${iFolder}/${f2array[i]} #append full path 
-		files_exist ${iFolder}/${f2array[i]} #check for existence
-	done
-            #Trim Galore paireend
-	if [[ "$trim_galore" == "yes" ]];then
-	    	echo $summary
-		if [[ "$summary" != "trimmed_exist" ]];then
-# trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
-			if [ ! -e ${iFolder}/trimmed ];then mkdir ${iFolder}/trimmed;fi # make trimmed folder
-			for i in `seq 0 $f1_array_length `;do # i in length(array) - bash arrays are 0 based
-				echo "
+# for each sample in the support file
+tail -n +2  $dataframe | 
+while read sample f1 f2 condition;do
+    if [[ "$f2" == "NA" ]]; then 
+        paired=no 
+    else paired=yes
+    fi;
+    echo "Sample $sample"
+    finalOFolder=${oFolder}/${sample}
+    dexseqfolder=${oFolder}/${sample}/dexseq
+    mkdir -p ${finalOFolder} ${dexseqfolder}
+    # go no further
+    #if [[  -e ${finalOFolder}/${sample}_unique.bam.bai ]]
+    #then
+    #    echo ${finalOFolder}/${sample}_unique.bam.bai exists will not align again
+    #    return 0
+    #fi
+   f1array=(`echo $f1 | tr "," " "`)
+   f1_array_length=$(( ${#f1array[@]} - 1 )) # because bash arrays are 0 based
+   for i in `seq 0 ${f1_array_length}`;do
+   #	f1array[i]=${iFolder}/${f1array[i]} # append full path
+	  files_exist ${iFolder}/${f1array[i]} # check for existence
+   done
+
+   echo Step1a: Aligning with STAR
+   echo "paired = $paired"
+# If sample is paired end        
+    if [[ "$paired" == "yes" ]];then
+        # create bash array of samples
+        f2array=(`echo $f2 | tr "," " "`) 
+        for i in `seq 0 ${f1_array_length}`;do
+       #check for existence
+	       files_exist ${iFolder}/${f2array[i]} 
+        done
+    
+        # if Trim Galore is wanted run on paired end sample
+        if [[ "$trim_galore" == "yes" ]];then
+            echo $summary
+    		if [[ "$summary" != "trimmed_exist" ]];then
+    # trim each pair of files in the two arrays - assume that forward and reverse reads are in equal numbers of pieces
+    			if [ ! -e ${oFolder}/trimmed ];then 
+                    		mkdir ${oFolder}/trimmed
+                	fi 
+                # make trimmed folder
+    			for i in `seq 0 $f1_array_length `;do 
+                # i in length(array) - bash arrays are 0 based
+    				echo "
 # trim paired end with Trim Galore. Trim adapters and low quality (phred below 20). output to scratch0
 $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cutadapt --paired ${iFolder}/${f1array[i]} ${iFolder}/${f2array[i]} 
-"  >>  $starSubmissionStep1a
-			done
-		fi
-			#the trimmed files have a slightly different output
-			# prefix each fastq name with "trimmed/" so the trimmed outFolder is found
-		for i in `seq 0 $f1_array_length`;do
-			f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' | sed 's/.fastq/_val_1.fq/g'`
-		done	
-		for i in `seq 0 $f1_array_length`;do
-			f2array[i]=`echo ${f2array[i]} | awk -F'/' '{print "trimmed/"$NF}' | sed 's/.fastq/_val_2.fq/g'`
-		done
-		echo ${f1array[@]}
-		echo ${f2array[@]}
-		if [[ "$summary" == "trimmed_exist" ]];then     
-                        echo "
-# trimmed_exist selected. Files have already been trimmed and exist in ${iFolder}/trimmed
+    "  >>  $starSubmissionStep1a
+    			done
+    		fi
+    			#the trimmed files have a slightly different output
+    			# prefix each fastq name with "trimmed/" so the trimmed outFolder is found
+    		for i in `seq 0 $f1_array_length`;do
+    			f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' | sed 's/.fastq/_val_1.fq/g'`
+    		done	
+    		for i in `seq 0 $f1_array_length`;do
+    			f2array[i]=`echo ${f2array[i]} | awk -F'/' '{print "trimmed/"$NF}' | sed 's/.fastq/_val_2.fq/g'`
+    		done
+    		echo ${f1array[@]}
+    		echo ${f2array[@]}
+    		if [[ "$summary" == "trimmed_exist" ]];then     
+                            echo "
+# trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
-                	for i in `seq 0 $f1_array_length`;do
-				files_exist ${iFolder}/${f1array[i]}
-				files_exist ${iFolder}/${f2array[i]}
-			done
-		fi
+                for i in `seq 0 $f1_array_length`;do
+    				files_exist ${oFolder}/${f1array[i]}
+    				files_exist ${oFolder}/${f2array[i]}
+    			done
+    		fi
 
-                #check that the trimming has happened. If not then exit
-                #echo "
-#if [ ! -e ${iFolder}/$f1 ]; then exit;fi" >> $starSubmissionStep1a
-            #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
-	fi
+                    #check that the trimming has happened. If not then exit
+                    #echo "
+    #if [ ! -e ${iFolder}/$f1 ]; then exit;fi" >> $starSubmissionStep1a
+                #if QC step is wanted and ran successfully then the trimmed fastqs should be aligned.
+    	fi
 
 	# if the fastq files come in pieces, STAR takes them as A_R1.fastq,B_R1.fastq A_R2.fastq,B_R2.fastq. 
 	# if files have just been trimmed, append scratch0. If files already trimmed or not trimmed then append iFolder. 
@@ -549,31 +579,33 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 	if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
 		fastqFolder=${SCRATCH_DIR}
 	else
-		fastqFolder=${iFolder}
+		fastqFolder=${oFolder}
 	fi
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	f2_total=`echo ${f2array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
-		    
+	# two-pass mode - currently a hidden feature
+    if [[ "$summary" == "twopass" ]]; then
+        twopass="--twopassMode Basic"
+    	memorymode="NoSharedMemory"
+    else
+        twopass=""
+	memorymode="LoadAndKeep"
+    fi
+
+    # align with STAR	    
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
-	" >> $starSubmissionStep1a
-	if [[ "${trim_galore}" == "yes" ]];then
-		echo "
 # move the trimmed files back to trimmed folder in iFolder
-mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," " " `
-		" >> $starSubmissionStep1a
-	fi
-	echo "
+mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
+
 # move the SJ.tab
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
-	" >> $starSubmissionStep1a
-	# if you only want Splice Junction files then the sorting and duplicate marking is not needed.
-	if [[ "$force" != "SJsOnly" ]]; then
-	echo "
-# sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
-$novosort --md --xs -f -t ${SCRATCH_DIR} -6 -c 3 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+
+# move the unsorted bam file back to the outFolder for sorting in Step1b
+mv ${SCRATCH_DIR}/${sample}Aligned.out.bam ${finalOFolder}/${sample}_unsorted.bam	
+
 date >&2
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
@@ -581,85 +613,109 @@ mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 	" >> $starSubmissionStep1a
-        fi
-	#if single ended
-        else
-	fastqFolder=${iFolder}
-		if [[ "${trim_galore}" == "yes" ]];then
+#################### 
+# IF SINGLE ENDED
+####################
+    elif [[ "$paired" == "no" ]]; then
+	   fastqFolder=${iFolder}
+       # if Trimming is desired, do it single ended
+		
+        if [[ "${trim_galore}" == "yes" ]];then
 			echo $summary           
-                	fastqFolder=${SCRATCH_DIR}
+            fastqFolder=${SCRATCH_DIR}
 			trimmedFolder=`dirname ${oFolder} | awk '{print $1"/trimmed/"}' `
 			if [ ! -e $trimmedFolder ]; then mkdir ${trimmedFolder};fi
-			if [[ "$summary" != "trimmed_exist" ]];then
-                		for i in `seq 0 $f1_array_length `;do # trim each fastq separately
+			
+            if [[ "$summary" != "trimmed_exist" ]];then
+                #trim each fastq separately
+                for i in `seq 0 $f1_array_length `;do
 					echo "
 # trim single end with Trim Galore. Trim adapters and low quality (phred below 20)
 $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cutadapt ${iFolder}/${f1array[i]}
 " >> $starSubmissionStep1a
 				done
-                	fi
+            fi
 		#the trimmed files have a slightly different output
 			for i in `seq 0 $f1_array_length`;do
 				f1array[i]=`echo ${f1array[i]} | awk -F'/' '{print "trimmed/"$NF}' |  sed 's/.fastq/_trimmed.fq/g'`
-        		done
-        		if [[ "$summary" == "trimmed_exist" ]];then     
-                		fastqFolder=${iFolder}
+        	done
+        	if [[ "$summary" == "trimmed_exist" ]];then     
+                fastqFolder=${iFolder}
 				echo "
-# trimmed_exist selected. Files have already been trimmed and exist in ${iFolder}/trimmed
+# trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
-         			for i in `seq 0 $f1_array_length`;do
-         				files_exist ${iFolder}/${f1array[i]}
-         			done
-			fi
-         	fi
-		#does not work if the support table has subfolders! #check that the trimming has happened. If not then exit
-                #echo "  if [ ! -e ${iFolder}/$f1 ]; then exit;fi " >> $starSubmissionStep1a
-            #if trimming has occurred then the trimmed fastq will be aligned
-        # STAR    
-	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
-	echo "
+         		for i in `seq 0 $f1_array_length`;do
+         			files_exist ${iFolder}/${f1array[i]}
+         		done
+            fi
+         fi
+
+    # get fastq pieces in right format   
+	f1_total=`echo ${f1array[@]} | 
+    awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | 
+    sed 's/,$//g'  `
+	# twopass mode
+    if [[ "$summary" == "twopass" ]]; then
+        twopass="--twopassMode Basic"
+        memorymode="NoSharedMemory"
+    else
+        twopass=""
+    memorymode="LoadAndKeep"
+    fi
+
+    # STAR alignment
+    echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad LoadAndKeep --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+
 # move the trimmed files back to trimmed folder in iFolder
-mv -t ${iFolder}/trimmed `echo $f1_total | tr "," " " `
+mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " `
+
 # move splice junction files
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
-" >> $starSubmissionStep1a
-	if [[ "$force" != "SJsOnly" ]];then
-		echo " 
-# sort reads and mark duplicates with NovoSort
-$novosort --md --xs -f -t ${SCRATCH_DIR} -6 -c 3 -m 30G ${SCRATCH_DIR}/${sample}Aligned.out.bam -o ${finalOFolder}/${sample}_unique.bam
+
+# move the unsorted bam file back to the outFolder for sorting in Step1b
+mv ${SCRATCH_DIR}/${sample}Aligned.out.bam ${finalOFolder}/${sample}_unsorted.bam  
+
 date >&2
+
 # move all Log files
 mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
+
 # remove old bam file
-rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
+#rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
-" >> $starSubmissionStep1a
+    " >> $starSubmissionStep1a
 	fi 
-    fi
-    done
+done
 
-    echo "
+echo "
 # clean up 
 rm -rf $JAVA_DIR
 " >> $starSubmissionStep1a
-    echo "
+echo "
 # move trimming reports if created
 if [ -e ${SCRATCH_DIR}/trimmed/*trimming* ];then
-	mv ${SCRATCH_DIR}/trimmed/*trimming* ${iFolder}/trimmed/
+	mv ${SCRATCH_DIR}/trimmed/*trimming* ${oFolder}/trimmed/
 fi
+
+rm -rf ${SCRATCH_DIR}
+" >> $starSubmissionStep1a
+
+if [[ "$summary" == "twopass" ]];then
+	echo "
 # remove genome from memory
 ${starexec} --genomeLoad Remove --genomeDir ${STARdir}
-# a clean slate
-rm -rf ${SCRATCH_DIR}
 
 " >> $starSubmissionStep1a
+fi
 }
 
+########################################
+# STEP1B: sorting and duplicate marking
+########################################
 
-# sorting and duplication removal
 function starSubmissionStep1b {
 # per sample
 # if the master table has been made before then remove it. Otherwise every time the submission script is run then more lines are appended to it.
@@ -669,11 +725,21 @@ function starSubmissionStep1b {
   tail -n +2  $dataframe | while read sample f1 f2 condition
   do
 	finalOFolder=${oFolder}/${sample}
-   echo "
+    SCRATCH_1b=/scratch0/${USER}/${sample}_sort/
+    echo "
+mkdir -p ${SCRATCH_1b}
+# sort reads and mark duplicates with NovoSort. Write unique.bam back to original folder
+$novosort --md --xs -f -t ${SCRATCH_1b} -6 -c 2 -m 12G ${finalOFolder}/${sample}_unsorted.bam -o ${finalOFolder}/${sample}_unique.bam
+
+# if sorting is successful then remove the unsorted bam file
+if [ -e ${finalOFolder}/${sample}_unique.bam ];then
+    rm ${finalOFolder}/${sample}_unsorted.bam
+fi
 ${samtools} index ${finalOFolder}/${sample}_unique.bam
+
 ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sample}_mappingStats.tab
 " > ${oFolder}/cluster/submission/star_step1b_${sample}.sh
-      echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
+    echo "${oFolder}/cluster/submission/star_step1b_${sample}.sh" >> $starMasterTableStep1b
   done
   # the job array will start the SGE_TASK_ID at 2 and iterate through. 
   # Therefore the first 1b script will run at SGE_TASK_ID=2 
@@ -683,14 +749,16 @@ ${samtools} flagstat ${finalOFolder}/${sample}_unique.bam > ${finalOFolder}/${sa
   starSubmissionStep1b=${oFolder}/cluster/submission/starSubmissionStep1b.sh
   echo "
 #$ -S /bin/bash
-#$ -l h_vmem=9.5G
-#$ -l tmem=9.5G
+#$ -l h_vmem=7.75G
+#$ -l tmem=7.75G
 #$ -l h_rt=24:00:00
-#$ -pe smp 1
+#$ -pe smp 2
 #$ -R y
 #$ -o ${oFolder}/cluster/out
 #$ -e ${oFolder}/cluster/error
 #$ -N step1b_${code}
+#$ -l scr=20G
+#$ -l tscratch=20G 
 #$ -wd ${oFolder}
 #$ -t 2-${njobs1b}
 #$ -tc 20
@@ -715,18 +783,11 @@ function starSubmissionStep2 {
         dexseqfolder=${oFolder}/${sample}/dexseq
 
 	finalOFolder=${oFolder}/${sample}
-	if [[ "$summary" == "featureCounts" ]];then
 	echo "
-#deseq counts
-Rscript $RfeatureCounts --bamFile ${finalOFolder}/${sample}_unique.bam --paired ${paired} --countStrand ${countStrand} --GTF ${gtfFile} --outFile ${dexseqfolder}/${sample}_deseq_counts.txt
-" > ${oFolder}/cluster/submission/star_step2_${sample}.sh
-	elif [[ "$summary" != "featureCounts" ]];then
-	echo "
-#dexseq counts
 $samtools view -F 0x0400 ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
 $samtools view ${finalOFolder}/${sample}_unique.bam |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
 " > ${oFolder}/cluster/submission/star_step2_${sample}.sh
-	fi
+
         echo "${oFolder}/cluster/submission/star_step2_${sample}.sh" >> $starMasterTableStep2
 
     done
@@ -794,22 +855,17 @@ ${Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile}
     ##############
     if [[ "$Rdeseq" == "yes" ]]
     then
-        files_exist $deseqFinalProcessR $dataframe $deseqFeatureCounts
-    	if [[ "$summary" == "featureCounts" ]];then
-		echo "
-${Rscript} ${deseqFeatureCounts} --support.frame ${dataframe} --oFolder ${oFolder} --annotation.file ${annotationFile} --code ${code} > ${clusterFolder}/R/deseq_featureCounts_${stem}.out
-		" >> $starSubmissionStep3 
-    	elif [[ "$summary" != "featureCounts" ]];then 
-		echo "
+        files_exist $deseqFinalProcessR $dataframe
+    echo "
 ${Rscript} ${deseqFinalProcessR} --keep.sex ${keepSex} --support.frame ${dataframe} --keep.dups ${keepDups} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/deseq_${stem}.out 
-    		" >> $starSubmissionStep3
-    	fi
+    " >> $starSubmissionStep3
     fi
     ##############
     if [[ "$Rdexseq" == "yes" ]]
     then
         files_exist $dexseqFinalProcessR $dataframe
     echo "
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 ${Rscript} ${dexseqFinalProcessR} --gff ${gffFile} --keep.sex ${keepSex} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --annotation.file ${annotationFile} --iFolder ${oFolder} > ${clusterFolder}/R/dexseq_${stem}.out
     " >> $starSubmissionStep3
     fi

@@ -88,3 +88,10 @@ Two flags in the submission script, `summary` and `force` are now deprecated. Th
 #### Realign files that have already been trimmed
   Useful if pipeline has crashed downstream of trimming.
 * Set `trim_galore` to `yes` and `summary` to `trimmed_exist`.
+
+#### Two-pass mapping with STAR
+  If you're interested in novel/unannotated splicing events you should consider using STAR's two-pass mapping mode. 
+  This first aligns your reads using a known set of transcripts (provided by Ensembl), with any novel splice junctions being mapped. It then incorporates those novel junctions into the referene and re-aligns.
+  The two-pass approach will not necessarily increase the detection of novel junctions but will improve the number of splice reads mapping to them.
+  It is however much slower than the usual mode.
+  * Set `summary` to `twopass`
