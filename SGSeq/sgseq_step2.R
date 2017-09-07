@@ -5,7 +5,8 @@
 
 library(SGSeq) 
 library(DEXSeq)
-library(dplyr) 
+library(dplyr)
+library(ggplot2)
 
 library(optparse)
 options(echo=T)
@@ -15,7 +16,7 @@ option_list <- list(
     make_option(c('--step'), help='', default = ""), 
     make_option(c('--code'), help='', default = ""),
     make_option(c('--output.dir'), help='', default = ""),
-    make_option(c('--species'), help='', default = "mouse")
+    make_option(c('--annotation'), help='', default = "")
 )
 
 
@@ -26,13 +27,14 @@ support.tab <- opt$support.tab
 code <- opt$code
 step <- opt$step 
 output.dir <- opt$output.dir
-species <- opt$species 
+species <- opt$species
+annotations.tab <- opt$annotation
 
-if(species == "mouse") { 
-annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab" 
-} else if (species == "human") { 
-annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab" 
-} 
+# if(species == "mouse") { 
+# annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab" 
+# } else if (species == "human") { 
+# annotations.tab <- "/cluster/scratch3/vyp-scratch2/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab" 
+# } 
 
 # read in annotation
 annotation <- read.table(annotations.tab, header = TRUE) 
@@ -111,86 +113,92 @@ for (condition in list.conditions) {
   support.loc$condition <- factor(support[, condition])
   
   # subset the samples from the matrix that are to be tested
- varcounts.loc <- varcounts[, !is.na(support[,condition]) ]
+  varcounts.loc <- varcounts[, !is.na(support[,condition]) ]
   #loc.countFiles <- countFiles[ !is.na(support.loc$condition) ]
   support.loc <-  support.loc[ !is.na(support.loc$condition), ]
 
-# create formula
-formuladispersion <- ~ sample + (condition + type) * exon
-formula0 <-  ~ sample + condition
-formula1 <-  ~ sample + condition * exon
-
-# run DEXSeq
-if(!file.exists(dexseq.data)) { 
-DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts.loc,
-                                              sampleData = support.loc,
-                                              design = formula1,
-                                        featureID = as.factor(vid),
-                                        groupID = as.factor(eid))
-
-DexSeqExons.loc <- estimateSizeFactors(DexSeqExons.loc)
-DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc)
-DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc)
-DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
-
-# save data
-save(DexSeqExons.loc, file = dexseq.data) 
-} else { # mainly for testing
-load(dexseq.data) 
-} 
-
-res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
-res.clean <- as.data.frame(res)
-
-## just for testing
-##}
-##quit()
-
-sample.data <- colData(sgvc)
-# remove any not in our condition
-sample.data <- sample.data[!is.na(support[,condition]), ]
+  # create formula
+  formuladispersion <- ~ sample + (condition + type) * exon
+  formula0 <-  ~ sample + condition
+  formula1 <-  ~ sample + condition * exon
   
-sample.names <- sample.data$sample_name 
-n.samples <- length(sample.names) 
-count.start <- which(names(res.clean) == "countData.1") 
-last <- count.start+n.samples-1 
-names(res.clean)[count.start:last] <- sample.names 
-
-res.clean$genomicData <- NULL 
-res.clean$FDR <- p.adjust(res.clean$pvalue, method = 'fdr')
-
-sgvc.df <- as.data.frame(mcols(sgvc) )
-psi <- variantFreq(sgvc)
-
-if (length(noreads) > 0) { 
+  # run DEXSeq
+  if(!file.exists(dexseq.data)) { 
+    DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts.loc,
+                                     sampleData = support.loc,
+                                     design = formula1,
+                                     featureID = as.factor(vid),
+                                     groupID = as.factor(eid))
+    
+    DexSeqExons.loc <- estimateSizeFactors(DexSeqExons.loc)
+    DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc)
+    DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc)
+    DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
+    
+    # save data
+    save(DexSeqExons.loc, file = dexseq.data) 
+  } else { # mainly for testing
+    load(dexseq.data) 
+  } 
+  
+  res <- DEXSeq::DEXSeqResults (DexSeqExons.loc)
+  res.clean <- as.data.frame(res)
+  
+  ## just for testing
+  ##}
+  ##quit()
+  
+  sample.data <- colData(sgvc)
+  # remove any not in our condition
+  sample.data <- sample.data[!is.na(support[,condition]), ]
+  
+  sample.names <- sample.data$sample_name 
+  n.samples <- length(sample.names) 
+  count.start <- which(names(res.clean) == "countData.1") 
+  last <- count.start+n.samples-1 
+  names(res.clean)[count.start:last] <- sample.names 
+  
+  res.clean$genomicData <- NULL 
+  res.clean$FDR <- p.adjust(res.clean$pvalue, method = 'fdr')
+  
+  sgvc.df <- as.data.frame(mcols(sgvc) )
+  psi <- variantFreq(sgvc)
+  
+  if (length(noreads) > 0) { 
     sgvc.df <- sgvc.df[-noreads,]
     psi <- psi[-noreads,] 
-} 
-
-colnames(psi) <- paste0(colnames(psi)  , "_psi") 
-res.clean <- cbind(res.clean, psi) 
-res.clean$geneName <- sgvc.df$geneName
-res.clean$txName <- sgvc.df$txName
-res.clean$eventID <- sgvc.df$eventID
-res.clean$variantType <- sgvc.df$variantType
-res.clean$from <- sgvc.df$from
-res.clean$to <- sgvc.df$to
-res.clean$type <- sgvc.df$type
-res.clean <- res.clean[order(res.clean$pvalue), ]
-
-makePretty <- function(x) { paste(unlist(x), collapse = "+") } 
-
-# Now match the ensembl ID back to more human readable IDs 
-
-getHugoName <- function(x) { paste(annotation[unlist(x), "external_gene_name"], collapse="+" ) } 
-
-res.clean <- dplyr::mutate(res.clean , ensemblName=unlist(lapply(geneName, makePretty))) 
-res.clean <- dplyr::mutate(res.clean , geneName=unlist(lapply(geneName, getHugoName))) 
-res.clean <- dplyr::mutate(res.clean , txName=unlist(lapply(txName, makePretty))) 
-res.clean <- dplyr::mutate(res.clean , variantType=unlist(lapply(variantType, makePretty))) 
-
-# save and write
-save(res.clean, file =  res.clean.data) 
-write.table(res.clean, file = res.clean.fname, sep = "\t")
-
+  } 
+  
+  colnames(psi) <- paste0(colnames(psi)  , "_psi") 
+  res.clean <- cbind(res.clean, psi) 
+  res.clean$geneName <- sgvc.df$geneName
+  res.clean$txName <- sgvc.df$txName
+  res.clean$eventID <- sgvc.df$eventID
+  res.clean$variantType <- sgvc.df$variantType
+  res.clean$from <- sgvc.df$from
+  res.clean$to <- sgvc.df$to
+  res.clean$type <- sgvc.df$type
+  res.clean <- res.clean[order(res.clean$pvalue), ]
+  
+  makePretty <- function(x) { paste(unlist(x), collapse = "+") } 
+  
+  # Now match the ensembl ID back to more human readable IDs 
+  
+  getHugoName <- function(x) { paste(annotation[unlist(x), "external_gene_name"], collapse="+" ) } 
+  
+  res.clean <- dplyr::mutate(res.clean , ensemblName=unlist(lapply(geneName, makePretty))) 
+  res.clean <- dplyr::mutate(res.clean , geneName=unlist(lapply(geneName, getHugoName))) 
+  res.clean <- dplyr::mutate(res.clean , txName=unlist(lapply(txName, makePretty))) 
+  res.clean <- dplyr::mutate(res.clean , variantType=unlist(lapply(variantType, makePretty))) 
+  
+  # save and write
+  save(res.clean, file =  res.clean.data) 
+  write.table(res.clean, file = res.clean.fname, sep = "\t")
+  
+  source("/SAN/vyplab/HuRNASeq/RNASeq_pipeline/SGSeq/makePieChartsAllEvents.R")
+  
+  try(
+    makePieChart(sgseqRes = res.clean, title = paste0(code, "_", conditions.name), FDRlimit = 0.01, outFolder = condition.dir )
+  )
 }
+

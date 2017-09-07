@@ -25,10 +25,15 @@ print( "creating SGSeq transcript annotations")
 print( paste( "from", gtf ) )
 
 
+# tx <- importTranscripts(gtf) 
+# txf_ucsc <- convertToTxFeatures(tx)
+# sgf_ucsc <- convertToSGFeatures(txf_ucsc)
+# sgv <- findSGVariants(sgf_ucsc)
+
 tx <- importTranscripts(gtf) 
-txf_ucsc <- convertToTxFeatures(tx)
-sgf_ucsc <- convertToSGFeatures(txf_ucsc)
-sgv <- findSGVariants(sgf_ucsc)
+txf <- convertToTxFeatures(tx) 
+sgf <- convertToSGFeatures(txf) 
+sgv <- findSGVariants(sgf)
 
 print( paste( "saving to:", sgseq.anno )  )
-save(sgv, file = sgseq.anno) 
+save(tx, txf, sgf, sgv, file = sgseq.anno) 

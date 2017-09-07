@@ -3,6 +3,9 @@ library(optparse)
 library(stringr)
 options(echo=T)
 
+# for debugging
+#load("../../Fly_C9/SGSeq/Fly_C9_txf_novel.RData")
+
 nCores <- 8
 # Finds novel transcripts and obtain the variant counts 
 
@@ -67,10 +70,18 @@ txf_novel <- predictTxFeatures(sample.info, min_junction_count = 5, verbose = TR
 
 save(txf_novel, file = paste0(output.dir, "/", code, "_txf_novel.RData")) 
 
-txf_novel <- keepSeqlevels(txf_novel, paste0("chr",c(1:19, "X", "Y")))
+# drop any sequence features that aren't part of standard chromosomes
+# only works for humans - what about flies? remove anything that lacks "_".
+#txf_novel <- keepSeqlevels(txf_novel, paste0("chr",c(1:19, "X", "Y")))
+keepChrs <- seqnames(txf_novel@seqinfo)[!grepl( "_", seqnames(txf_novel@seqinfo) ) ]
+print( "keeping only sequences from:")
+print(keepChrs)
+txf_novel <- keepSeqlevels( txf_novel, keepChrs )
+
+
 sgf_novel <- convertToSGFeatures(txf_novel)
 sgf_novel <- annotate(sgf_novel, txf)
 sgv_novel <- findSGVariants(sgf_novel, include = "all")
 
 sgvc_novel <- getSGVariantCounts(sgv_novel, sample_info = sample.info, cores = nCores, min_denominator = 10, verbose = TRUE)
-save(sgf_novel, sgv_novel, sgvc_novel, file = paste0(output.dir, "/", code, "_sgv_novel.RData")) 
+save(sgf_novel, file = paste0(output.dir, "/", code, "_sgv_novel.RData")) 

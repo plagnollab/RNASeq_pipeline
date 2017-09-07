@@ -57,8 +57,14 @@ script_step2a=${outputDir}/cluster/submission/sgseq_step2a.sh
 script_step2b=${outputDir}/cluster/submission/sgseq_step2b.sh 
 Rscript=/share/apps/R-3.3.2/bin/Rscript
 
+Rdir=${outputDir}/cluster/R
+out_step0=${Rdir}/sgseq_step0.out
+out_step1a=${Rdir}/sgseq_step1a.out
+out_step1b=${Rdir}/sgseq_step1b.out
+out_step2a=${Rdir}/sgseq_step2a.out
+out_step2b=${Rdir}/sgseq_step2b.out
 # make directories
-for dir in $outputDir ${outputDir}/cluster/out ${outputDir}/cluster/error ${outputDir}/cluster/submission ${outputDir}/cluster/R; do
+for dir in $outputDir ${outputDir}/cluster/out ${outputDir}/cluster/error ${outputDir}/cluster/submission ${Rdir}; do
 	if [ ! -e $dir ];then
 		mkdir -p $dir
 	fi
@@ -73,20 +79,24 @@ fi
 case "$species" in  
 	worm)
 	   gtf=${refFolder}/Worm/Caenorhabditis_elegans.WBcel235.89.gtf
-       sgseqAnno=${refFolder}/Worm/Caenorhabditis_elegans.WBcel235.89.sgseqAnno.Rdata
+	   annotation=${refFolder}/Worm/biomart_annotations_worm.tab 
+     sgseqAnno=${refFolder}/Worm/Caenorhabditis_elegans.WBcel235.89.sgseqAnno.Rdata
 	;;
 	fly)
-        gtf=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.gtf
-        sgseqAnno=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.sgseqAnno.Rdata
-        ;;
+     gtf=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.gtf
+     annotation=${refFolder}/Fly/biomart_annotations_fly.tab
+     sgseqAnno=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.sgseqAnno.Rdata
+  ;;
 	mouse)
 	   gtf=${refFolder}/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
-       sgseqAnno=${refFolder}/Mouse/Mus_musculus.GRCm38.82_fixed.sgseqAnno.Rdata
-	   ;;
+	   annotation=${refFolder}/Mouse/biomart_annotations_mouse.tab
+     sgseqAnno=${refFolder}/Mouse/Mus_musculus.GRCm38.82_fixed.sgseqAnno.Rdata
+	;;
 	human)
 	   gtf=${refFolder}/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
-       sgseqAnno=${refFolder}/Human_hg38/Homo_sapiens.GRCh38.82_fixed.sgseqAnno.Rdata 
-	   ;;
+	   annotation=${refFolder}/Human_hg38/biomart_annotations_human.tab
+     sgseqAnno=${refFolder}/Human_hg38/Homo_sapiens.GRCh38.82_fixed.sgseqAnno.Rdata 
+	;;
 	*)
         stop "unknown species $species"
 esac
@@ -97,6 +107,11 @@ else
     echo "GTF file exists"
 fi
 
+if [ ! -e $annotation ];then
+    stop "annotation file $annotation is missing"
+else
+  echo "annotation file exists"
+fi
 
 function step0 {
     echo "
@@ -110,7 +125,7 @@ function step0 {
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 
-$Rscript $step0 --gtf $gtf --sgseq.anno $sgseqAnno
+$Rscript $step0 --gtf $gtf --sgseq.anno $sgseqAnno > $out_step0
 " > $script_step0
 echo "step 0 - create SGSeq transcript objects"
 echo $script_step0
@@ -129,7 +144,9 @@ echo "
 #$ -cwd 
 }
 
-$Rscript --vanilla ${step1a} --support.tab ${support} --code ${code} --output.dir ${outputDir} --gtf ${gtf} --sgseq.anno ${sgseqAnno}
+$Rscript --vanilla ${step1a} --support.tab ${support} \
+  --code ${code} --output.dir ${outputDir} --gtf ${gtf} \
+  --sgseq.anno ${sgseqAnno} > ${out_step1a}
 " > $script_step1a
 
     echo "step1a - find all annotated splicing events"
@@ -150,7 +167,9 @@ function step1b {
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 
-$Rscript --vanilla ${step1b} --support.tab $support --code ${code} --output.dir ${outputDir} --gtf ${gtf} --sgseq.anno ${sgseqAnno} 
+$Rscript --vanilla ${step1b} --support.tab ${support} \
+  --code ${code} --output.dir ${outputDir} --gtf ${gtf} \
+  --sgseq.anno ${sgseqAnno}  > ${out_step1b}
 " > $script_step1b
     echo "step1b - find all annotated AND novel splicing events"
     echo $script_step1b
@@ -168,7 +187,8 @@ function step2a {
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 
-$Rscript --vanilla ${step2} --step step2a --support.tab ${support} --code ${code} --output.dir ${outputDir} 
+$Rscript --vanilla ${step2} --step step2a --support.tab ${support} \
+  --code ${code} --output.dir ${outputDir} --annotation ${annotation} > ${out_step2a}
 " > $script_step2a
     echo "step2a - run DEXSeq using the annotated event counts from SGSeq"
     echo $script_step2a
@@ -188,7 +208,8 @@ function step2b {
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 
-$Rscript --vanilla ${step2} --step step2b --support.tab ${support} --code ${code} --output.dir ${outputDir}
+$Rscript --vanilla ${step2} --step step2b --support.tab ${support} \
+  --code ${code} --output.dir ${outputDir} --annotation ${annotation} > ${out_step2b}
 " > $script_step2b
     echo "step2b - run DEXSeq using the annotated AND novel event counts from SGSeq"
     echo $script_step2b
