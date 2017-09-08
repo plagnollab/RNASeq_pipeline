@@ -1,5 +1,5 @@
 #!/bin/bash 
-memPerCore=2.8G # not recommended by Tristan
+memPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
 
 until [ -z "$1" ]
@@ -136,7 +136,7 @@ echo "
 #$ -S /bin/bash
 #$ -l h_vmem=${memPerCore},tmem=${memPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 8  
+#$ -pe smp 4  
 #$ -R y
 #$ -N SGSeq_${code}_step1a
 #$ -o ${outputDir}/cluster/out
@@ -160,7 +160,7 @@ function step1b {
 #$ -S /bin/bash
 #$ -l h_vmem=${memPerCore},tmem=${memPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 8
+#$ -pe smp 4
 #$ -N SGSeq_${code}_step1b  
 #$ -R y
 #$ -o ${outputDir}/cluster/out
@@ -180,7 +180,7 @@ function step2a {
 #$ -S /bin/bash
 #$ -l h_vmem=${memPerCore},tmem=${memPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 1  
+#$ -pe smp 4  
 #$ -N SGSeq_${code}_step2a
 #$ -R y
 #$ -o ${outputDir}/cluster/out
@@ -201,7 +201,7 @@ function step2b {
 #$ -S /bin/bash
 #$ -l h_vmem=${memPerCore},tmem=${memPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 1
+#$ -pe smp 4
 #$ -N SGSeq_${code}_step2b  
 #$ -R y
 #$ -o ${outputDir}/cluster/out
