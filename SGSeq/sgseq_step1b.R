@@ -6,7 +6,7 @@ options(echo=T)
 # for debugging
 #load("../../Fly_C9/SGSeq/Fly_C9_txf_novel.RData")
 
-nCores <- 8
+nCores <- 4
 # Finds novel transcripts and obtain the variant counts 
 
 option_list <- list(
@@ -66,7 +66,7 @@ load(sgseq.anno)
 #print(si_cases) 
 #txf_novel <- predictTxFeatures(si_cases, min_junction_count = 5, verbose = TRUE, cores = nCores)
 # originally just did this for the cases and not the controls - not sure about this.
-txf_novel <- predictTxFeatures(sample.info, min_junction_count = 5, verbose = TRUE, cores = nCores)
+txf_novel <- predictTxFeatures(sample.info, min_junction_count = 5, verbose = FALSE, cores = nCores, max_complexity = 15)
 
 save(txf_novel, file = paste0(output.dir, "/", code, "_txf_novel.RData")) 
 
