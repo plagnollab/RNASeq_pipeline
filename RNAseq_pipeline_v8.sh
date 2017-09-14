@@ -473,6 +473,11 @@ function starSubmissionStep1a {
     if [[ "$force" == "SJsOnly" ]];then
 	STARoutput="None"
     fi
+    if [[ "$force" == "chimeric" ]];then
+	    chimeraCommand="--chimSegmentMin 15"
+    else
+	    chimeraCommand=""
+    fi
     echo "
 #$ -S /bin/bash
 #$ -l h_vmem=10G,tmem=10G
@@ -596,7 +601,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     # align with STAR	    
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
@@ -667,7 +672,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     # STAR alignment
     echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 
 # move the trimmed files back to trimmed folder in iFolder
