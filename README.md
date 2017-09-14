@@ -95,3 +95,8 @@ Two flags in the submission script, `summary` and `force` are now deprecated. Th
   The two-pass approach will not necessarily increase the detection of novel junctions but will improve the number of splice reads mapping to them.
   It is however much slower than the usual mode.
   * Set `summary` to `twopass`
+
+#### Chimeric alignments
+  If you're interested in circular RNAs or fusion transcripts then you can turn on STAR's reporting of chimeric alignments with
+* Set `force` to `chimeric`
+  This will align samples as usual but for each sample will output separate `Chimeric.out.sam` and `Chimeric.out.junction` files. See the [STAR manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) for more details.
