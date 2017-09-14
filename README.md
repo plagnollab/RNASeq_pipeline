@@ -99,4 +99,5 @@ Two flags in the submission script, `summary` and `force` are now deprecated. Th
 #### Chimeric alignments
   If you're interested in circular RNAs or fusion transcripts then you can turn on STAR's reporting of chimeric alignments with
 * Set `force` to `chimeric`
-  This will align samples as usual but for each sample will output separate `Chimeric.out.sam` and `Chimeric.out.junction` files. See the [STAR manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) for more details.
+  
+This will align samples as usual but for each sample will output separate `Chimeric.out.sam` and `Chimeric.out.junction` files. See the [STAR manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) for more details.
