@@ -257,8 +257,9 @@ mkdir -p ${oFolder} ${clusterFolder} ${clusterFolder}/out ${clusterFolder}/error
 
 files_exist $dataframe 
 
-cp "$dataframe" "${oFolder}/"
-
+if [ `dirname $dataframe` != ${oFolder} ];then
+	cp "$dataframe" "${oFolder}/"
+fi
 
 case "$species" in
     zebrafish)

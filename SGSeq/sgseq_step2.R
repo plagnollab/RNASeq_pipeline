@@ -7,9 +7,10 @@ library(SGSeq)
 library(DEXSeq)
 library(dplyr)
 library(ggplot2)
+library(stringr)
 
 library(optparse)
-options(echo=T)
+options(echo=TRUE)
 
 option_list <- list(
     make_option(c('--support.tab'), help='', default = ""),
@@ -48,9 +49,11 @@ list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 # pick which counts file to use
 if (step == "step2a") { 
    sgvc.data <- paste0(output.dir, "/", code, "_sgvc.RData") 
+   print(sgvc.data)
    load(sgvc.data) 
 } else if (step == "step2b") { 
    sgvc.data <- paste0(output.dir, "/", code, "_sgv_novel.RData") 
+   print(sgvc.data)
    load(sgvc.data) 
    sgvc <- sgvc_novel 
 } else { 
@@ -136,7 +139,7 @@ for (condition in list.conditions) {
     DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
     
     # save data
-    save(DexSeqExons.loc, file = dexseq.data) 
+    save(DexSeqExons.loc, sgvc, support, annotations, file = dexseq.data) 
   } else { # mainly for testing
     load(dexseq.data) 
   } 
@@ -168,6 +171,9 @@ for (condition in list.conditions) {
     sgvc.df <- sgvc.df[-noreads,]
     psi <- psi[-noreads,] 
   } 
+
+  # select just the samples present in the condition
+  psi <- psi[, sample.names]
   
   colnames(psi) <- paste0(colnames(psi)  , "_psi") 
   res.clean <- cbind(res.clean, psi) 
@@ -178,8 +184,20 @@ for (condition in list.conditions) {
   res.clean$from <- sgvc.df$from
   res.clean$to <- sgvc.df$to
   res.clean$type <- sgvc.df$type
+
   res.clean <- res.clean[order(res.clean$pvalue), ]
+
+  createCoords <- function(from, to){
+    fromSplit <- str_split_fixed(from, ":", 4)
+    toSplit <- str_split_fixed(to, ":", 4)
+    coord <- ifelse( toSplit[,4] == "+", 
+      yes = paste0( toSplit[,2], ":", fromSplit[,3], "-", toSplit[,3]),
+      no = paste0( toSplit[,2], ":", toSplit[,3], "-", fromSplit[,3]) 
+      ) 
+  }
   
+  res.clean$coords <- createCoords( from = res.clean$from, to = res.clean$to)
+
   makePretty <- function(x) { paste(unlist(x), collapse = "+") } 
   
   # Now match the ensembl ID back to more human readable IDs 
@@ -198,7 +216,7 @@ for (condition in list.conditions) {
   source("/SAN/vyplab/HuRNASeq/RNASeq_pipeline/SGSeq/makePieChartsAllEvents.R")
   
   try(
-    makePieChart(sgseqRes = res.clean, title = paste0(code, "_", conditions.name), FDRlimit = 0.01, outFolder = condition.dir )
+    makePieChart(sgseqRes = res.clean, title = paste0(code, "_", conditions.name), FDRlimit = 0.05, outFolder = condition.dir )
   )
 }
 

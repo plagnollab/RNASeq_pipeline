@@ -1,5 +1,6 @@
 #!/bin/bash 
-memPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
+step1MemPerCore=7.5G # step1 keeps failing!
+step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
 
 until [ -z "$1" ]
@@ -83,7 +84,7 @@ case "$species" in
      sgseqAnno=${refFolder}/Worm/Caenorhabditis_elegans.WBcel235.89.sgseqAnno.Rdata
 	;;
 	fly)
-     gtf=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.gtf
+     gtf=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.82.chr.corrected.names.gtf
      annotation=${refFolder}/Fly/biomart_annotations_fly.tab
      sgseqAnno=${refFolder}/Fly/Drosophila_melanogaster.BDGP6.89.sgseqAnno.Rdata
   ;;
@@ -134,7 +135,7 @@ echo $script_step0
 function step1a {
 echo "  
 #$ -S /bin/bash
-#$ -l h_vmem=${memPerCore},tmem=${memPerCore}
+#$ -l h_vmem=${step1MemPerCore},tmem=${step1MemPerCore}
 #$ -l h_rt=72:00:00
 #$ -pe smp 4  
 #$ -R y
@@ -158,7 +159,7 @@ function step1b {
 #if [ $step = "step1b" ]; then  
     echo "  
 #$ -S /bin/bash
-#$ -l h_vmem=${memPerCore},tmem=${memPerCore}
+#$ -l h_vmem=${step1MemPerCore},tmem=${step1MemPerCore}
 #$ -l h_rt=72:00:00
 #$ -pe smp 4
 #$ -N SGSeq_${code}_step1b  
@@ -178,7 +179,7 @@ $Rscript --vanilla ${step1b} --support.tab ${support} \
 function step2a {
     echo "  
 #$ -S /bin/bash
-#$ -l h_vmem=${memPerCore},tmem=${memPerCore}
+#$ -l h_vmem=${step2MemPerCore},tmem=${step2MemPerCore}
 #$ -l h_rt=72:00:00
 #$ -pe smp 4  
 #$ -N SGSeq_${code}_step2a
@@ -199,7 +200,7 @@ $Rscript --vanilla ${step2} --step step2a --support.tab ${support} \
 function step2b {
     echo "  
 #$ -S /bin/bash
-#$ -l h_vmem=${memPerCore},tmem=${memPerCore}
+#$ -l h_vmem=${step2MemPerCore},tmem=${step2MemPerCore}
 #$ -l h_rt=72:00:00
 #$ -pe smp 4
 #$ -N SGSeq_${code}_step2b  

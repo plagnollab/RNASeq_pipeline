@@ -84,4 +84,4 @@ sgf_novel <- annotate(sgf_novel, txf)
 sgv_novel <- findSGVariants(sgf_novel, include = "all")
 
 sgvc_novel <- getSGVariantCounts(sgv_novel, sample_info = sample.info, cores = nCores, min_denominator = 10, verbose = TRUE)
-save(sgf_novel, file = paste0(output.dir, "/", code, "_sgv_novel.RData")) 
+save(sgf_novel, sgvc_novel, file = paste0(output.dir, "/", code, "_sgv_novel.RData")) 
