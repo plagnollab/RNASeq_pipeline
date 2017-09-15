@@ -213,7 +213,7 @@ for (condition in list.conditions) {
   
   # save and write
   save(res.clean, file =  res.clean.data) 
-  write.table(res.clean, file = res.clean.fname, sep = "\t")
+  write.table(res.clean, file = res.clean.fname, sep = "\t", row.names = FALSE)
   
   source("/SAN/vyplab/HuRNASeq/RNASeq_pipeline/SGSeq/makePieChartsAllEvents.R")
   
