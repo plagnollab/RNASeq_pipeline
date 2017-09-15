@@ -139,7 +139,7 @@ for (condition in list.conditions) {
     DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
     
     # save data
-    save(DexSeqExons.loc, sgvc, support, annotations, file = dexseq.data) 
+    save(DexSeqExons.loc, sgvc, support, annotation, file = dexseq.data) 
   } else { # mainly for testing
     load(dexseq.data) 
   } 
