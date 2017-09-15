@@ -187,7 +187,6 @@ for (condition in list.conditions) {
 
   res.clean$external_gene_ID <- annotation$external_gene_name[ match( res.clean$geneName, annotation$EnsemblID)]
 
-
   res.clean <- res.clean[order(res.clean$pvalue), ]
 
   createCoords <- function(from, to){
