@@ -492,6 +492,8 @@ function starSubmissionStep1a {
 echo \$HOSTNAME >&2
 date >&2
 mkdir -p $JAVA_DIR
+
+${starexec} --genomeLoad Remove --genomeDir ${STARdir}
 " > $starSubmissionStep1a
 
 # is trimming required?
@@ -564,10 +566,10 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     		echo ${f1array[@]}
     		echo ${f2array[@]}
     		if [[ "$summary" == "trimmed_exist" ]];then     
-                            echo "
+                        echo "
 # trimmed_exist selected. Files have already been trimmed and exist in ${oFolder}/trimmed
 " >> $starSubmissionStep1a      
-                for i in `seq 0 $f1_array_length`;do
+                	for i in `seq 0 $f1_array_length`;do
     				files_exist ${oFolder}/${f1array[i]}
     				files_exist ${oFolder}/${f2array[i]}
     			done
@@ -585,10 +587,15 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 	if [[ "$trim_galore" == "yes" && "$summary" != "trimmed_exist" ]];then
 		fastqFolder=${SCRATCH_DIR}
 	else
-		fastqFolder=${oFolder}
+		fastqFolder=${iFolder}
 	fi
 	f1_total=`echo ${f1array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
 	f2_total=`echo ${f2array[@]} | awk -v i=$fastqFolder 'BEGIN{RS=" ";ORS=","}{print i"/"$1}' | sed 's/,$//g'  `
+	
+	for fastq in `echo $f1_total $f2_total | tr ',' ' ' `; do
+		files_exist $fastq
+	done
+	
 	# two-pass mode - currently a hidden feature
     if [[ "$summary" == "twopass" ]]; then
         twopass="--twopassMode Basic"
@@ -603,9 +610,14 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
 # align with STAR. Output = ${STARoutput}
 ${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
+	" >> $starSubmissionStep1a
+	if [ "$trim_galore" == "yes" ];then
+		echo "
 # move the trimmed files back to trimmed folder in iFolder
 mv -t ${oFolder}/trimmed `echo $f1_total | tr "," " " ` `echo $f2_total | tr "," 0" " `
-
+	" >> $starSubmissionStep1a
+	fi
+	echo "
 # move the SJ.tab
 mv ${SCRATCH_DIR}/${sample}SJ.out.tab ${finalOFolder}/
 
@@ -619,6 +631,13 @@ mv ${SCRATCH_DIR}/${sample}Log* ${finalOFolder}/
 rm ${SCRATCH_DIR}/${sample}Aligned.out.bam
 
 	" >> $starSubmissionStep1a
+
+	if [[ "$force" == "chimeric" ]];then
+		echo "
+mv -t ${finalOFolder} ${SCRATCH_DIR}/${sample}Chimeric.out.junction ${SCRATCH_DIR}/${sample}Chimeric.out.sam
+	" >> $starSubmissionStep1a
+	fi
+
 #################### 
 # IF SINGLE ENDED
 ####################
