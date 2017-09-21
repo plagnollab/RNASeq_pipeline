@@ -48,7 +48,7 @@ options(echo=T)
 #f210i.res.clean <- read.table(f210i.res,header=TRUE)
 #m323k.res.clean <- read.table(m323k.res,header=TRUE)
 
-makePieChart <- function(sgseqRes, title, FDRlimit, outFolder){
+makePieChart <- function(sgseqRes, title, FDRlimit, outFolder = NA){
   # filter by FDR < 0.01!
   res.sig <- dplyr::filter(sgseqRes, FDR < FDRlimit) %>% select(one_of(c("groupID", "variantType", "FDR")) ) 
   # for each groupID take one event
@@ -61,26 +61,28 @@ makePieChart <- function(sgseqRes, title, FDRlimit, outFolder){
   print(res.events)
   print( sum(res.events) )
   res.events.plot <- c() 
-  res.events.plot["Cassette exons"] <- res.events["S2E:I"] + res.events["S2E:S"] + res.events["SE:I"] + res.events["SE:S"]
-  res.events.plot["Retained introns"] <- res.events["RI:E"] + res.events["RI:R"] 
-  res.events.plot["Alternative first exon"] <- res.events["AS"] + res.events["AFE"] 
-  res.events.plot["Alternative last exon"] <- res.events["AE"] + res.events["ALE"] 
-  res.events.plot["Alternative 3' site"] <- res.events["A3SS:P"] + res.events["A3SS:D"] 
-  res.events.plot["Alternative 5' site"] <- res.events["A5SS:P"] + res.events["A5SS:D"] 
-  res.events.plot["Mutually exclusive exons"] <- res.events["MXE"]
+  res.events.plot["Cassette exons"] <- sum( c( res.events["S2E:I"], res.events["S2E:S"], res.events["SE:I"], res.events["SE:S"] ), na.rm = TRUE )
+  res.events.plot["Retained introns"] <- sum( c( res.events["RI:E"] + res.events["RI:R"] ), na.rm = TRUE )
+  res.events.plot["Alternative first exon"] <- sum( c(res.events["AS"] + res.events["AFE"] ), na.rm = TRUE )
+  res.events.plot["Alternative last exon"] <- sum( c(res.events["AE"] + res.events["ALE"] ), na.rm = TRUE )
+  res.events.plot["Alternative 3' splice site"] <- sum( c(res.events["A3SS:P"] + res.events["A3SS:D"] ), na.rm = TRUE)
+  res.events.plot["Alternative 5' splice site"] <- sum( c(res.events["A5SS:P"] + res.events["A5SS:D"] ), na.rm = TRUE)
+  res.events.plot["Mutually exclusive exons"] <- sum( c(res.events["MXE"]), na.rm = TRUE )
   res.events.plot <- as.data.frame(res.events.plot) 
   names(res.events.plot) <- "varcounts" 
+  print( res.events.plot)
   res.events.plot$variantType <- row.names(res.events.plot)
   res.events.plot <- res.events.plot[ order(res.events.plot$varcounts,decreasing=FALSE),]  
   res.events.plot$variantType <- factor(res.events.plot$variantType, levels = rev(res.events.plot$variantType) )
   res.events.plot <- dplyr::mutate(res.events.plot, pos = cumsum(varcounts) - 0.5*varcounts) 
   res.events.plot$prop <- signif( (res.events.plot$varcounts / sum(res.events.plot$varcounts) ) * 100, 3) 
   res.events.plot$prop <- paste0(res.events.plot$prop, "%")
+  res.events.plot <- res.events.plot[ res.events.plot$varcounts >0 ,]
   
   pie <- ggplot(res.events.plot, aes(x="", y = varcounts, fill = variantType)) + 
     geom_bar(width = 1, stat="identity")  + 
     geom_text(aes(x=1.6, y = pos, label = prop), size = 3 ) +
-    coord_polar(theta="y") + 
+    coord_polar(theta="y") +
     scale_fill_brewer("",palette="Dark2", direction = 1) + 
     theme_void() +
     ggtitle(title) +
@@ -88,9 +90,11 @@ makePieChart <- function(sgseqRes, title, FDRlimit, outFolder){
              label = paste0("total number of events at adjusted p < ",FDRlimit,": ", num.events ) )
   
   print(pie)
+  if( !is.na(outFolder)){
   ggsave(paste0(outFolder,"/", title, "_sgseq_pie_chart.pdf") )
   
   write.table( res.events.plot, paste0(outFolder, "/", title, "_sgseq_variant_type_table.tab"), col.names = TRUE, sep = "\t")
+  }
 } 
 # 
 # makePieChart(f210i.res.clean, "RRM2mut", 0.01, f210i.dir)
