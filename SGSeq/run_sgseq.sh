@@ -125,7 +125,7 @@ function step0 {
 #$ -o ${outputDir}/cluster/out
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
-
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 $Rscript $step0 --gtf $gtf --sgseq.anno $sgseqAnno > $out_step0
 " > $script_step0
 echo "step 0 - create SGSeq transcript objects"
@@ -144,8 +144,8 @@ echo "
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
 }
-
-$Rscript --vanilla ${step1a} --support.tab ${support} \
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
+R$script --vanilla ${step1a} --support.tab ${support} \
   --code ${code} --output.dir ${outputDir} --gtf ${gtf} \
   --sgseq.anno ${sgseqAnno} > ${out_step1a}
 " > $script_step1a
@@ -167,7 +167,7 @@ function step1b {
 #$ -o ${outputDir}/cluster/out
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
-
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 $Rscript --vanilla ${step1b} --support.tab ${support} \
   --code ${code} --output.dir ${outputDir} --gtf ${gtf} \
   --sgseq.anno ${sgseqAnno}  > ${out_step1b}
@@ -187,7 +187,7 @@ function step2a {
 #$ -o ${outputDir}/cluster/out
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
-
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 $Rscript --vanilla ${step2} --step step2a --support.tab ${support} \
   --code ${code} --output.dir ${outputDir} --annotation ${annotation} > ${out_step2a}
 " > $script_step2a
@@ -208,7 +208,7 @@ function step2b {
 #$ -o ${outputDir}/cluster/out
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
-
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 $Rscript --vanilla ${step2} --step step2b --support.tab ${support} \
   --code ${code} --output.dir ${outputDir} --annotation ${annotation} > ${out_step2b}
 " > $script_step2b
