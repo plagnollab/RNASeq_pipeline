@@ -43,16 +43,16 @@ and then run R
 
 # Input 1: Sample Table
 
-The key input is a table in **tab delimited** plain text format that contains one row per sample, with the header line:
-```
-sample  f1  f2  condition_A condition_B  type_1
-control_1	sample1_R1.fastq.gz	sample1_R2.fastq.gz	control	control	female
-mutation_A_1	sample2_lane1_R1.fastq.gz,sample2_lane._R1.fastq.gz	sample2_lane1.fastq.gz,sample2_lane2.fastq.gz	mutation_A	NA	male
-mutation_B_1	sample3_R1.fastq.gz	sample3_R2.fastq.gz	NA	mutation_B	female
-```
+The key input is a table in **tab delimited** plain text format that contains one row per sample, with a header line. Here is a simple example:
+
+sample | f1 | f2 | condition_A | condition_B | type_1
+-------|----|----|-------------|-------------|-------
+control_1 | sample1_R1.fastq.gz | sample1_R2.fastq.gz |control | control | female
+mutation_A_1 | sample2_lane1_R1.fastq.gz,sample2_lane._R1.fastq.gz | sample2_lane1.fastq.gz,sample2_lane2.fastq.gz | mutation_A | NA | male
+mutation_B_1 |sample3_R1.fastq.gz | sample3_R2.fastq.gz | NA | mutation_B | female
 
 * `sample` must be a unique sample name.
-* `f1` and `f2` specify the input fastqs, which *must* be gzipped - they will have the extension `<file>.fastq.gz` . If the data are single ended then the fastq file names will go under f1 and all cells in f2 must be set to **NA**.
+* `f1` and `f2` specify the input fastqs, which *must* be gzipped - they will have the extension `<file>.fastq.gz` . If the data are single ended then the fastq file names will go under f1 and all cells in f2 must be set to **NA**. Only put file name in here - the path to the fastq files should be set in the submission script
 * If the fastq files are in pieces then fastq files of the same direction should be comma separated.
 * `condition` is what you want to run the differential analyses on. You can include multiple condition columns and any sample to be excluded from a condition should have a value of **NA**. DESeq2 and DEXSeq will assume that the topmost or alphabetically first condition label is the reference condition in the comparison so order your rows accordingly.
 * `type` is an optional covariate column which will be included in the differential expression model. You can have as many type columns as you wish as long as the column name contains the word "type".
