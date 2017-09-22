@@ -49,7 +49,7 @@ sample  f1  f2  condition  (type)
 ```
 
 * `sample` must be a unique sample name.
-* `f1` and `f2` specify the input fastqs, which can be gzipped. If the data are single stranded then f2 must be set as **NA**.
+* `f1` and `f2` specify the input fastqs, which *must* be gzipped - they will have the extension `<file>.fastq.gz` . If the data are single stranded then f2 must be set as **NA**.
 * If the fastq files are in pieces then fastq files of the same direction should be comma separated.
 * `condition` is what you want to run the differential expression analysis on. You can include multiple condition columns
 * `type` is an optional covariate column which will be included in the differential expression model.
