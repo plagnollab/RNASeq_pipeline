@@ -470,13 +470,13 @@ $fastqc -o $fastqcFolder ${f2array[i]}
 function starSubmissionStep1a {
     starSubmissionStep1a=${oFolder}/cluster/submission/starSubmissionStep1a.sh
     STARoutput="BAM Unsorted"
-    if [[ "$force" == "SJsOnly" ]];then
+    if [[ "$force" == "SJsOnly" || "$force" == "chimeric" ]];then
 	STARoutput="None"
     fi
     if [[ "$force" == "chimeric" ]];then
 	    chimeraCommand="--chimSegmentMin 15"
     else
-	    chimeraCommand=""
+	    chimeraCommand="--outSAMstrandField intronMotif"
     fi
     echo "
 #$ -S /bin/bash
@@ -608,7 +608,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     # align with STAR	    
 	echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn $f1_total $f2_total --readFilesCommand zcat --genomeLoad ${memorymode} --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput $twopass --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 	" >> $starSubmissionStep1a
 	if [ "$trim_galore" == "yes" ];then

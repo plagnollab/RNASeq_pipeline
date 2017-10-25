@@ -1,5 +1,5 @@
 #!/bin/bash 
-step1MemPerCore=15G # step1 keeps failing!
+step1MemPerCore=7.5G # step1 keeps failing!
 step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
 
@@ -143,11 +143,12 @@ echo "
 #$ -o ${outputDir}/cluster/out
 #$ -e ${outputDir}/cluster/error
 #$ -cwd 
-}
+
 export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
-R$script --vanilla ${step1a} --support.tab ${support} \
+$Rscript --vanilla ${step1a} --support.tab ${support} \
   --code ${code} --output.dir ${outputDir} --gtf ${gtf} \
   --sgseq.anno ${sgseqAnno} > ${out_step1a}
+
 " > $script_step1a
 
     echo "step1a - find all annotated splicing events"

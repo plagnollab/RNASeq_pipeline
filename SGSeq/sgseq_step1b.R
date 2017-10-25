@@ -6,7 +6,7 @@ options(echo=T)
 # for debugging
 #load("../../Fly_C9/SGSeq/Fly_C9_txf_novel.RData")
 
-nCores <- 8
+nCores <- 4
 # Finds novel transcripts and obtain the variant counts 
 
 option_list <- list(

@@ -1,7 +1,7 @@
 library(SGSeq) 
 library(optparse)
 options(echo=T)
-nCores <- 8
+nCores <- 4
 option_list <- list(
     make_option(c('--support.tab'), help='', default = "/SAN/vyplab/IoN_RNAseq/Kitty/F210I/sgseq/f210i_new_support.tab"),
     make_option(c('--code'), help='', default = "F210I_embryonic_brain_norm"),
@@ -74,6 +74,13 @@ if(file.exists(sample.info.file)) {
 message("loading annotation")
 load(sgseq.anno)
 print(sgv) 
+
+
+
+message("deal with mitochondrial chromosome name")
+# chrM in bam files but chrMT in GTF files - stupid!
+seqlevels(sgv)[ which(seqlevels(sgv) == "chrMT") ] <- "chrM"
+
 
 message("getting variant counts") 
 print(sample.info) 
