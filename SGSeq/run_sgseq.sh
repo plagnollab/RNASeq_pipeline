@@ -1,5 +1,5 @@
 #!/bin/bash 
-step1MemPerCore=7.5G # step1 keeps failing!
+step1MemPerCore=12.5G # step1 keeps failing!
 step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
 

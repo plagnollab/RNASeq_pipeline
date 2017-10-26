@@ -14,6 +14,7 @@ sgf_object <- "/Users/Jack/SAN/HuRNASeq/Fly_C9/SGSeq/Fly_C9_sgv_novel.RData"
 sigVarTable <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Control_KO/Nicol_FUS_KO_splice_variant_table_sig.tab"
 nullVarTable <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Control_KO/Nicol_FUS_KO_splice_variant_table_null.tab"
 species <- "Mouse"
+sgf_object <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Nicol_FUS_KO_sgv_novel.RData"
 
 
 outFolder <- paste0(dirname(sigVarTable), "/bed_files")
@@ -27,7 +28,7 @@ createBed <- function(vtable){
     start = coords[,2],
     end = coords[,3],
     gene_name = vtable$gene,
-    eventID = vtable$eventID,
+    groupID = vtable$groupID,
     strand = vtable$strand
   )
   return(outBed)
@@ -67,6 +68,25 @@ createBedFASTA <- function(varTable, mode){
     system(getFasta.cmd)
     fasta_list[[v]] <- readLines(fasta_out)
   }
+  # cassette exon central exons 
+  central_exons <- paste0(outFolder, "/cassette_exons_central_", mode,".bed")
+  if( file.exists( central_exons) ){
+    central_exons_df <- read.table(central_exons, header=FALSE, sep = "\t")
+    names(central_exons_df) <- c("chr", "start", "end", "geneName", "eventID", "strand")
+    bed_list[["central_exons"]] <- central_exons_df
+    fasta_out <- gsub(".bed$", ".fasta", central_exons)
+    getFasta.cmd <- paste("bedtools getfasta",
+                          "-fi", fasta, 
+                          "-bed", central_exons,
+                          "-fo", fasta_out,
+                          "-s")
+    
+    system(getFasta.cmd)
+    fasta_file <- readLines(fasta_out)
+    fasta_list[["central_exons"]] <- fasta_file
+  }
+  
+  
   return(list(fasta = fasta_list, bed = bed_list) )
 } 
 
@@ -79,7 +99,18 @@ null <- createBedFASTA(nullVarTable, "null")
 
 save(sig,null, file = paste0(outFolder, "/objects.Rdata"))
 
-# TODO: for cassete exons find the internal exon coordinates
+# TODO: for cassette exons find the internal exon coordinates
+
+
+
+
+# PREDICT FUNCTIONAL CONSEQUENCES FOR THE VARIANT
+
+
+
+
+#### WORKING WITH THE FASTA SEQUENCES
+
 
 # As the FASTA files are the entire sequence from splice site to splice site I can check for minor splice site usage.
 findSpliceSites <- function(fastaList){

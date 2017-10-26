@@ -23,6 +23,7 @@ sgseq_res <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Control_KO/N
 support_frame <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/nicol_KO_SGSeq_support.tab"
 code <- "Nicol_FUS_KO"
 condition <- "condition_HOM"
+sgf_object <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Nicol_FUS_KO_sgv_novel.RData"
 
 # Nicol FUS d14
 sgseq_res <-"/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/SGSeq/Control_HOM/Nicol_FUS_d14_Control_HOM_res_clean_novel.tab"
@@ -141,7 +142,7 @@ createVarTable <- function(d, groupIDs){
     }
     # assemble into a table
     varTable_row <- data.frame(
-      eventID = i,
+      groupID = i,
       gene = event$geneName[ref], # in case of weirdness
       EnsemblID = event$ensemblName[ref],
       coords = biggestCoords,
@@ -206,3 +207,97 @@ nullVarTable <- createVarTable(d, nullGroupIDs)
 write.table(nullVarTable, nullOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
 
 dPSIPlot(nullVarTable, nullOutFile)
+
+
+# from Kitty
+
+load(sgf_object)
+
+# for each cassette exon
+# look at the variant which includes the exon
+# this is made up of 3 features
+# JEJ - junction exon junction
+# the 2nd feature is the exon, which stores the coordinates
+findExonPos <- function(varID) { 
+  # find the feature IDs for the variant
+  featureID <- subset(mcols(sgv_novel), variantID == varID)$featureID     
+  # funny regex stuff
+  subFeatureID <- gsub("\\(.*\\)", "",featureID) 
+  
+  if ( subFeatureID == "" ) { 
+    subFeatureID = gsub("\\(.*\\),", ",",featureID) 
+  }     
+  # double check there are only 3 features.
+  if( length( str_split(subFeatureID, ",")[[1]] ) != 3){
+    message("variant does not contain a central cassete exon")
+    return(NULL)
+  }
+  
+  exonID <- strsplit(subFeatureID, ",")[[1]][2]
+  
+  # Now find the feature that corresponds to this exonID 
+  exon_f = sgf_novel[featureID(sgf_novel) == exonID]
+  chr = as.character(seqnames(exon_f))  
+  start = as.integer(start(exon_f)) 
+  end = as.integer(end(exon_f)) 
+  strand = as.character(strand(exon_f)) 
+  
+  pos = c(chr, start, end, strand)  
+  
+  return(pos) 
+} 
+
+# get all included cassette exons
+cassette_exons <- subset(d, variantType == "SE:I")
+# very slow
+central_exons <- lapply( cassette_exons$featureID, FUN = findExonPos)
+# this removes null entries
+names(central_exons) <- cassette_exons$featureID
+all <- as.data.frame(do.call( rbind, central_exons))
+names(all) <- c("exon.chr", "exon.start", "exon.end", "exon.strand")
+all$exon.start <- as.numeric(as.character(all$exon.start))
+all$exon.end <- as.numeric(as.character(all$exon.end))
+all$featureID <- row.names(all)
+head(all)
+# merge together
+cassette_exons_all <- merge(cassette_exons, all)
+
+# groupID should be kept for further work
+
+# significant cassette exons
+cassette_exons_sig <- filter(cassette_exons_all, padj < 0.05 & !is.na(external_gene_ID) ) %>%
+                      arrange( padj ) %>%
+                      select( exon.chr, exon.start, exon.end, external_gene_ID, groupID, exon.strand)
+
+# null cassette exons
+cassette_exons_null <- filter(cassette_exons_all, padj > 0.95 & !is.na(external_gene_ID) ) %>%
+                       select( exon.chr, exon.start, exon.end, external_gene_ID, groupID, exon.strand)
+
+outFolder <- paste0(dirname(sgseq_res), "/bed_files")
+if( !dir.exists(outFolder)){dir.create(outFolder)}
+
+# write out files
+write.table( cassette_exons_sig, file =  paste0(outFolder, "/cassette_exons_central_sig.bed"), col.names=FALSE, row.names=FALSE, quote = FALSE , sep = "\t")
+write.table( cassette_exons_null, file =  paste0(outFolder, "/cassette_exons_central_null.bed"), col.names=FALSE, row.names=FALSE, quote = FALSE , sep = "\t")
+
+
+
+
+# predict effect of cassette splicing variants
+if( species == "mouse"){
+  genome <- "BSgenome.Mmusculus.UCSC.mm10"
+  transcripts <- "TxDb.Mmusculus.UCSC.mm10.knownGene"
+}
+
+library(genome, character.only = TRUE)
+library(transcripts, character.only = TRUE)
+
+txdb <- eval(parse(text = transcripts))
+genome <- eval(parse(text = genome))
+load(sgf_object)
+
+test <- sgv_novel[ which(SGSeq::eventID(sgv_novel) == 38578 ) ]
+vep <- predictVariantEffects(test, tx = txdb, genome = genome, output = "full", cores = 2)
+
+# vep is a dataframe - can be manipulated
+
