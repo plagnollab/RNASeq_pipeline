@@ -65,7 +65,7 @@ The second input file is a list of variables that will be used by the pipeline s
 * `iFolder`: where the input fastq files are. If in separate subfolders then include the subfolder in the sample table.
 * `dataframe`: the path to the sample table
 * `code`: the name of the project, used as the job name when submitting each step.
-* `species`: the species genome used for alignment. `human` specifies hg19 whereas `human_hg38` specifies hg38.
+* `species`: the species genome used for alignment. See **supported species** for details
 * `stranded=(unstranded/fr-firststrand/fr-secondstrand)`: whether the RNA-seq library is stranded. 
 * `submit=(yes|no)`: whether the pipeline should automatically submit jobs to the cluster.
 * `step0_QC=(yes|no)`: each fastqc is checked with FastQC. This step should ideally be completed before the rest of the pipeline is run.
@@ -77,6 +77,20 @@ The second input file is a list of variables that will be used by the pipeline s
 * `Rdeseq=(yes|no)`: differential gene expression with the DESeq2 package.
 * `Rdexseq=(yes|no)`: differential exon usage with the DEXSeq package.
 * `goseq=(yes|no)`; Gene Ontology enrichment analysis with the GOSeq package.
+
+## Supported species
+Below is a list of currently supported species genomes and the species code needed for the submission file:
+Code | Animal | Genome build | GTF source and version 
+-----|--------|--------------|-----------------------
+`human_hg38` | *homo sapiens* | hg38 | Ensembl 82
+`mouse` | *mus musculus* | mm10 | Ensembl 82
+`rat` | *rattus norvegicus* | rnor6  | Ensembl 90
+`worm` | *caenorhabditis elegans* | WBcel235 | WormBase 235/ Ensembl 89
+`fly` | *drosophila melanogaster* | dm6 | Ensembl 82
+`macaque` | *macaca mullata* | Mmul_8.0.1 | Ensembl 90
+`mosquito` | *anopheles gambiae* | AgamP4 | VectorBase 36
+
+If you would like to use the RNA-seq pipeline with any other species then please raise it as an issue on GitHub.
 
 ## A note on stranding
 Strand-specific library preparations are now commonplace, which improves the accuracy of feature quantification. However, there are two possible ways of stranding a paired RNAseq library:
