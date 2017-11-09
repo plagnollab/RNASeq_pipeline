@@ -396,6 +396,18 @@ case "$species" in
         geneModel=/cluster/project8/vyp/vincent/data/reference_genomes/gene_tables/mm9_NCBI37_Ensembl_nochr.bed
         ##db=mmusculus_gene_ensembl
         ;;
+    macaque)
+	STARdir=/SAN/vyplab/HuRNASeq/reference_datasets/STAR/Macaque
+	annotationFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Macaque/biomart_annotations_Macaque.tab
+	gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Macaque/Macaca_mulatta.Mmul_8.0.1.90.gff
+	gtfFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Macaque/Macaca_mulatta.Mmul_8.0.1.90.gtf
+	;;
+    rat)
+        STARdir=/SAN/vyplab/HuRNASeq/reference_datasets/STAR/Rat
+	annotationFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Rat/biomart_annotations_Rat.tab
+	gffFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_6.0.90.gff
+	gtfFile=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Rat/Rattus_norvegicus.Rnor_6.0.90.gtf
+	;;
     *)
         stop "unknown species $species"
 esac
