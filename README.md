@@ -80,6 +80,7 @@ The second input file is a list of variables that will be used by the pipeline s
 
 ## Supported species
 Below is a list of currently supported species genomes and the species code needed for the submission file:
+
 Code | Animal | Genome build | GTF source and version 
 -----|--------|--------------|-----------------------
 `human_hg38` | *homo sapiens* | hg38 | Ensembl 82
