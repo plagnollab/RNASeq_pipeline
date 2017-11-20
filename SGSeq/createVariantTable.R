@@ -3,6 +3,7 @@
 library(dplyr)
 library(stringr)
 library(ggplot2)
+
 # for testing
 sgseq_res <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq/CTL_FTD_TAU/FTD_brain_CTL_FTD_TAU_res_clean_novel.tab"
 support_frame <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq_support.tab"
@@ -59,6 +60,7 @@ variantType_df <- data.frame(
 # a reference outcome needs to be set and this can be based on the type of event
 # with casette exons the outcome of exon inclusion is the reference outcome
 # dPSIs are calculated for the reference outcome
+
 createVarTable <- function(d, groupIDs){
   varTable <- lapply(groupIDs, FUN = function(i){
     event <- d[ d$groupID == i,]
@@ -187,11 +189,13 @@ dPSIPlot <- function(varTable, outFile){
 
 
 # get all significant group IDs - sometimes only one of the events will be significant!
+
 sigOutFile <- paste0(dirname(sgseq_res), "/", code ,"_splice_variant_table_sig.tab")
 sigGroupIDs <- unique( dplyr::filter(d, padj < 0.05 & geneName != "")$groupID)
 print("Number of unique events:")
 print(length(sigGroupIDs))
 
+# create variant table for significant events
 sigVarTable <- createVarTable(d, sigGroupIDs)
 write.table(sigVarTable, sigOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
 
@@ -202,6 +206,7 @@ nullOutFile <- paste0(dirname(sgseq_res), "/", code ,"_splice_variant_table_null
 nullGroupIDs <- unique( dplyr::filter(d, padj > 0.95 & geneName != "")$groupID)
 print("Number of unique null events:")
 print(length(nullGroupIDs))
+
 # create table
 nullVarTable <- createVarTable(d, nullGroupIDs)
 write.table(nullVarTable, nullOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
@@ -213,7 +218,8 @@ dPSIPlot(nullVarTable, nullOutFile)
 
 load(sgf_object)
 
-# for each cassette exon
+# FIND INTERNAL EXON COORDINATES FOR EACH CASSETTE EXON
+
 # look at the variant which includes the exon
 # this is made up of 3 features
 # JEJ - junction exon junction
@@ -229,7 +235,7 @@ findExonPos <- function(varID) {
   }     
   # double check there are only 3 features.
   if( length( str_split(subFeatureID, ",")[[1]] ) != 3){
-    message("variant does not contain a central cassete exon")
+    message("variant does not contain a central cassette exon")
     return(NULL)
   }
   
@@ -241,7 +247,6 @@ findExonPos <- function(varID) {
   start = as.integer(start(exon_f)) 
   end = as.integer(end(exon_f)) 
   strand = as.character(strand(exon_f)) 
-  
   pos = c(chr, start, end, strand)  
   
   return(pos) 
@@ -251,6 +256,7 @@ findExonPos <- function(varID) {
 cassette_exons <- subset(d, variantType == "SE:I")
 # very slow
 central_exons <- lapply( cassette_exons$featureID, FUN = findExonPos)
+
 # this removes null entries
 names(central_exons) <- cassette_exons$featureID
 all <- as.data.frame(do.call( rbind, central_exons))
