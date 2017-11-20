@@ -3,6 +3,7 @@
 library(dplyr)
 library(stringr)
 library(ggplot2)
+library(optparse)
 # for testing
 sgseq_res <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq/CTL_FTD_TAU/FTD_brain_CTL_FTD_TAU_res_clean_novel.tab"
 support_frame <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq_support.tab"
@@ -13,6 +14,7 @@ sgseq_res <- "/Users/Jack/SAN/HuRNASeq/Fly_C9/SGSeq/control_GR/Fly_C9_control_GR
 support_frame <- "/Users/Jack/SAN/HuRNASeq/Fly_C9/fly_SGSeq_support.tab"
 code <- "Fly_C9_GR"
 condition <- "conditionGR"
+
 # Fly + GA dipeptides
 sgseq_res <- "/Users/Jack/SAN/HuRNASeq/Fly_C9/SGSeq/control_GA/Fly_C9_control_GA_res_clean_novel.tab"
 condition <- "conditionGA"
@@ -30,6 +32,8 @@ sgseq_res <-"/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/SGSeq/Control_HOM/
 support_frame <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/nicol_d14_SGSeq_support.tab"
 code <- "Nicol_FUS_d14"
 condition <- "condition_HOM"
+
+
 
 # BEGIN
 
@@ -300,4 +304,13 @@ test <- sgv_novel[ which(SGSeq::eventID(sgv_novel) == 38578 ) ]
 vep <- predictVariantEffects(test, tx = txdb, genome = genome, output = "full", cores = 2)
 
 # vep is a dataframe - can be manipulated
+
+# can use pairwiseAlignment function from biostrings to extract the protein sequence of the central exon
+# test on Eif4h
+ref <- vep$protein_ref_seq[1]
+var <- vep$protein_var_seq[1]
+p <- (pairwiseAlignment(var, ref))
+central_seq <- unlist(deletion(p))
+# ref is the inclusion protein
+central <- str_sub( ref, start = central_seq@start, end = central_seq@start + central_seq@width)
 
