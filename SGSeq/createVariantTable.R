@@ -42,9 +42,9 @@ step <- "step2b"
 #condition <- "condition_HOM"
 
 # Bilal
-support.tab <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/12mnth_SGSeq_support.tab"
-code <- "Bilal_12mnth"
-output.dir <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/12mnth/"
+support.tab <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/3mnth_SGSeq_support.tab"
+code <- "Bilal_3mnth"
+output.dir <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/3mnth/"
 step <- "step2b"
 
 ###################
@@ -113,7 +113,7 @@ createVarTable <- function(d, groupIDs){
         if( all("A3SS" %in% varTypeSplit) ){
           ref <- which( varType == "A3SS:P")
         }
-        if( length(ref) > 1 | ref == "unassigned"){
+        if( length(ref) > 1 | any(ref == "unassigned") ){
           ref <- which( event$exonBaseMean == max(event$exonBaseMean))
         }
       }
@@ -228,6 +228,8 @@ list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
 
 for (condition in list.conditions) {
   
+  print(condition)
+  
   # create a string to represent comparison
   conditions <- support[, condition]
   # remove NA values and find unique
@@ -271,9 +273,10 @@ for (condition in list.conditions) {
   sigVarTable <- createVarTable(d, sigGroupIDs)
   
   write.table(sigVarTable, sigOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
-
-  dPSIPlot(sigVarTable, sigOutFile)
-
+  
+  if( length(sigGroupIDs) > 0 ){
+    dPSIPlot(sigVarTable, sigOutFile)
+  }
   # do the same but for non-significant splicing events
   nullOutFile <- paste0(condition.dir, "/", code, "_", conditions.name,  "_splice_variant_table_null.tab") 
   nullGroupIDs <- unique( dplyr::filter(d, padj > 0.95 & geneName != "")$groupID)
@@ -286,7 +289,7 @@ for (condition in list.conditions) {
   nullVarTable <- createVarTable(d, nullGroupIDs)
   write.table(nullVarTable, nullOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
   
-  dPSIPlot(nullVarTable, nullOutFile)
+  #dPSIPlot(nullVarTable, nullOutFile)
   
 
 }
