@@ -5,6 +5,7 @@ library(purrr)
 library(stringr)
 library(ggplot2)
 library(optparse)
+library(data.table)
 
 # # for testing
 # sgseq_res <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq/CTL_FTD_TAU/FTD_brain_CTL_FTD_TAU_res_clean_novel.tab"
