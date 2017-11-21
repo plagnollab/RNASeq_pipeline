@@ -54,6 +54,7 @@ species <- opt$species
 
 
 # load in SGSeq R object
+message("loading in SGSeq object - may take a while")
 load(sgf_object)
 # read in SGSeq results
 d <- as.data.frame(fread(sgseq_res), stringsAsFactors=FALSE)
@@ -74,9 +75,9 @@ library(transcripts, character.only = TRUE)
 txdb <- eval(parse(text = transcripts))
 genome <- eval(parse(text = genome))
 
-cassette_ids <- unique(cassette_exons$groupID)
 
 # subset sgv_novel for just the significant cassette exons (included)
+cassette_ids <- unique(cassette_exons$groupID)
 cassettes <- sgv_novel[ which(SGSeq::eventID(sgv_novel) %in% cassette_ids ) ]
 
 message(paste("Number of cassette exons:", length(cassettes) ))

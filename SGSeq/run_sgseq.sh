@@ -44,6 +44,9 @@ step0=${pipelineBaseDir}/sgseq_step0.R
 step1a=${pipelineBaseDir}/sgseq_step1a.R
 step1b=${pipelineBaseDir}/sgseq_step1b.R
 step2=${pipelineBaseDir}/sgseq_step2.R
+createVarTable=${pipelineBaseDir}/createVariantTable.R
+findCentralExons=${pipelineBaseDir}/findCentralExons.R
+createBedFASTA=${pipelineBaseDir}/createBedFASTA.R
 
 for script in $step0 $step1a $step1b $step2 $support; do
     if [ ! -e $script ]; then
@@ -55,7 +58,8 @@ script_step0=${outputDir}/cluster/submission/sgseq_step0.sh
 script_step1a=${outputDir}/cluster/submission/sgseq_step1a.sh 
 script_step1b=${outputDir}/cluster/submission/sgseq_step1b.sh 
 script_step2a=${outputDir}/cluster/submission/sgseq_step2a.sh 
-script_step2b=${outputDir}/cluster/submission/sgseq_step2b.sh 
+script_step2b=${outputDir}/cluster/submission/sgseq_step2b.sh
+script_step3=${outputDir}/cluster/submission/sgseq_step3.sh
 Rscript=/share/apps/R-3.3.2/bin/Rscript
 
 Rdir=${outputDir}/cluster/R
@@ -64,6 +68,8 @@ out_step1a=${Rdir}/sgseq_step1a.out
 out_step1b=${Rdir}/sgseq_step1b.out
 out_step2a=${Rdir}/sgseq_step2a.out
 out_step2b=${Rdir}/sgseq_step2b.out
+out_step3=${Rdir}/sgseq_step3.out
+
 # make directories
 for dir in $outputDir ${outputDir}/cluster/out ${outputDir}/cluster/error ${outputDir}/cluster/submission ${Rdir}; do
 	if [ ! -e $dir ];then
@@ -216,6 +222,41 @@ $Rscript --vanilla ${step2} --step step2b --support.tab ${support} \
     echo "step2b - run DEXSeq using the annotated AND novel event counts from SGSeq"
     echo $script_step2b
 }
+
+# step3 - downstream analysis of results
+function step3 {
+  if [[ "$step" == "step1a" ]]; then 
+    STEP2CHOICE=step2a
+  elif [[ "$step" == "step1b" ]];then
+    STEP2CHOICE=step2b
+  fi
+  
+  echo "  
+#$ -S /bin/bash
+#$ -l h_vmem=${step2MemPerCore},tmem=${step2MemPerCore}
+#$ -l h_rt=72:00:00
+#$ -pe smp 4
+#$ -N SGSeq_${code}_step3  
+#$ -R y
+#$ -o ${outputDir}/cluster/out
+#$ -e ${outputDir}/cluster/error
+#$ -cwd 
+
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
+
+$Rscript --vanilla $createVarTable --step $STEP2CHOICE --support.tab $support \
+  --code $code --output.dir $outputDir > $out_step3
+
+$Rscript --vanilla $findCentralExons --step $STEP2CHOICE --support.tab $support \
+  --code $code --output.dir $outputDir >> $out_step3 
+
+
+" > $script_step3
+    echo "step3 - analyse downstream events"
+    echo $script_step3
+}
+
+
 
 # make SGSeq_${code} transcript annotation data if doesn't exist already
 if [ ! -e $sgseqAnno ];then

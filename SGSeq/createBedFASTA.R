@@ -2,7 +2,7 @@ library(data.table)
 library(stringr)
 library(ggplot2)
 library(Biostrings)
-# take the output of createVariantTable
+# take the output of createVariantTable and make a bunch of BED files
 
 # Fly C9 GR 
 sigVarTable <- "/Users/Jack/SAN/HuRNASeq/Fly_C9/SGSeq/control_GR/Fly_C9_splice_variant_table_sig.tab"
@@ -15,6 +15,7 @@ sigVarTable <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Control_KO
 nullVarTable <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Control_KO/Nicol_FUS_KO_splice_variant_table_null.tab"
 species <- "Mouse"
 sgf_object <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/KO/SGSeq/Nicol_FUS_KO_sgv_novel.RData"
+
 
 
 outFolder <- paste0(dirname(sigVarTable), "/bed_files")
@@ -68,6 +69,7 @@ createBedFASTA <- function(varTable, mode){
     system(getFasta.cmd)
     fasta_list[[v]] <- readLines(fasta_out)
   }
+  
   # cassette exon central exons 
   central_exons <- paste0(outFolder, "/cassette_exons_central_", mode,".bed")
   if( file.exists( central_exons) ){
