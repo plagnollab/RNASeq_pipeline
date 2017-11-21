@@ -703,7 +703,7 @@ $trimgalore --gzip -o ${SCRATCH_DIR}/trimmed --quality 20 --path_to_cutadapt $cu
     # STAR alignment
     echo "
 # align with STAR. Output = ${STARoutput}
-${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outSAMstrandField intronMotif --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
+${starexec} --readFilesIn ${f1_total} --readFilesCommand zcat --genomeLoad $memorymode $twopass --genomeDir ${STARdir} --runThreadN  4 $chimeraCommand --outFileNamePrefix ${SCRATCH_DIR}/${sample} --outSAMtype $STARoutput --outSAMunmapped Within --outSAMheaderHD ID:${sample} PL:Illumina
 date >&2
 
 # move the trimmed files back to trimmed folder in iFolder
