@@ -271,18 +271,22 @@ fi
 if [[ "$step" == "step1a" ]]; then  
     step1a
     step2a
+    step3
     if [[ "$submit" == "yes" ]];then
         qsub $hold $script_step1a
         qsub -hold_jid SGSeq_${code}_step1a $script_step2a
+        qsub -hold_jid SGSeq_${code}_step2a $script_step3
     fi
 fi
 
 if [ $step == "step1b" ]; then
     step1b
     step2b
+    step3
     if [[ "$submit" == "yes" ]];then
         qsub $hold $script_step1b
         qsub -hold_jid SGSeq_${code}_step1b $script_step2b
+        qsub -hold_jid SGSeq_${code}_step2b $script_step3
     fi
 fi
 
