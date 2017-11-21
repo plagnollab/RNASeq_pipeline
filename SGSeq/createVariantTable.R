@@ -207,8 +207,8 @@ dPSIPlot <- function(varTable, outFile){
     guides(colour=FALSE) +
     theme(axis.text.x  = element_text(angle=45, hjust=1) ) +
     xlab("")
-  print(p)
-  ggsave(p,filename = gsub(outFile,".tab", ".pdf") )
+  #print(p)
+  return(p)
 }
 
 # conversion table for SGSeq categories to human readable names
@@ -276,7 +276,8 @@ for (condition in list.conditions) {
   write.table(sigVarTable, sigOutFile, sep = "\t", row.names = FALSE, quote = FALSE)
   
   if( length(sigGroupIDs) > 0 ){
-    dPSIPlot(sigVarTable, sigOutFile)
+    p <- dPSIPlot(sigVarTable, sigOutFile)
+    ggsave(p,filename = gsub(sigOutFile,".tab", ".pdf") )
   }
   # do the same but for non-significant splicing events
   nullOutFile <- paste0(condition.dir, "/", code, "_", conditions.name,  "_splice_variant_table_null.tab") 
