@@ -5,6 +5,7 @@ library(stringr)
 library(ggplot2)
 library(optparse)
 library(SGSeq)
+library(data.table)
 ############
 # FUNCTIONS
 ############
