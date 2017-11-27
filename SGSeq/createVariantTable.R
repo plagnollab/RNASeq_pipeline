@@ -8,6 +8,13 @@ library(optparse)
 library(data.table)
 
 # # for testing
+
+# step <- "step2b" 
+# support.tab <- "~/SAN/HuRNASeq/ENCODE/HNRNPK/HepG2_ENCSR853ZJS/processed/SGSeq_support.tab"
+# code <- "HNRNPK_HepG2" 
+# output.dir <- "~/SAN/HuRNASeq/ENCODE/HNRNPK/HepG2_ENCSR853ZJS/processed/SGSeq/"
+
+
 # sgseq_res <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq/CTL_FTD_TAU/FTD_brain_CTL_FTD_TAU_res_clean_novel.tab"
 # support_frame <- "/Users/Jack/SAN/IoN_RNAseq/FTD_brain/SGSeq_support.tab"
 # condition <- "condition_MAPT"
@@ -35,18 +42,18 @@ library(data.table)
 # 
 
 # TEST ME!!!
-
-support.tab <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/nicol_d14_SGSeq_support.tab"
-code <- "Nicol_FUS_d14"
-output.dir <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/SGSeq/"
-step <- "step2b"
-#condition <- "condition_HOM"
-
-# Bilal
-support.tab <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/3mnth_SGSeq_support.tab"
-code <- "Bilal_3mnth"
-output.dir <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/3mnth/"
-step <- "step2b"
+# 
+# support.tab <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/nicol_d14_SGSeq_support.tab"
+# code <- "Nicol_FUS_d14"
+# output.dir <- "/Users/Jack/SAN/IoN_RNAseq/Nicol_FUS/mRNAseq/d14/SGSeq/"
+# step <- "step2b"
+# #condition <- "condition_HOM"
+# 
+# # Bilal
+# support.tab <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/12mnth_SGSeq_support.tab"
+# code <- "Bilal_12mnth"
+# output.dir <- "//Users/Jack/SAN/IoN_RNAseq/BilalMalik/SGSeq/12mnth/"
+# step <- "step2b"
 
 ###################
 ## PARSE ARGUMENTS
@@ -166,6 +173,8 @@ createVarTable <- function(d, groupIDs){
     if( length(strand) > 1){
       strand <- "*"
     }
+    varTable_row <- NULL
+    tryCatch(
     # assemble into a table
     varTable_row <- data.frame(
       groupID = i,
@@ -181,6 +190,9 @@ createVarTable <- function(d, groupIDs){
       ref_anno,
       alt_anno,
       stringsAsFactors=FALSE
+    ), error = function(e){ 
+      print(paste0("event: ", i, " in ", event$geneName[ref], " with ref = ", ref ))
+     }
     )
     return(varTable_row)
   })
