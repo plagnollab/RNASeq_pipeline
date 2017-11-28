@@ -298,6 +298,12 @@ for (condition in list.conditions) {
   print("Number of unique null events:")
   print(length(nullGroupIDs))
   
+  # sample 1000
+  set.seed(12345)
+  nullGroupIDs <- sample( nullGroupIDs, 1000, replace = FALSE)
+  
+  print("sampling 1000")
+  
   # create table
   print("creating null table - this can take a while")
   nullVarTable <- createVarTable(d, nullGroupIDs)
