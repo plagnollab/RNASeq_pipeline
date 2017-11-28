@@ -104,6 +104,14 @@ case "$species" in
 	   annotation=${refFolder}/Human_hg38/biomart_annotations_human.tab
      sgseqAnno=${refFolder}/Human_hg38/Homo_sapiens.GRCh38.82_fixed.sgseqAnno.Rdata 
 	;;
+	macaque)
+	    gtf=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.gtf
+	    annotation=${refFolder}/Macaque/biomart_annotations_Macaque.tab
+	    sgseqAnno=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.sgseqAnno.Rdata
+	rat)
+	   gtf=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.gtf
+	   annotation=${refFolder}/Rat/biomart_annotations_Rat.tab
+	   sgseqAnno=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.sgseqAnno.Rdata
 	*)
         stop "unknown species $species"
 esac
