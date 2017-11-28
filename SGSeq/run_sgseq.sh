@@ -278,6 +278,8 @@ if [ ! -e $sgseqAnno ];then
         qsub $script_step0
         hold="-hold_jid SGSeq_${code}_step0"
     fi
+else
+	hold=""
 fi
 
 
