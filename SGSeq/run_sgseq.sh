@@ -1,4 +1,6 @@
 #!/bin/bash 
+set -euo pipefail
+
 step1MemPerCore=12.5G # step1 keeps failing!
 step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
@@ -108,22 +110,25 @@ case "$species" in
 	    gtf=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.gtf
 	    annotation=${refFolder}/Macaque/biomart_annotations_Macaque.tab
 	    sgseqAnno=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.sgseqAnno.Rdata
+	;;
 	rat)
 	   gtf=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.gtf
 	   annotation=${refFolder}/Rat/biomart_annotations_Rat.tab
 	   sgseqAnno=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.sgseqAnno.Rdata
+	;;
 	*)
-        stop "unknown species $species"
+        echo  "unknown species $species"
+	exit 1
 esac
 
 if [ ! -e $gtf ];then
-    stop "GTF file $gtf is missing"
+    echo "GTF file $gtf is missing"; exit 1
 else
     echo "GTF file exists"
 fi
 
 if [ ! -e $annotation ];then
-    stop "annotation file $annotation is missing"
+    echo "annotation file $annotation is missing"; exit 1
 else
   echo "annotation file exists"
 fi
