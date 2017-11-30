@@ -229,6 +229,8 @@ echo "
 #$ -wd ${outFolder}
 echo \$HOSTNAME >&2
 
+# important for some reason
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
 
 ${R}script ${polyA_dexseq} --support.tab $support \\
                            --code $code \\
