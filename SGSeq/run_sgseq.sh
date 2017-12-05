@@ -1,4 +1,6 @@
 #!/bin/bash 
+set -euo pipefail
+
 step1MemPerCore=12.5G # step1 keeps failing!
 step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
@@ -44,6 +46,9 @@ step0=${pipelineBaseDir}/sgseq_step0.R
 step1a=${pipelineBaseDir}/sgseq_step1a.R
 step1b=${pipelineBaseDir}/sgseq_step1b.R
 step2=${pipelineBaseDir}/sgseq_step2.R
+createVarTable=${pipelineBaseDir}/createVariantTable.R
+findCentralExons=${pipelineBaseDir}/findCentralExons.R
+createBedFASTA=${pipelineBaseDir}/createBedFASTA.R
 
 for script in $step0 $step1a $step1b $step2 $support; do
     if [ ! -e $script ]; then
@@ -55,7 +60,8 @@ script_step0=${outputDir}/cluster/submission/sgseq_step0.sh
 script_step1a=${outputDir}/cluster/submission/sgseq_step1a.sh 
 script_step1b=${outputDir}/cluster/submission/sgseq_step1b.sh 
 script_step2a=${outputDir}/cluster/submission/sgseq_step2a.sh 
-script_step2b=${outputDir}/cluster/submission/sgseq_step2b.sh 
+script_step2b=${outputDir}/cluster/submission/sgseq_step2b.sh
+script_step3=${outputDir}/cluster/submission/sgseq_step3.sh
 Rscript=/share/apps/R-3.3.2/bin/Rscript
 
 Rdir=${outputDir}/cluster/R
@@ -64,6 +70,8 @@ out_step1a=${Rdir}/sgseq_step1a.out
 out_step1b=${Rdir}/sgseq_step1b.out
 out_step2a=${Rdir}/sgseq_step2a.out
 out_step2b=${Rdir}/sgseq_step2b.out
+out_step3=${Rdir}/sgseq_step3.out
+
 # make directories
 for dir in $outputDir ${outputDir}/cluster/out ${outputDir}/cluster/error ${outputDir}/cluster/submission ${Rdir}; do
 	if [ ! -e $dir ];then
@@ -98,18 +106,29 @@ case "$species" in
 	   annotation=${refFolder}/Human_hg38/biomart_annotations_human.tab
      sgseqAnno=${refFolder}/Human_hg38/Homo_sapiens.GRCh38.82_fixed.sgseqAnno.Rdata 
 	;;
+	macaque)
+	    gtf=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.gtf
+	    annotation=${refFolder}/Macaque/biomart_annotations_Macaque.tab
+	    sgseqAnno=${refFolder}/Macaque/Macaca_mulatta.Mmul_8.0.1.90.sgseqAnno.Rdata
+	;;
+	rat)
+	   gtf=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.gtf
+	   annotation=${refFolder}/Rat/biomart_annotations_Rat.tab
+	   sgseqAnno=${refFolder}/Rat/Rattus_norvegicus.Rnor_6.0.90.sgseqAnno.Rdata
+	;;
 	*)
-        stop "unknown species $species"
+        echo  "unknown species $species"
+	exit 1
 esac
 
 if [ ! -e $gtf ];then
-    stop "GTF file $gtf is missing"
+    echo "GTF file $gtf is missing"; exit 1
 else
     echo "GTF file exists"
 fi
 
 if [ ! -e $annotation ];then
-    stop "annotation file $annotation is missing"
+    echo "annotation file $annotation is missing"; exit 1
 else
   echo "annotation file exists"
 fi
@@ -217,6 +236,41 @@ $Rscript --vanilla ${step2} --step step2b --support.tab ${support} \
     echo $script_step2b
 }
 
+# step3 - downstream analysis of results
+function step3 {
+  if [[ "$step" == "step1a" ]]; then 
+    STEP2CHOICE=step2a
+  elif [[ "$step" == "step1b" ]];then
+    STEP2CHOICE=step2b
+  fi
+  
+  echo "  
+#$ -S /bin/bash
+#$ -l h_vmem=${step2MemPerCore},tmem=${step2MemPerCore}
+#$ -l h_rt=72:00:00
+#$ -pe smp 4
+#$ -N SGSeq_${code}_step3  
+#$ -R y
+#$ -o ${outputDir}/cluster/out
+#$ -e ${outputDir}/cluster/error
+#$ -cwd 
+
+export LD_LIBRARY_PATH=/share/apps/zlib-1.2.8/lib:$LD_LIBRARY_PATH
+
+$Rscript --vanilla $createVarTable --step $STEP2CHOICE --support.tab $support \
+  --code $code --output.dir $outputDir > $out_step3
+
+$Rscript --vanilla $findCentralExons --step $STEP2CHOICE --support.tab $support \
+  --code $code --output.dir $outputDir >> $out_step3 
+
+
+" > $script_step3
+    echo "step3 - analyse downstream events"
+    echo $script_step3
+}
+
+
+
 # make SGSeq_${code} transcript annotation data if doesn't exist already
 if [ ! -e $sgseqAnno ];then
     step0
@@ -224,24 +278,30 @@ if [ ! -e $sgseqAnno ];then
         qsub $script_step0
         hold="-hold_jid SGSeq_${code}_step0"
     fi
+else
+	hold=""
 fi
 
 
 if [[ "$step" == "step1a" ]]; then  
     step1a
     step2a
+    step3
     if [[ "$submit" == "yes" ]];then
         qsub $hold $script_step1a
         qsub -hold_jid SGSeq_${code}_step1a $script_step2a
+        qsub -hold_jid SGSeq_${code}_step2a $script_step3
     fi
 fi
 
 if [ $step == "step1b" ]; then
     step1b
     step2b
+    step3
     if [[ "$submit" == "yes" ]];then
         qsub $hold $script_step1b
         qsub -hold_jid SGSeq_${code}_step1b $script_step2b
+        qsub -hold_jid SGSeq_${code}_step2b $script_step3
     fi
 fi
 

@@ -79,9 +79,9 @@ if [ "$species" == "mouse" ];then
    annotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed_genes_only.gtf
    biomartAnnotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Mouse/biomart_annotations_mouse.tab
 elif [ "$species" == "human" ];then
-   genome="test"
-   annotation="test"
-   biomartAnnotation="test"
+   genome=/SAN/vyplab/HuRNASeq/reference_datasets/hg38.fa
+   annotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
+   biomartAnnotation=/SAN/vyplab/HuRNASeq/reference_datasets/RNASeq/Human_hg38/biomart_annotations_human.tab
 else
    echo $species is not a valid species
    fail=1
