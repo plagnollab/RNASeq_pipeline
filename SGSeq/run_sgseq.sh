@@ -1,7 +1,8 @@
 #!/bin/bash 
 set -euo pipefail
 
-step1MemPerCore=12.5G # step1 keeps failing!
+step1Cores=6
+step1MemPerCore=15G # step1 keeps failing!
 step2MemPerCore=3.8G # 3.8G x 4 cores should get run the quickest but is it enough memory?
 
 
@@ -156,7 +157,7 @@ echo "
 #$ -S /bin/bash
 #$ -l h_vmem=${step1MemPerCore},tmem=${step1MemPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 4  
+#$ -pe smp ${step1Cores}
 #$ -R y
 #$ -N SGSeq_${code}_step1a
 #$ -o ${outputDir}/cluster/out
@@ -181,7 +182,7 @@ function step1b {
 #$ -S /bin/bash
 #$ -l h_vmem=${step1MemPerCore},tmem=${step1MemPerCore}
 #$ -l h_rt=72:00:00
-#$ -pe smp 4
+#$ -pe smp ${step1Cores}
 #$ -N SGSeq_${code}_step1b  
 #$ -R y
 #$ -o ${outputDir}/cluster/out

@@ -1,5 +1,6 @@
 library(SGSeq) 
 library(optparse)
+library(stringr)
 options(echo=T)
 nCores <- 4
 option_list <- list(

@@ -189,7 +189,7 @@ for (condition in list.conditions) {
     select( exon.chr, exon.start, exon.end, external_gene_ID, groupID, exon.strand)
   
   # null cassette exons
-  cassette_exons_null <- filter(cassette_exons_all, padj > 0.95 & !is.na(external_gene_ID) ) %>%
+  cassette_exons_null <- filter(cassette_exons_all, padj > 0.5 & !is.na(external_gene_ID) ) %>%
     select( exon.chr, exon.start, exon.end, external_gene_ID, groupID, exon.strand)
   
   outFolder <- paste0(condition.dir, "/bed_files")
@@ -201,3 +201,7 @@ for (condition in list.conditions) {
   write.table( cassette_exons_null, file =  paste0(outFolder, "/cassette_exons_central_null.bed"), col.names=FALSE, row.names=FALSE, quote = FALSE , sep = "\t")
   
 }
+
+# for testing -DELETE ME
+save.image( file = "/SAN/vyplab/TDP43_RNA/TDP_F210I_M323K/M323K/New_adult_brain/processed/sgseq/2018_4_HET_4_HOM/CONTROL_HOM/test.Rdata")
+

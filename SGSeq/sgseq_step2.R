@@ -10,7 +10,7 @@ library(ggplot2)
 library(stringr)
 
 library(optparse)
-options(echo=TRUE)
+#options(echo=TRUE)
 
 option_list <- list(
     make_option(c('--support.tab'), help='', default = ""),
