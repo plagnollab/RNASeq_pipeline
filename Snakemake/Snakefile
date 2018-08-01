@@ -1,0 +1,117 @@
+bigFilesBundleFolder=/SAN/vyplab/HuRNASeq/reference_datasets
+
+case "$species" in
+    human_hg38)
+        STARdir=${bigFilesBundleFolder}/RNASeq/Human_hg38/STAR
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gtf
+        gffFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/Homo_sapiens.GRCh38.82_fixed.gff
+	    annotationFile=${bigFilesBundleFolder}/RNASeq/Human_hg38/biomart_annotations_human.tab
+        ;;
+    mouse)
+        STARdir=${bigFilesBundleFolder}/STAR/Mouse
+        gffFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gff
+        gtfFile=${bigFilesBundleFolder}/RNASeq/Mouse/Mus_musculus.GRCm38.82_fixed.gtf
+        annotationFile=${bigFilesBundleFolder}/RNASeq/Mouse/biomart_annotations_mouse.tab
+        ;;
+
+
+rule fastqc:
+    input:
+        "reads/{sample}.fastq"
+    output:
+        html="qc/{sample}.html",
+        zip="qc/{sample}.zip"
+    params: ""
+    wrapper:
+        "0.22.0/bio/fastqc"
+
+rule fastqc:
+    input:
+        fastq="data/{sample}.fastq.gz"
+    output:
+        "results/fastqc/{sample}_fastqc.zip",
+        "results/fastqc/{sample}_fastqc.html"
+    params:
+        outputfolder="results/fastqc",
+        cluster="-N 1 -c 1 --mem=16G -t 160:00:00 -o logs/fastqc.{sample}.%A.log"
+    shell:
+        "fastqc {input.fastq} --outdir {params.outputfolder}"
+
+#Currently no accomodation for paired ends
+#Only run this if the setting trimmed is set, if it is trim off 20 bases
+if config["trimmed"]:
+    rule trimGalore:
+        input:
+            fastq="data/{sample}.fastq.gz"
+        output:
+            trimmed="results/trim_galore/{sample}_trimmed.fq.gz",
+            logfolder="results/logs/{sample}.fastq.gz_trimming_report.txt"
+        shell:
+            '''
+            trim_galore --paired -o {output.trimmed} -q 20 {input.fastq}
+            mv {params.log} {output.logfolder}
+            '''
+
+#Run Star
+rule MapStar:
+    input:
+        #select from either trimmed or untrimmed file locaotin depending on if trimmed is set
+        fastq='results/trim_galore/{sample}_trimmed.fq.gz' if config['trimmed'] else 'data/{sample}.fastq.gz'
+        index=STAR_INDEX
+    output:
+        'results/bams/{sample}_unsorted.bam'
+    #I think that I might be able to make a pipeline without this but not sure
+    params:
+        star_index=config['star_index'],
+        outprefix="results/mapped/{sample}.",
+        cluster="-N 1 -c 8 --mem-per-cpu=4GB -t 160:00:00 -o logs/polyAmapstar.{sample}.%A.log"
+    threads: 16
+    shell:
+        """
+        STAR --runThreadN {threads} \
+        --genomeDir {params.star_index} --genomeLoad NoSharedMemory \
+        --readFilesIn {input.fastq} --readFilesCommand zcat \
+        --outFileNamePrefix {params.outprefix} \
+        --sjdbScore 1 --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 \
+        --outFilterMultimapNmax 1 --outFilterMismatchNmax 999 --outFilterMismatchNoverReadLmax 0.04 \
+        --alignIntronMin 20 --alignIntronMax 1000000 --alignMatesGapMax 1000000 \
+        --outFilterType BySJout --twopassMode Basic \
+        --outSAMattributes All --outSAMstrandField intronMotif \
+        --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM 60000000000
+
+        sambamba index -t 8 {output.bam}
+        """
+
+
+rule SortReads:
+    input:
+        unsorted='results/bams/{sample}_unsorted.bam'
+    output:
+        sorted='results/bams/{sample}_unique.bam'
+    params:
+        NovoSort='${software}/novocraft3/novosort'
+        scratch=
+    shell:
+    '''$novosort --md --xs -f -t ${SCRATCH} -6 -c 2 -m 12G {input.unsorted} -o ${finalOFolder}/${sample}_unique.bam'''
+
+rule DexseqCounts:
+        input:
+            sorted='results/bams/{sample}_unique.bam'
+        output:
+            unique='results/dexseq/{sample}._dexseq_counts_keep_dups.txt'
+            dups='results/dexseq/{sample}._dexseq_counts.txt'
+        shell:
+        '''
+        samtools view -F 0x0400 {sorted} |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts.txt
+        samtools view {sorted} |  ${pythonbin} ${dexseqCount} --order=pos --paired=${paired} --stranded=${countStrand}  ${gffFile} - ${dexseqfolder}/${sample}_dexseq_counts_keep_dups.txt
+        '''
+
+rule CombinedAnalysis:
+    input:
+        dups='results/dexseq/{sample}._dexseq_counts.txt'
+    output:
+        'results/R/count_prepare.out'
+    shell:
+    '''
+    {Rscript} ${countPrepareR} --gff ${gffFile} --annotation.file ${annotationFile} --keep.dups ${keepDups} --support.frame ${dataframe} --code ${code} --iFolder ${oFolder} > ${clusterFolder}/R/count_prepare.out
+    '''
