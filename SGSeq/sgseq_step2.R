@@ -9,6 +9,9 @@ library(dplyr)
 library(ggplot2)
 library(stringr)
 
+BPPARAM <- MulticoreParam(workers=8)
+
+
 library(optparse)
 options(echo=TRUE)
 
@@ -45,6 +48,15 @@ row.names(annotation) <- annotation$EnsemblID
 # read in support
 support  <- read.table(support.tab, header = T, stringsAsFactor = F) 
 list.conditions <- grep(names(support), pattern = '^condition.*', value  = TRUE)
+
+list.covariates <- grep(names(support), pattern = '^type.*', value = TRUE )
+
+if( length(list.covariates) == 1 ){
+	add.covariate <- TRUE
+
+}else{
+	add.covariate <- FALSE
+}
 
 # pick which counts file to use
 if (step == "step2a") { 
@@ -108,35 +120,57 @@ for (condition in list.conditions) {
   } else { 
    message("step needs to be either 2a for known variants or 2b for novel variants") 
   }  
-
   message('Condition ', condition)
   support.loc <- support
 
-  ##handle the type variable
-  support.loc$condition <- factor(support[, condition])
   
+  support.loc$condition <- factor(support[, condition])
+	  
   # subset the samples from the matrix that are to be tested
   varcounts.loc <- varcounts[, !is.na(support[,condition]) ]
+  message("varcounts subset OK")
   #loc.countFiles <- countFiles[ !is.na(support.loc$condition) ]
   support.loc <-  support.loc[ !is.na(support.loc$condition), ]
-
+  message("support subset OK")
   # create formula
-  formuladispersion <- ~ sample + (condition + type) * exon
-  formula0 <-  ~ sample + condition
-  formula1 <-  ~ sample + condition * exon
+  #formuladispersion <- ~ sample + (condition + type) * exon
+  #formula0 <-  ~ sample + condition
+  #formula1 <-  ~ sample + condition * exon
+ 
   
+ 
+  if( add.covariate == TRUE){
+    names(support.loc)[ which( names(support.loc) == list.covariates) ] <- "type" 
+    formulaFullModel = ~ sample + exon + type:exon + condition:exon
+    formulaReducedModel = ~ sample + exon + type:exon
+  }else{
+    formulaFullModel = ~ sample + exon + condition:exon
+    formulaReducedModel = ~ sample + exon
+  }
+
+# save local environment for testing
+message("saving")
+    save.image(file = "test.Rdata")	
+ 
+
   # run DEXSeq
   if(!file.exists(dexseq.data)) { 
     DexSeqExons.loc <- DEXSeqDataSet(countData = varcounts.loc,
                                      sampleData = support.loc,
-                                     design = formula1,
-                                     featureID = as.factor(vid),
+                                     #design = formula1,
+                                     design = formulaFullModel,
+				     featureID = as.factor(vid),
                                      groupID = as.factor(eid))
-    
+   
+ 
     DexSeqExons.loc <- estimateSizeFactors(DexSeqExons.loc)
-    DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc)
-    DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc)
-    DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc)
+    DexSeqExons.loc <- DEXSeq::estimateDispersions(DexSeqExons.loc, formula = formulaFullModel, BPPARAM=BPPARAM)
+    DexSeqExons.loc <- DEXSeq::testForDEU(DexSeqExons.loc,
+			reducedModel = formulaReducedModel,
+                  	fullModel = formulaFullModel,
+ 			BPPARAM=BPPARAM)
+
+    DexSeqExons.loc <- DEXSeq::estimateExonFoldChanges(DexSeqExons.loc, BPPARAM=BPPARAM, fitExpToVar="condition")
     
     # save data
     save(DexSeqExons.loc, sgvc, support, annotation, file = dexseq.data) 
@@ -157,9 +191,14 @@ for (condition in list.conditions) {
   
   sample.names <- sample.data$sample_name 
   n.samples <- length(sample.names) 
-  count.start <- which(names(res.clean) == "countData.1") 
-  last <- count.start+n.samples-1 
-  names(res.clean)[count.start:last] <- sample.names 
+  
+  # find all columns that correspond to "countData.x"
+  # rename them to the naming scheme
+  countData.cols <- which( grepl("countData", names(res.clean) ) )
+  names(res.clean)[countData.cols] <- sample.names
+  #count.start <- which(names(res.clean) == "countData.1") 
+  #last <- count.start+n.samples-1 
+  #names(res.clean)[count.start:last] <- sample.names 
   
   res.clean$genomicData <- NULL 
   res.clean$FDR <- p.adjust(res.clean$pvalue, method = 'fdr')

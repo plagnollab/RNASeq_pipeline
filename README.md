@@ -8,6 +8,9 @@ Set of scripts for RNA-Seq data processing, in particular differential expressio
 * The aligned reads overlapping the union exons were counted using HTSeq. This is wrapped in the dexseq_count.py Python script, included with the DEXSeq package.
 * Differential exon and transcript expression between conditions was assessed using the DEXSeq (1.14.2) and DESeq2 (1.8.2) Bioconductor packages respectively running on R (3.1.1).
 
+# With Pubmed references for each tool:
+Reads were aligned to the hg38 human genome build using STAR (2.4.2a) (23104886). BAM files were sorted and duplicate reads flagged using NovoSort (1.03.09) (Novocraft). The aligned reads overlapping human exons (Ensembl 82)  were counted using HTSeq (0.1) (25260700) . Differential gene expression was assessed with DESeq2 (1.8.2) (25516281) , and  differential splicing was assessed with SGSeq (27218464) and DEXSeq (22722343), running on R (3.3.2) (R project for statistical computing).
+
 <p align="center">
   <img src="https://github.com/plagnollab/RNASeq_pipeline/blob/master/schematic.png">
 </p>
